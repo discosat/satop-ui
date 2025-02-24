@@ -20,20 +20,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Timer,
   Repeat,
-  PenTool,
+  /* PenTool, */
   Camera,
   SplitSquareVertical,
   CircuitBoard,
 } from "lucide-react";
 
 type BlockType =
-  | "commands"
-  | "if"
-  | "ifelse"
-  | "wait-sec"
-  | "repeat-n"
-  | "gpio-write"
-  | "capture_image";
+  /* | "commands" */
+  "if" | "ifelse" | "wait-sec" | "repeat-n" | "gpio-write" | "capture_image";
 
 interface BlockInput {
   name: string;
@@ -64,15 +59,16 @@ type BlockTypes = {
   [K in BlockType]: BlockDefinition;
 };
 
-// Define block types that match the CSP parser
-const blockTypes: BlockTypes = {
-  commands: {
+/* commands: {
     name: "Command Sequence",
     color: "bg-gray-600",
     icon: <PenTool className="w-4 h-4" />,
     inputs: [],
     canHaveChildren: true,
-  },
+  }, */
+
+// Define block types that match the CSP parser
+const blockTypes: BlockTypes = {
   if: {
     name: "If Statement",
     color: "bg-blue-500",
@@ -341,14 +337,14 @@ const BlockProgramming: React.FC = () => {
             <Controls />
           </ReactFlow>
         </div>
-        <div className="border rounded-lg bg-gray-50 p-4">
+        {/*  <div className="border rounded-lg bg-gray-50 p-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">CSP Output</h3>
           </div>
           <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto max-h-[520px]">
             {output}
           </pre>
-        </div>
+        </div> */}
       </CardContent>
     </Card>
   );

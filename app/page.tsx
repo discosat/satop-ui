@@ -59,7 +59,15 @@ export default function LoginPage() {
         </Button>
 
         <p className="text-center text-space-subtext mt-6">
-          sign on using your WAYF credentials
+          Need help? Contact{" "}
+          <a
+            href="#"
+            className="text-purple-300 hover:underline"
+            target="_blank"
+            rel="noreferrer"
+          >
+            support
+          </a>
         </p>
       </div>
     </div>
