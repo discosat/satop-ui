@@ -1,34 +1,39 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import ReactFlow, {
   Background,
   Controls,
-  Handle,
   Position,
   Node,
   NodeProps,
   Connection,
-  ConnectionMode,
   useNodesState,
   useEdgesState,
   XYPosition,
   addEdge,
 } from "reactflow";
+
 import "reactflow/dist/style.css";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Timer,
   Repeat,
-  /* PenTool, */
   Camera,
   SplitSquareVertical,
   CircuitBoard,
 } from "lucide-react";
+import { BaseNode } from "@/components/base-node";
+import { LabeledHandle } from "@/components/labeled-handle";
+import { DevTools } from "@/components/devtools";
 
 type BlockType =
-  /* | "commands" */
-  "if" | "ifelse" | "wait-sec" | "repeat-n" | "gpio-write" | "capture_image";
+  | "if"
+  | "ifelse"
+  | "wait-sec"
+  | "repeat-n"
+  | "gpio-write"
+  | "capture_image";
 
 interface BlockInput {
   name: string;
@@ -58,14 +63,6 @@ interface ProgramBlockProps extends NodeProps<BlockData> {
 type BlockTypes = {
   [K in BlockType]: BlockDefinition;
 };
-
-/* commands: {
-    name: "Command Sequence",
-    color: "bg-gray-600",
-    icon: <PenTool className="w-4 h-4" />,
-    inputs: [],
-    canHaveChildren: true,
-  }, */
 
 // Define block types that match the CSP parser
 const blockTypes: BlockTypes = {
@@ -174,10 +171,19 @@ const blockTypes: BlockTypes = {
 };
 
 // Program Block Component
-const ProgramBlock = React.memo(({ data }: ProgramBlockProps) => {
+const ProgramBlock = React.memo(({ selected, data }: ProgramBlockProps) => {
   return (
-    <div className={`${data.color} rounded-lg p-4 text-white min-w-[200px]`}>
-      <Handle type="target" position={Position.Top} />
+    <BaseNode
+      selected={selected}
+      className={`${data.color} rounded-lg p-4 text-white min-w-[200px]`}
+    >
+      <LabeledHandle
+        id="target-1"
+        title="Some Input"
+        type="target"
+        position={Position.Top}
+      />
+
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2 font-bold">
           {data.icon}
@@ -193,11 +199,16 @@ const ProgramBlock = React.memo(({ data }: ProgramBlockProps) => {
           />
         ))}
       </div>
-      <Handle type="source" position={Position.Bottom} />
-    </div>
+
+      <LabeledHandle
+        id="source-1"
+        title="Some Input"
+        type="source"
+        position={Position.Bottom}
+      />
+    </BaseNode>
   );
 });
-
 ProgramBlock.displayName = "ProgramBlock";
 
 const nodeTypes = {
@@ -273,7 +284,59 @@ const BlockProgramming: React.FC = () => {
     []
   );
 
-  const [output, setOutput] = useState<string>("");
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>CSP Block Programming</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {Toolbar}
+        <div
+          style={{ height: "600px" }}
+          className="border rounded-lg bg-gray-50"
+        >
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            nodeTypes={nodeTypes}
+            onDragOver={onDragOver}
+            onDrop={onDrop}
+            fitView
+          >
+            <Background />
+            <DevTools position="top-left" />
+            <Controls />
+          </ReactFlow>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default BlockProgramming;
+
+/* commands: {
+    name: "Command Sequence",
+    color: "bg-gray-600",
+    icon: <PenTool className="w-4 h-4" />,
+    inputs: [],
+    canHaveChildren: true,
+  }, */
+{
+  /*  <div className="border rounded-lg bg-gray-50 p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">CSP Output</h3>
+          </div>
+          <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto max-h-[520px]">
+            {output}
+          </pre>
+        </div> */
+}
+
+/* const [output, setOutput] = useState<string>("");
 
   useEffect(() => {
     const generateCSP = (): string => {
@@ -307,47 +370,4 @@ const BlockProgramming: React.FC = () => {
     };
 
     setOutput(generateCSP());
-  }, [nodes, edges]);
-
-  return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>CSP Block Programming</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {Toolbar}
-        <div
-          style={{ height: "600px" }}
-          className="border rounded-lg bg-gray-50"
-        >
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            nodeTypes={nodeTypes}
-            onDragOver={onDragOver}
-            onDrop={onDrop}
-            connectionMode={ConnectionMode.Strict}
-            fitView
-            snapToGrid={true}
-          >
-            <Background />
-            <Controls />
-          </ReactFlow>
-        </div>
-        {/*  <div className="border rounded-lg bg-gray-50 p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">CSP Output</h3>
-          </div>
-          <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto max-h-[520px]">
-            {output}
-          </pre>
-        </div> */}
-      </CardContent>
-    </Card>
-  );
-};
-
-export default BlockProgramming;
+  }, [nodes, edges]); */
