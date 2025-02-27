@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   await createSession({
     userID: payload.eduPersonPrincipalName[0],
     name: payload.displayName[0],
-    avatar: "martin.jpeg",
+    avatar: "/assets/martin.jpeg",
     email: payload.mail[0],
     role: "viewer",
     scopes: ["fp", "fp.view", "fp.code", "entities", "entities.overview"],

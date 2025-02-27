@@ -8,7 +8,7 @@ export async function login() {
     userID: "1234",
     name: "Jenny",
     role: "admin",
-    avatar: "martin.jpeg",
+    avatar: "/assets/martin.jpeg",
     email: "jenny@jenny.com",
     scopes: ["fp", "fp.view", "fp.code", "entities", "entities.overview"],
     accessToken: "access_token_placeholder",
