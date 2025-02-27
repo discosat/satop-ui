@@ -1,16 +1,20 @@
 "use client";
-import { login } from "@/app/actions/login";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import { goToWayf } from "../actions/wayf";
+import { login } from "../actions/login";
 
 export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const handleWAYFLogin = async () => {
-    setIsLoading(true);
     // Simulate login process
     await new Promise((resolve) => setTimeout(resolve, 500));
-    await login();
+    if (process.env.NEXT_PUBLIC_USE_WAYF === "1") {
+      await goToWayf(window.location.origin);
+    } else {
+      await login();
+    }
     setIsLoading(false);
   };
 

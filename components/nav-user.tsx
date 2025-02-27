@@ -5,8 +5,11 @@ import {
   Bell,
   ChevronsUpDown,
   CreditCard,
+  EllipsisIcon,
+  KeySquare,
   LogOut,
   Sparkles,
+  UserCog,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,10 +29,9 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { logout } from "@/app/actions/logout";
+import { useSession } from "@/app/context";
 
-export function NavUser({
-  user,
-}: {
+export function NavUser({}: {
   user: {
     name: string;
     email: string;
@@ -37,6 +39,11 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
+  const user = useSession();
+
+  if (!user) {
+    return <div>no user! 🫨</div>;
+  }
 
   return (
     <SidebarMenu>
@@ -55,7 +62,7 @@ export function NavUser({
                 <span className="truncate font-semibold">{user.name}</span>
                 <span className="truncate text-xs">{user.email}</span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4" />
+              <EllipsisIcon className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -79,23 +86,12 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <Sparkles />
-                Upgrade to Pro
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck />
-                Account
+                <KeySquare />
+                Permissions
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <CreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
+                <UserCog />
+                Edit profile
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { ChevronRight, type LucideIcon } from "lucide-react"
+import { ChevronRight, type LucideIcon } from "lucide-react";
 
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/components/ui/collapsible";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -17,27 +17,33 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
+import { useSession } from "@/app/context";
+import { hasScope } from "@/lib/user";
+import { SessionPayload } from "@/lib/session";
 
 export function NavMain({
   items,
 }: {
   items: {
-    title: string
-    url: string
-    icon: LucideIcon
-    isActive?: boolean
+    title: string;
+    url: string;
+    icon: LucideIcon;
+    isActive?: boolean;
+    scope?: string;
     items?: {
-      title: string
-      url: string
-    }[]
-  }[]
+      title: string;
+      url: string;
+      scope?: string;
+    }[];
+  }[];
 }) {
+  const session = useSession();
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Platform</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map((item) => (
+        {allowedItems(session, items).map((item) => (
           <Collapsible key={item.title} asChild defaultOpen={item.isActive}>
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip={item.title}>
@@ -56,7 +62,7 @@ export function NavMain({
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <SidebarMenuSub>
-                      {item.items?.map((subItem) => (
+                      {allowedItems(session, item.items).map((subItem) => (
                         <SidebarMenuSubItem key={subItem.title}>
                           <SidebarMenuSubButton asChild>
                             <a href={subItem.url}>
@@ -74,5 +80,19 @@ export function NavMain({
         ))}
       </SidebarMenu>
     </SidebarGroup>
-  )
+  );
+}
+
+function allowedItems<T extends { scope?: string }>(
+  session: SessionPayload | null,
+  items: T[],
+) {
+  return items.filter(({ scope }) => {
+    console.log({
+      scope,
+      session,
+      has: hasScope(session, scope ?? ""),
+    });
+    return !scope || hasScope(session, scope);
+  });
 }

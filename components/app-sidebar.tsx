@@ -38,16 +38,19 @@ const data = {
     {
       title: "Flight planning",
       url: "#",
+      scope: "fp",
       icon: SquareTerminal,
       isActive: true,
       items: [
         {
           title: "Overview",
           url: "#",
+          scope: "fp.view",
         },
         {
           title: "Block programming",
           url: "#",
+          scope: "fp.program",
         },
         /*   {
           title: "Settings",
