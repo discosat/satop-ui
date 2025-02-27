@@ -7,8 +7,10 @@ import {
   Frame,
   Map,
   PieChart,
+  SatelliteDish,
   Settings2,
   SquareTerminal,
+  User,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -61,7 +63,7 @@ const data = {
     {
       title: "Ground station",
       url: "#",
-      icon: Bot,
+      icon: SatelliteDish,
       items: [
         {
           title: "Genesis",
@@ -100,6 +102,19 @@ const data = {
         },
       ],
     }, */
+    {
+      title: "Users",
+      url: "#",
+      scope: "entities",
+      icon: User,
+      items: [
+        {
+          title: "Overview",
+          scope: "entities.overview",
+          url: "#",
+        },
+      ],
+    },
     {
       title: "Settings",
       url: "#",

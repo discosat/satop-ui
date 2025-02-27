@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     avatar: "martin.jpeg",
     email: payload.mail[0],
     role: "viewer",
-    scopes: ["fp.view", "fp.code"],
+    scopes: ["fp", "fp.view", "fp.code", "entities", "entities.overview"],
     accessToken: "access_token_placeholder",
     refreshToken: "refresh_token_placeholder",
   });

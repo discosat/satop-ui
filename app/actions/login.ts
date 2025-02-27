@@ -10,7 +10,7 @@ export async function login() {
     role: "admin",
     avatar: "martin.jpeg",
     email: "jenny@jenny.com",
-    scopes: ["fp"],
+    scopes: ["fp", "fp.view", "fp.code", "entities", "entities.overview"],
     accessToken: "access_token_placeholder",
     refreshToken: "refresh_token_placeholder",
   });
