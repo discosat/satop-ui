@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "tunnel": "ssh -N -R 3008:localhost:3000 serv2.nohns.dk -i ~/.ssh/id_rsa_retired_20250207"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

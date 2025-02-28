@@ -6,7 +6,7 @@ export interface SessionPayload extends JWTPayload {
   userID: string;
   name: string;
   avatar: string;
-  role: "admin" | "scientist" | "viewer";
+  role: "admin" | "scientist" | "viewer" | "applicant";
   email: string;
   scopes: string[];
   accessToken: string;
@@ -53,11 +53,9 @@ export async function createSession(payload: SessionPayload) {
 export async function currentSession(): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get(SESSION_KEY);
-  console.log({ sessionCookie });
   if (!sessionCookie) return null;
 
   const payload = await decrypt(sessionCookie.value);
-  console.log({ payload });
   if (!payload) return null;
   return payload;
 }

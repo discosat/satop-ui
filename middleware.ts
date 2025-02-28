@@ -12,8 +12,12 @@ export async function middleware(request: NextRequest) {
     return handleAPIRoutes(session, path);
   }
 
+  const redirectURL =
+    session?.role === "applicant"
+      ? `${request.nextUrl.origin}/apply`
+      : `${request.nextUrl.origin}/login`;
   if (isRouteProtected(session, path))
-    return NextResponse.redirect(`${request.nextUrl.origin}/login`);
+    return NextResponse.redirect(redirectURL);
   return NextResponse.next();
 }
 
@@ -25,11 +29,16 @@ function handleAPIRoutes(session: SessionPayload | null, path: string) {
 
 function isRouteProtected(session: SessionPayload | null, path: string) {
   if (
-    session ||
     publicRoutes.includes(path) ||
     path.startsWith("/_next") ||
     path.startsWith("/assets")
   ) {
+    return false;
+  }
+  if (session?.role === "applicant" && path != "/apply") {
+    return true;
+  }
+  if (session) {
     return false;
   }
   return true;
