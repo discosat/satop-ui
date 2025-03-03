@@ -1,6 +1,5 @@
 "use client";
 
-<<<<<<< HEAD
 import {
   EllipsisIcon,
   KeySquare,
@@ -9,9 +8,6 @@ import {
   Sun,
   UserCog,
 } from "lucide-react";
-=======
-import { EllipsisIcon, KeySquare, LogOut, UserCog } from "lucide-react";
->>>>>>> d5ac9210ca02d7216a198cb97534f3e8e88e78be
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {

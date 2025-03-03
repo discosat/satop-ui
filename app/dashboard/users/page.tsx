@@ -45,6 +45,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import EditUserModal from "./editUserModal";
 
 // Types
 type UserRole = "viewer" | "scientist" | "admin" | "ground station";
