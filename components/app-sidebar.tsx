@@ -43,41 +43,11 @@ const data = {
       scope: "fp",
       icon: SquareTerminal,
       isActive: true,
-      items: [
-        {
-          title: "Overview",
-          url: "#",
-          scope: "fp.view",
-        },
-        {
-          title: "Block programming",
-          url: "#",
-          scope: "fp.program",
-        },
-        /*   {
-          title: "Settings",
-          url: "#",
-        }, */
-      ],
     },
     {
-      title: "Ground station",
+      title: "Ground stations",
       url: "#",
       icon: SatelliteDish,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
     },
     /*  {
       title: "Documentation",
@@ -104,39 +74,15 @@ const data = {
     }, */
     {
       title: "Users",
-      url: "#",
+      url: "/dashboard/users",
       scope: "entities",
       icon: User,
-      items: [
-        {
-          title: "Overview",
-          scope: "entities.overview",
-          url: "#",
-        },
-      ],
+      badge: 1,
     },
     {
       title: "Settings",
       url: "#",
       icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
     },
   ],
   /*  projects: [

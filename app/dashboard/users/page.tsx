@@ -28,17 +28,35 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MoreHorizontal, Plus, RefreshCw, Search } from "lucide-react";
+import {
+  Bot,
+  Eye,
+  MoreHorizontal,
+  Plus,
+  RefreshCw,
+  SatelliteDish,
+  Search,
+  ShieldUser,
+  TestTubeDiagonal,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Types
-type UserRole = "viewer" | "scientist" | "admin";
+type UserRole = "viewer" | "scientist" | "admin" | "ground station";
+type UserType = "machine" | "human";
 
 interface User {
   id: string;
   name: string;
   email: string;
+  type: UserType;
   role: UserRole;
+  scopes?: string[];
   avatarUrl: string;
   needsSupport?: boolean;
   supportReason?: string;
@@ -51,6 +69,8 @@ const users: User[] = [
     name: "Alex Johnson",
     email: "alex@example.com",
     role: "admin",
+    scopes: [],
+    type: "human",
     avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
   },
   {
@@ -58,6 +78,8 @@ const users: User[] = [
     name: "Sam Wilson",
     email: "sam@example.com",
     role: "scientist",
+    scopes: ["fp.program", "fp.create"],
+    type: "human",
     avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sam",
   },
   {
@@ -65,23 +87,25 @@ const users: User[] = [
     name: "Taylor Smith",
     email: "taylor@example.com",
     role: "viewer",
+    type: "human",
+    scopes: ["fp.program"],
     avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Taylor",
   },
   {
     id: "4",
-    name: "Morgan Lee",
-    email: "morgan@example.com",
-    role: "scientist",
+    name: "SDU Ground Station",
+    email: "gssdu@discosat.dk",
+    role: "ground station",
+    type: "machine",
     avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Morgan",
   },
   {
     id: "5",
-    name: "Jamie Roberts",
-    email: "jamie@example.com",
-    role: "viewer",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jamie",
-    needsSupport: true,
-    supportReason: "Account activation issues",
+    name: "AU Ground Station",
+    email: "gsau@discosat.dk",
+    role: "ground station",
+    type: "machine",
+    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Morgan",
   },
   {
     id: "6",
@@ -90,23 +114,39 @@ const users: User[] = [
     role: "scientist",
     avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Casey",
     needsSupport: true,
-    supportReason: "Password reset request",
+    type: "human",
+    supportReason:
+      "I wish to photograph the disko islands for thermal springs.",
   },
 ];
 
-// Role badge color mapping
-const getRoleBadgeColor = (role: UserRole) => {
-  switch (role) {
-    case "admin":
-      return "bg-purple-100 text-purple-800 hover:bg-purple-100";
-    case "scientist":
-      return "bg-blue-100 text-blue-800 hover:bg-blue-100";
-    case "viewer":
-      return "bg-gray-100 text-gray-800 hover:bg-gray-100";
-    default:
-      return "";
-  }
-};
+interface RoleBadgeProps {
+  role: UserRole;
+}
+
+function RoleBadge({ role }: RoleBadgeProps) {
+  const classes = {
+    admin: "bg-purple-800 text-purple-100 hover:bg-purple-800",
+    scientist: "bg-blue-800 text-blue-100 hover:bg-blue-800",
+    viewer: "bg-gray-800 text-gray-100 hover:bg-gray-800",
+    "ground station": "bg-orange-800 text-orange-100 hover:bg-orange-800",
+  };
+  const icons = {
+    admin: <ShieldUser className="w-4 h-4" />,
+    scientist: <TestTubeDiagonal className="w-4 h-4" />,
+    viewer: <Eye className="w-4 h-4" />,
+    "ground station": <SatelliteDish className="w-4 h-4" />,
+  };
+  return (
+    <Badge
+      className={"capitalize inline-flex gap-1 " + classes[role]}
+      variant="outline"
+    >
+      {icons[role]}
+      <span>{role}</span>
+    </Badge>
+  );
+}
 
 export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -114,7 +154,7 @@ export default function UserManagement() {
   const filteredUsers = users.filter(
     (user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase())
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const supportUsers = users.filter((user) => user.needsSupport);
@@ -131,10 +171,10 @@ export default function UserManagement() {
 
       <div className="w-full">
         <Tabs defaultValue="all-users">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full lg:w-80 grid-cols-2">
             <TabsTrigger value="all-users">All Users</TabsTrigger>
             <TabsTrigger value="support-users">
-              Support Needed
+              Applications
               {supportUsers.length > 0 && (
                 <Badge variant="destructive" className="ml-2">
                   {supportUsers.length}
@@ -205,16 +245,37 @@ export default function UserManagement() {
                                   </AvatarFallback>
                                 </Avatar>
                                 {user.name}
+                                {user.type === "machine" && (
+                                  <Tooltip>
+                                    <TooltipTrigger>
+                                      <Badge className="px-0.5 bg-gray-800 text-gray-600 hover:bg-gray-800">
+                                        <Bot className="w-4 h-4" />
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Machine</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
                               </div>
                             </TableCell>
                             <TableCell>{user.email}</TableCell>
                             <TableCell>
-                              <Badge
-                                className={getRoleBadgeColor(user.role)}
-                                variant="outline"
-                              >
-                                {user.role}
-                              </Badge>
+                              <div className="flex gap-2">
+                                <RoleBadge role={user.role} />
+                                {user.scopes && user.scopes.length > 0 && (
+                                  <Tooltip>
+                                    <TooltipTrigger>
+                                      <Badge className="bg-gray-800 text-gray-600 hover:bg-gray-800">
+                                        +{user.scopes.length} scopes
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{user.scopes.join(", ")}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell>
                               <DropdownMenu>
@@ -254,9 +315,10 @@ export default function UserManagement() {
           <TabsContent value="support-users" className="mt-6">
             <Card>
               <CardHeader className="pb-1">
-                <CardTitle>Users Requiring Support</CardTitle>
+                <CardTitle>Platform access applications</CardTitle>
                 <CardDescription>
-                  Users who have reported issues or need assistance
+                  Approve access for applicants wanting access to the Discosat
+                  platform.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -267,7 +329,7 @@ export default function UserManagement() {
                         <TableHead>User</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Role</TableHead>
-                        <TableHead>Support Reason</TableHead>
+                        <TableHead>Message</TableHead>
                         <TableHead className="w-[80px]"></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -303,12 +365,7 @@ export default function UserManagement() {
                             </TableCell>
                             <TableCell>{user.email}</TableCell>
                             <TableCell>
-                              <Badge
-                                className={getRoleBadgeColor(user.role)}
-                                variant="outline"
-                              >
-                                {user.role}
-                              </Badge>
+                              <RoleBadge role={user.role} />
                             </TableCell>
                             <TableCell>{user.supportReason}</TableCell>
                             <TableCell>
