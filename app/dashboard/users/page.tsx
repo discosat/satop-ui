@@ -155,19 +155,19 @@ export default function UserManagement() {
   const filteredUsers = users.filter(
     (user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()),
+      user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const user = {
-    id: '1',
-    name: 'Jane Doe',
-    email: 'jane.doe@example.com',
-    role: 'Admin',
-    scope: 'team'
+    id: "1",
+    name: "Jane Doe",
+    email: "jane.doe@example.com",
+    role: "Admin",
+    scope: "team",
   };
-  
+
   const handleSaveUser = (updatedUser) => {
-    console.log('Saving updated user:', updatedUser);
+    console.log("Saving updated user:", updatedUser);
     // Here you would typically update your state or call an API
   };
 
@@ -215,10 +215,7 @@ export default function UserManagement() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
-                    <EditUserModal
-                    user={user} 
-                    onSave={handleSaveUser} 
-                    />
+                    <EditUserModal user={user} onSave={handleSaveUser} />
                   </div>
                   <Button variant="outline" size="icon">
                     <RefreshCw className="h-4 w-4" />
@@ -400,12 +397,15 @@ export default function UserManagement() {
                                   <DropdownMenuItem>
                                     Contact user
                                   </DropdownMenuItem>
+
                                   <DropdownMenuItem>
                                     View details
                                   </DropdownMenuItem>
+
                                   <DropdownMenuItem>
                                     Mark as resolved
                                   </DropdownMenuItem>
+
                                   <DropdownMenuItem>
                                     Assign to team
                                   </DropdownMenuItem>

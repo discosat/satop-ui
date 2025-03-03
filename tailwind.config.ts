@@ -53,6 +53,20 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar-background))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: {
+            DEFAULT: "hsl(var(--sidebar-primary))",
+            foreground: "hsl(var(--sidebar-primary-foreground))",
+          },
+          accent: {
+            DEFAULT: "hsl(var(--sidebar-accent))",
+            foreground: "hsl(var(--sidebar-accent-foreground))",
+          },
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
+        },
         "space-card": "rgba(23, 25, 35, 0.4)", // Increased transparency
         "space-text": "#ffffff",
         "space-subtext": "#a0aec0",
@@ -72,22 +86,10 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: 0 },
         },
-        orbit: {
-          "0%": { transform: "rotate(0deg) translateX(150px) rotate(0deg)" },
-          "100%": {
-            transform: "rotate(360deg) translateX(150px) rotate(-360deg)",
-          },
-        },
-        "satellite-rotation": {
-          "0%": { transform: "rotate(0deg)" },
-          "100%": { transform: "rotate(360deg)" },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        orbit: "orbit 20s linear infinite",
-        "satellite-rotation": "satellite-rotation 10s linear infinite",
       },
       backgroundImage: {
         "space-image":

@@ -2,21 +2,14 @@
 
 import * as React from "react";
 import {
-  BookOpen,
-  Bot,
-  Frame,
   House,
-  Map,
-  PieChart,
   SatelliteDish,
   Settings2,
   SquareTerminal,
   User,
 } from "lucide-react";
 import Image from "next/image";
-
 import { NavMain } from "@/components/nav-main";
-import { NavProjects } from "@/components/nav-projects";
 import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
@@ -34,7 +27,6 @@ const data = {
   user: {
     name: "Martin Vad",
     email: "202007814@post.au.dk",
-    //avatar: "/avatars/shadcn.jpg",
     avatar: "martin.jpeg",
   },
   navMain: [
@@ -56,29 +48,7 @@ const data = {
       url: "/dashboard/ground-stations",
       icon: SatelliteDish,
     },
-    /*  {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    }, */
+
     {
       title: "Users",
       url: "/dashboard/users",
@@ -92,23 +62,6 @@ const data = {
       icon: Settings2,
     },
   ],
-  /*  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
-    },
-  ], */
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -135,13 +88,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
       <SidebarContent>
         <NavMain items={data.navMain} />
-        {/* <NavProjects projects={data.projects} /> */}
       </SidebarContent>
+
       <SidebarFooter>
         <NavUser user={data.user} />
       </SidebarFooter>
+
       <SidebarRail />
     </Sidebar>
   );

@@ -1,14 +1,11 @@
 "use client";
 
 import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
   EllipsisIcon,
   KeySquare,
   LogOut,
-  Sparkles,
+  Moon,
+  Sun,
   UserCog,
 } from "lucide-react";
 
@@ -30,6 +27,7 @@ import {
 } from "@/components/ui/sidebar";
 import { logout } from "@/app/actions/logout";
 import { useSession } from "@/app/context";
+import { useTheme } from "next-themes";
 
 export function NavUser({}: {
   user: {
@@ -39,6 +37,7 @@ export function NavUser({}: {
   };
 }) {
   const { isMobile } = useSidebar();
+  const { setTheme, theme } = useTheme();
   const user = useSession();
 
   if (!user) {
@@ -92,6 +91,13 @@ export function NavUser({}: {
               <DropdownMenuItem>
                 <UserCog />
                 Edit profile
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+              >
+                <Sun className="h-[1.5rem] w-[1.3rem] dark:hidden" />
+                <Moon className="hidden h-5 w-5 dark:block" />
+                <span>Toggle theme</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
   Dialog,
@@ -8,14 +8,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Form,
   FormControl,
@@ -24,9 +24,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 // Define our user type
 interface User {
@@ -39,11 +39,11 @@ interface User {
 
 // Define available scopes
 const scopes = [
-  { value: 'global', label: 'Global' },
-  { value: 'organization', label: 'Organization' },
-  { value: 'team', label: 'Team' },
-  { value: 'project', label: 'Project' },
-  { value: 'personal', label: 'Personal' },
+  { value: "global", label: "Global" },
+  { value: "organization", label: "Organization" },
+  { value: "team", label: "Team" },
+  { value: "project", label: "Project" },
+  { value: "personal", label: "Personal" },
 ];
 
 interface EditUserModalProps {
@@ -52,34 +52,36 @@ interface EditUserModalProps {
   onSave: (user: User) => void;
 }
 
-export function EditUserModal({ 
-  user, 
-  triggerButton, 
-  onSave 
+export function EditUserModal({
+  user,
+  triggerButton,
+  onSave,
 }: EditUserModalProps) {
   const [open, setOpen] = useState(false);
-  
+
   // Initialize the form with react-hook-form
   const form = useForm<User>({
     defaultValues: user || {
-      id: '',
-      name: '',
-      email: '',
-      role: '',
-      scope: ''
-    }
+      id: "",
+      name: "",
+      email: "",
+      role: "",
+      scope: "",
+    },
   });
 
   // Reset form when user prop changes or modal opens
   useEffect(() => {
     if (open) {
-      form.reset(user || {
-        id: '',
-        name: '',
-        email: '',
-        role: '',
-        scope: ''
-      });
+      form.reset(
+        user || {
+          id: "",
+          name: "",
+          email: "",
+          role: "",
+          scope: "",
+        }
+      );
     }
   }, [user, open, form]);
 
@@ -88,59 +90,21 @@ export function EditUserModal({
     setOpen(false);
   };
 
-  // Default trigger button if none provided
-  const defaultTrigger = (
-    <Button variant="default">
-      {user ? 'Edit User' : 'Create User'}
-    </Button>
-  );
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {triggerButton || defaultTrigger}
-      </DialogTrigger>
+      <DialogTrigger asChild>{triggerButton}</DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{user ? 'Edit User' : 'Create User'}</DialogTitle>
+          <DialogTitle>{user ? "Edit User" : "Create User"}</DialogTitle>
           <DialogDescription>
-            {user 
-              ? 'Make changes to user information and permissions' 
-              : 'Create a new user with appropriate permissions'
-            }
+            {user
+              ? "Make changes to user information and permissions"
+              : "Create a new user with appropriate permissions"}
           </DialogDescription>
         </DialogHeader>
-        
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
             <FormField
               control={form.control}
               name="role"
@@ -154,15 +118,15 @@ export function EditUserModal({
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="scope"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Access Scope</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
+                  <Select
+                    onValueChange={field.onChange}
                     defaultValue={field.value}
                     value={field.value}
                   >
@@ -180,19 +144,24 @@ export function EditUserModal({
                     </SelectContent>
                   </Select>
                   <FormDescription>
-                    This determines the user's access level across the system
+                    This determines the user&apos;s access level across the
+                    system
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
             <DialogFooter className="pt-4">
-              <Button variant="outline" type="button" onClick={() => setOpen(false)}>
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => setOpen(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit">
-                {user ? 'Save Changes' : 'Create User'}
+                {user ? "Save Changes" : "Create User"}
               </Button>
             </DialogFooter>
           </form>
