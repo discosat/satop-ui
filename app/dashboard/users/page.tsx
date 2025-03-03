@@ -45,7 +45,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import EditUserModal from "./editUserModal";
 
 // Types
 type UserRole = "viewer" | "scientist" | "admin" | "ground station";
@@ -158,19 +157,6 @@ export default function UserManagement() {
       user.email.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const user = {
-    id: '1',
-    name: 'Jane Doe',
-    email: 'jane.doe@example.com',
-    role: 'Admin',
-    scope: 'team'
-  };
-  
-  const handleSaveUser = (updatedUser) => {
-    console.log('Saving updated user:', updatedUser);
-    // Here you would typically update your state or call an API
-  };
-
   const supportUsers = users.filter((user) => user.needsSupport);
 
   return (
@@ -214,10 +200,6 @@ export default function UserManagement() {
                       className="pl-8"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <EditUserModal
-                    user={user} 
-                    onSave={handleSaveUser} 
                     />
                   </div>
                   <Button variant="outline" size="icon">

@@ -29,6 +29,15 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 
+const getBadge = (val?: number) => {
+  return () =>
+    new Promise<number>((res) => {
+      setTimeout(() => {
+        res(val ?? 0);
+      }, 250);
+    });
+};
+
 // This is sample data.
 const data = {
   user: {
@@ -56,35 +65,12 @@ const data = {
       url: "/dashboard/ground-stations",
       icon: SatelliteDish,
     },
-    /*  {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    }, */
     {
       title: "Users",
       url: "/dashboard/users",
       scope: "entities",
       icon: User,
-      badge: 1,
+      badge: getBadge(2),
     },
     {
       title: "Settings",
