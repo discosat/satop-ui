@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
   Dialog,
@@ -7,7 +7,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -48,17 +47,17 @@ const scopes = [
 
 interface EditUserModalProps {
   user?: User | null; // Optional user data
-  triggerButton?: React.ReactNode; // Optional custom trigger button
   onSave: (user: User) => void;
+  onCancel?: () => void;
 }
 
-export function EditUserModal({
+export default function EditUserModal({
+  dialogOpen,
+  setDialogOpen,
   user,
-  triggerButton,
   onSave,
-}: EditUserModalProps) {
-  const [open, setOpen] = useState(false);
-
+  onCancel,
+}) {
   // Initialize the form with react-hook-form
   const form = useForm<User>({
     defaultValues: user || {
@@ -70,29 +69,25 @@ export function EditUserModal({
     },
   });
 
-  // Reset form when user prop changes or modal opens
+  // Reset form when user prop changes
   useEffect(() => {
-    if (open) {
-      form.reset(
-        user || {
-          id: "",
-          name: "",
-          email: "",
-          role: "",
-          scope: "",
-        }
-      );
-    }
-  }, [user, open, form]);
+    form.reset(
+      user || {
+        id: "",
+        name: "",
+        email: "",
+        role: "",
+        scope: "",
+      }
+    );
+  }, [user, form]);
 
   const onSubmit = (data: User) => {
     onSave(data);
-    setOpen(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{triggerButton}</DialogTrigger>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{user ? "Edit User" : "Create User"}</DialogTitle>
@@ -153,11 +148,7 @@ export function EditUserModal({
             />
 
             <DialogFooter className="pt-4">
-              <Button
-                variant="outline"
-                type="button"
-                onClick={() => setOpen(false)}
-              >
+              <Button variant="outline" type="button" onClick={onCancel}>
                 Cancel
               </Button>
               <Button type="submit">
@@ -170,5 +161,3 @@ export function EditUserModal({
     </Dialog>
   );
 }
-
-export default EditUserModal;

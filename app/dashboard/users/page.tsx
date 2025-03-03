@@ -36,7 +36,7 @@ import {
   RefreshCw,
   SatelliteDish,
   Search,
-  ShieldUser,
+  ShieldPlus,
   TestTubeDiagonal,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -46,6 +46,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import EditUserModal from "./editUserModal";
+import Actions from "./actions";
 
 // Types
 type UserRole = "viewer" | "scientist" | "admin" | "ground station";
@@ -133,7 +134,7 @@ function RoleBadge({ role }: RoleBadgeProps) {
     "ground station": "bg-orange-800 text-orange-100 hover:bg-orange-800",
   };
   const icons = {
-    admin: <ShieldUser className="w-4 h-4" />,
+    admin: <ShieldPlus className="w-4 h-4" />,
     scientist: <TestTubeDiagonal className="w-4 h-4" />,
     viewer: <Eye className="w-4 h-4" />,
     "ground station": <SatelliteDish className="w-4 h-4" />,
@@ -293,29 +294,8 @@ export default function UserManagement() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                    <span className="sr-only">Open menu</span>
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem>Edit user</DropdownMenuItem>
-                                  <DropdownMenuItem>
-                                    Change role
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem>
-                                    Reset password
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem className="text-red-600">
-                                    Delete user
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              {/*Todo add User to actions*/}
+                              <Actions />
                             </TableCell>
                           </TableRow>
                         ))
