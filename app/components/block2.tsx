@@ -7,7 +7,8 @@ import React, {
   useEffect,
   ChangeEvent,
 } from "react";
-import ReactFlow, {
+import {
+  ReactFlow,
   Background,
   Controls,
   Position,
@@ -21,9 +22,9 @@ import ReactFlow, {
   addEdge,
   MarkerType,
   Handle,
-} from "reactflow";
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 
-import "reactflow/dist/style.css";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Timer,
@@ -35,7 +36,6 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { BaseNode } from "@/components/base-node";
 import { DevTools } from "@/components/devtools";
 
 type BlockType =

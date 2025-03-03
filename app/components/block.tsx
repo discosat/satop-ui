@@ -1,20 +1,6 @@
 "use client";
 
 import React, { useCallback, useMemo } from "react";
-import ReactFlow, {
-  Background,
-  Controls,
-  Position,
-  Node,
-  NodeProps,
-  Connection,
-  useNodesState,
-  useEdgesState,
-  XYPosition,
-  addEdge,
-} from "reactflow";
-
-import "reactflow/dist/style.css";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Timer,
@@ -26,6 +12,24 @@ import {
 import { BaseNode } from "@/components/base-node";
 import { LabeledHandle } from "@/components/labeled-handle";
 import { DevTools } from "@/components/devtools";
+
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  Position,
+  Node,
+  NodeProps,
+  Connection,
+  Edge,
+  useNodesState,
+  useEdgesState,
+  XYPosition,
+  addEdge,
+  MarkerType,
+  Handle,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 
 type BlockType =
   | "if"
@@ -306,9 +310,10 @@ const BlockProgramming: React.FC = () => {
             onDrop={onDrop}
             fitView
           >
-            <Background />
-            <DevTools position="top-left" />
             <Controls />
+            <Background />
+
+            <DevTools position="top-left" />
           </ReactFlow>
         </div>
       </CardContent>
