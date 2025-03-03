@@ -21,6 +21,7 @@ import {
 import { useSession } from "@/app/context";
 import { hasScope } from "@/lib/user";
 import { SessionPayload } from "@/lib/session";
+import { Badge } from "./ui/badge";
 
 export function NavMain({
   items,
@@ -31,6 +32,7 @@ export function NavMain({
     icon: LucideIcon;
     isActive?: boolean;
     scope?: string;
+    badge?: number;
     items?: {
       title: string;
       url: string;
@@ -50,6 +52,11 @@ export function NavMain({
                 <a href={item.url}>
                   <item.icon />
                   <span>{item.title}</span>
+                  {item.badge && (
+                    <Badge variant="destructive" className="ml-0">
+                      {item.badge}
+                    </Badge>
+                  )}
                 </a>
               </SidebarMenuButton>
               {item.items?.length ? (
