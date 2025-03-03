@@ -5,6 +5,7 @@ import {
   BookOpen,
   Bot,
   Frame,
+  House,
   Map,
   PieChart,
   SatelliteDish,
@@ -38,15 +39,21 @@ const data = {
   },
   navMain: [
     {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: House,
+      isActive: true,
+    },
+    {
       title: "Flight planning",
-      url: "#",
+      url: "/dashboard/flight",
       scope: "fp",
       icon: SquareTerminal,
       isActive: true,
     },
     {
       title: "Ground stations",
-      url: "#",
+      url: "/dashboard/ground-stations",
       icon: SatelliteDish,
     },
     /*  {
