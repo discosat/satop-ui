@@ -1,16 +1,6 @@
 "use client";
 
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  EllipsisIcon,
-  KeySquare,
-  LogOut,
-  Sparkles,
-  UserCog,
-} from "lucide-react";
+import { EllipsisIcon, KeySquare, LogOut, UserCog } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
