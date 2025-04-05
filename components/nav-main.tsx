@@ -97,7 +97,7 @@ export function NavMain({
 
 function allowedItems<T extends { scope?: string }>(
   session: SessionPayload | null,
-  items: T[],
+  items: T[]
 ) {
   return items.filter(({ scope }) => {
     console.log({

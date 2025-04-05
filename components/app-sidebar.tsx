@@ -1,13 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  House,
-  SatelliteDish,
-  Settings2,
-  SquareTerminal,
-  User,
-} from "lucide-react";
+import { House, SatelliteDish, SquareTerminal, User } from "lucide-react";
 import Image from "next/image";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -60,11 +54,6 @@ const data = {
       scope: "entities",
       icon: User,
       badge: 1,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
     },
   ],
 };

@@ -172,7 +172,7 @@ export function OverpassCalendar({ satellites }: OverpassCalendarProps) {
     // Skip formatting during server render
     if (!isMounted) return "";
 
-    return date.toLocaleString("en-US", {
+    return date.toLocaleString("da-DK", {
       month: "short",
       day: "numeric",
       hour: "2-digit",
@@ -186,7 +186,7 @@ export function OverpassCalendar({ satellites }: OverpassCalendarProps) {
     // Skip formatting during server render
     if (!isMounted) return "";
 
-    return date.toLocaleTimeString("en-US", {
+    return date.toLocaleTimeString("da-DK", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,

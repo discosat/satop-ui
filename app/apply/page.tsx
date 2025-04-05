@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import ParticleBackground from "../components/particle-background";
 import Starfield from "../components/starfield";
 import Image from "next/image";

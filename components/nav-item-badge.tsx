@@ -30,7 +30,10 @@ export default function NavItemBadge({ value }: NavItemBadge) {
 
   return (
     val && (
-      <Badge variant="destructive" className="ml-0 transition-all">
+      <Badge
+        variant="default"
+        className="bg-red-600 px-3 text-white  ml-auto transition-all"
+      >
         {val}
       </Badge>
     )

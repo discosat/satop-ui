@@ -148,7 +148,7 @@ export function SatelliteMap({ satellites }: SatelliteMapProps) {
           height: "100%",
           width: "100%",
           borderRadius: "0.5rem",
-          backgroundColor: "rgb(17, 24, 39)",
+          backgroundColor: "rgb(0, 0, 0)",
         }}
         projection={"mercator"}
         interactive={true}

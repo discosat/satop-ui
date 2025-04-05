@@ -28,31 +28,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Bot,
-  Eye,
-  MoreHorizontal,
-  Plus,
-  RefreshCw,
-  SatelliteDish,
-  Search,
-  ShieldPlus,
-  TestTubeDiagonal,
-} from "lucide-react";
+import { MoreHorizontal, Plus, RefreshCw, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import EditUserModal from "./editUserModal";
 import Actions from "./actions";
+import UsersTable from "./users-table";
+import { RoleBadge } from "./role-badge";
+import { ApplicationsTable } from "./applications-table";
 
 // Types
-type UserRole = "viewer" | "scientist" | "admin" | "ground station";
-type UserType = "machine" | "human";
+export type UserRole = "viewer" | "scientist" | "admin" | "ground station";
+export type UserType = "machine" | "human";
 
-interface User {
+export interface User {
   id: string;
   name: string;
   email: string;
@@ -122,34 +110,6 @@ const users: User[] = [
   },
 ];
 
-interface RoleBadgeProps {
-  role: UserRole;
-}
-
-function RoleBadge({ role }: RoleBadgeProps) {
-  const classes = {
-    admin: "bg-purple-800 text-purple-100 hover:bg-purple-800",
-    scientist: "bg-blue-800 text-blue-100 hover:bg-blue-800",
-    viewer: "bg-gray-800 text-gray-100 hover:bg-gray-800",
-    "ground station": "bg-orange-800 text-orange-100 hover:bg-orange-800",
-  };
-  const icons = {
-    admin: <ShieldPlus className="w-4 h-4" />,
-    scientist: <TestTubeDiagonal className="w-4 h-4" />,
-    viewer: <Eye className="w-4 h-4" />,
-    "ground station": <SatelliteDish className="w-4 h-4" />,
-  };
-  return (
-    <Badge
-      className={"capitalize inline-flex gap-1 " + classes[role]}
-      variant="outline"
-    >
-      {icons[role]}
-      <span>{role}</span>
-    </Badge>
-  );
-}
-
 export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -191,7 +151,10 @@ export default function UserManagement() {
             <TabsTrigger value="support-users">
               Applications
               {supportUsers.length > 0 && (
-                <Badge variant="destructive" className="ml-2">
+                <Badge
+                  variant="destructive"
+                  className="ml-2 bg-red-600 px-3 text-white"
+                >
                   {supportUsers.length}
                 </Badge>
               )}
@@ -223,86 +186,7 @@ export default function UserManagement() {
                   </Button>
                 </div>
 
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead className="w-[80px]"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredUsers.length === 0 ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={4}
-                            className="text-center py-8 text-muted-foreground"
-                          >
-                            No users found
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredUsers.map((user) => (
-                          <TableRow key={user.id}>
-                            <TableCell className="font-medium">
-                              <div className="flex items-center gap-3">
-                                <Avatar>
-                                  <AvatarImage
-                                    src={`/api/placeholder/32/32`}
-                                    alt={user.name}
-                                  />
-                                  <AvatarFallback>
-                                    {user.name
-                                      .split(" ")
-                                      .map((n) => n[0])
-                                      .join("")}
-                                  </AvatarFallback>
-                                </Avatar>
-                                {user.name}
-                                {user.type === "machine" && (
-                                  <Tooltip>
-                                    <TooltipTrigger>
-                                      <Badge className="px-0.5 bg-gray-800 text-gray-600 hover:bg-gray-800">
-                                        <Bot className="w-4 h-4" />
-                                      </Badge>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Machine</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>{user.email}</TableCell>
-                            <TableCell>
-                              <div className="flex gap-2">
-                                <RoleBadge role={user.role} />
-                                {user.scopes && user.scopes.length > 0 && (
-                                  <Tooltip>
-                                    <TooltipTrigger>
-                                      <Badge className="bg-gray-800 text-gray-600 hover:bg-gray-800">
-                                        +{user.scopes.length} scopes
-                                      </Badge>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>{user.scopes.join(", ")}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {/*Todo add User to actions*/}
-                              <Actions />
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
+                <UsersTable filteredUsers={filteredUsers} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -317,87 +201,7 @@ export default function UserManagement() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Message</TableHead>
-                        <TableHead className="w-[80px]"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {supportUsers.length === 0 ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={5}
-                            className="text-center py-8 text-muted-foreground"
-                          >
-                            No users currently need support
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        supportUsers.map((user) => (
-                          <TableRow key={user.id}>
-                            <TableCell className="font-medium">
-                              <div className="flex items-center gap-3">
-                                <Avatar>
-                                  <AvatarImage
-                                    src={`/api/placeholder/32/32`}
-                                    alt={user.name}
-                                  />
-                                  <AvatarFallback>
-                                    {user.name
-                                      .split(" ")
-                                      .map((n) => n[0])
-                                      .join("")}
-                                  </AvatarFallback>
-                                </Avatar>
-                                {user.name}
-                              </div>
-                            </TableCell>
-                            <TableCell>{user.email}</TableCell>
-                            <TableCell>
-                              <RoleBadge role={user.role} />
-                            </TableCell>
-                            <TableCell>{user.supportReason}</TableCell>
-                            <TableCell>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                    <span className="sr-only">Open menu</span>
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem>
-                                    Contact user
-                                  </DropdownMenuItem>
-
-                                  <DropdownMenuItem>
-                                    View details
-                                  </DropdownMenuItem>
-
-                                  <DropdownMenuItem>
-                                    Mark as resolved
-                                  </DropdownMenuItem>
-
-                                  <DropdownMenuItem>
-                                    Assign to team
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
+                <ApplicationsTable supportUsers={supportUsers} />
               </CardContent>
             </Card>
           </TabsContent>
