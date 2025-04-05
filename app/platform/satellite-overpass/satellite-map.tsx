@@ -33,7 +33,7 @@ export function SatelliteMap({ satellites }: SatelliteMapProps) {
   const [viewState, setViewState] = useState({
     longitude: 0,
     latitude: 0,
-    zoom: 8,
+    zoom: 1,
   });
   const [satelliteInfo, setSatelliteInfo] = useState<SatelliteInfoType>({
     altitude: 0,
@@ -92,12 +92,11 @@ export function SatelliteMap({ satellites }: SatelliteMapProps) {
             Math.pow(velocity.z, 2)
         );
 
-        // Update the view state to center on the satellite
-        setViewState({
+        setViewState((prev) => ({
+          ...prev,
           longitude: longitudeDeg,
           latitude: latitudeDeg,
-          zoom: 3,
-        });
+        }));
 
         // Update satellite info for display
         setSatelliteInfo({
@@ -149,8 +148,13 @@ export function SatelliteMap({ satellites }: SatelliteMapProps) {
           height: "100%",
           width: "100%",
           borderRadius: "0.5rem",
+          backgroundColor: "rgb(17, 24, 39)",
         }}
-        mapStyle="https://tile.openstreetmap.jp/styles/maptiler-basic-en/style.json"
+        projection={"mercator"}
+        interactive={true}
+        //mapStyle="https://tile.openstreetmap.jp/styles/maptiler-basic-en/style.json"
+        //mapStyle="https://demotiles.maplibre.org/style.json"
+        mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
         touchPitch={false}
         dragRotate={false}
         onMove={(evt) => setViewState(evt.viewState)}
