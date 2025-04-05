@@ -46,18 +46,20 @@ const scopes = [
 ];
 
 interface EditUserModalProps {
-  user?: User | null; // Optional user data
+  user?: User | null;
+  dialogOpen: boolean;
+  setDialogOpen: (open: boolean) => void;
   onSave: (user: User) => void;
   onCancel?: () => void;
 }
 
 export default function EditUserModal({
+  user,
   dialogOpen,
   setDialogOpen,
-  user,
   onSave,
   onCancel,
-}) {
+}: EditUserModalProps) {
   // Initialize the form with react-hook-form
   const form = useForm<User>({
     defaultValues: user || {

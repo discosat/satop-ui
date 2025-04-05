@@ -38,7 +38,7 @@ export async function POST(req: Request) {
   const origin = params.get("state");
   if (origin) {
     // Do a 301 so cookies are sent with redirect
-    const redirectTo = `${origin}/dashboard`;
+    const redirectTo = `${origin}/platform`;
     return NextResponse.redirect(redirectTo, 301);
   }
 }

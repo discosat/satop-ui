@@ -12,7 +12,7 @@ export default async function Apply() {
     redirect("/login");
   }
   if (session?.role !== "applicant") {
-    redirect("/dashboard");
+    redirect("/platform");
   }
 
   return (

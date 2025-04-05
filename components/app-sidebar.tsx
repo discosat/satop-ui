@@ -31,27 +31,32 @@ const data = {
   },
   navMain: [
     {
-      title: "Dashboard",
-      url: "/dashboard",
+      title: "Home",
+      url: "/platform",
       icon: House,
       isActive: true,
     },
     {
+      title: "Satellite Overpass",
+      url: "/platform/satellite-overpass",
+      icon: SatelliteDish,
+      isActive: true,
+    },
+    {
       title: "Flight planning",
-      url: "/dashboard/flight",
+      url: "/platform/flight",
       scope: "fp",
       icon: SquareTerminal,
       isActive: true,
     },
     {
       title: "Ground stations",
-      url: "/dashboard/ground-stations",
+      url: "/platform/ground-stations",
       icon: SatelliteDish,
     },
-
     {
       title: "Users",
-      url: "/dashboard/users",
+      url: "/platform/users",
       scope: "entities",
       icon: User,
       badge: 1,

@@ -99,4 +99,6 @@ canvas {
   mix-blend-mode: screen;
 }
 
-
+.maplibregl-popup.satmap\:opacity-75.maplibregl-popup-anchor-right {
+  display: none !important;
+}

@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 export default async function LoginPage() {
   const session = await me();
   if (session) {
-    redirect("/dashboard");
+    redirect("/platform");
   }
 
   return (

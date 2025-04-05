@@ -15,5 +15,5 @@ export async function login() {
     refreshToken: "refresh_token_placeholder",
   });
 
-  redirect("/dashboard");
+  redirect("/platform");
 }
