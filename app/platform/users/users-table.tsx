@@ -19,6 +19,7 @@ import {
 import Actions from "./actions";
 import { User } from "./page";
 import { RoleBadge } from "./role-badge";
+import { ScopeBadge } from "./scope-badge";
 
 interface UsersTableProps {
   filteredUsers: User[];
@@ -82,18 +83,7 @@ export default function UsersTable({ filteredUsers }: UsersTableProps) {
                 <TableCell>
                   <div className="flex gap-2">
                     <RoleBadge role={user.role} />
-                    {user.scopes && user.scopes.length > 0 && (
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Badge className="bg-gray-800 text-gray-600 hover:bg-gray-800">
-                            +{user.scopes.length} scopes
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{user.scopes.join(", ")}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
+                    <ScopeBadge scopes={user?.scopes} />
                   </div>
                 </TableCell>
                 <TableCell>

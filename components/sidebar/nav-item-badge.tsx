@@ -32,7 +32,7 @@ export default function NavItemBadge({ value }: NavItemBadge) {
     val && (
       <Badge
         variant="default"
-        className="bg-red-600 px-3 text-white  ml-auto transition-all"
+        className="bg-red-600 hover:bg-red-700 px-3 text-white  ml-auto transition-all"
       >
         {val}
       </Badge>
