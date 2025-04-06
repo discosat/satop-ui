@@ -8,9 +8,10 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import { Info, RefreshCw, Orbit, Clock } from "lucide-react";
+import { Info, Orbit, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { RefreshButton } from "@/components/refresh-button";
 
 interface SatelliteInfoCardProps {
   name: string;
@@ -33,7 +34,6 @@ export function SatelliteInfoCard({
   info,
   showOrbit,
   setShowOrbit,
-  isLoading,
   refreshPosition,
   centerOnSatellite,
 }: SatelliteInfoCardProps) {
@@ -110,18 +110,7 @@ export function SatelliteInfoCard({
               Orbit
             </ToggleGroupItem>
           </ToggleGroup>
-
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={refreshPosition}
-            disabled={isLoading}
-          >
-            <RefreshCw
-              className={`h-4 w-4 mr-1 ${isLoading ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </Button>
+          <RefreshButton onClick={refreshPosition} />
         </div>
 
         <Button

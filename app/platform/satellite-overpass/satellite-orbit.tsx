@@ -22,10 +22,12 @@ export function SatelliteOrbit({
   tle,
   date,
   steps = 90,
-  color = "#ff3333",
+  color = "#e77d5d",
   width = 2,
 }: SatelliteOrbitProps) {
   const [segments, setSegments] = useState<Array<Array<[number, number]>>>([]);
+
+  //Tailwind red-500 to hex #ff3333
 
   // Calculate the orbit path
   useEffect(() => {

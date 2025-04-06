@@ -26,15 +26,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
-// Define our user type
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  scope: string;
-}
+import { User } from "./page";
 
 // Define available scopes
 const scopes = [
@@ -46,7 +38,7 @@ const scopes = [
 ];
 
 interface EditUserModalProps {
-  user?: User | null;
+  user: User;
   dialogOpen: boolean;
   setDialogOpen: (open: boolean) => void;
   onSave: (user: User) => void;
@@ -92,11 +84,9 @@ export default function EditUserModal({
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{user ? "Edit User" : "Create User"}</DialogTitle>
+          <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
-            {user
-              ? "Make changes to user information and permissions"
-              : "Create a new user with appropriate permissions"}
+            Make changes to user information and permissions
           </DialogDescription>
         </DialogHeader>
 
@@ -153,9 +143,7 @@ export default function EditUserModal({
               <Button variant="outline" type="button" onClick={onCancel}>
                 Cancel
               </Button>
-              <Button type="submit">
-                {user ? "Save Changes" : "Create User"}
-              </Button>
+              <Button type="submit">Save Changes</Button>
             </DialogFooter>
           </form>
         </Form>

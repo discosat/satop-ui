@@ -10,13 +10,14 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import { Clock, Calendar, MapPin, RefreshCw, ArrowUpRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Clock, Calendar, MapPin, ArrowUpRight } from "lucide-react";
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Satellite } from "react-sat-map";
+import { RefreshButton } from "@/components/refresh-button";
 
 interface Overpass {
   start: Date;
@@ -39,7 +40,7 @@ export function OverpassCalendar({ satellites }: OverpassCalendarProps) {
   const [overpasses, setOverpasses] = useState<Overpass[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  //const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState<boolean>(false);
 
   const issTLE = satellites[0];
@@ -148,18 +149,10 @@ export function OverpassCalendar({ satellites }: OverpassCalendarProps) {
 
       setOverpasses(foundOverpasses);
       setLoading(false);
-      setIsRefreshing(false);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
       setLoading(false);
-      setIsRefreshing(false);
     }
-  };
-
-  // Refresh overpass calculations
-  const refreshCalculations = (): void => {
-    setIsRefreshing(true);
-    setTimeout(calculateOverpasses, 100);
   };
 
   useEffect(() => {
@@ -324,16 +317,11 @@ export function OverpassCalendar({ satellites }: OverpassCalendarProps) {
             </CardTitle>
             <CardDescription>Next 24 hours from now</CardDescription>
           </div>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={refreshCalculations}
-            disabled={isRefreshing}
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
-            />
-          </Button>
+          <RefreshButton
+            onClick={() => {
+              calculateOverpasses();
+            }}
+          />
         </div>
       </CardHeader>
       <Separator />

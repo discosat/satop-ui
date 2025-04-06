@@ -11,11 +11,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, RefreshCw, Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import EditUserModal from "./editUserModal";
 import UsersTable from "./users-table";
 import { ApplicationsTable } from "./applications-table";
+import { RefreshButton } from "@/components/refresh-button";
 
 // Types
 export type UserRole = "viewer" | "scientist" | "admin" | "ground station";
@@ -100,19 +100,6 @@ export default function UserManagement() {
       user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const user = {
-    id: "1",
-    name: "Jane Doe",
-    email: "jane.doe@example.com",
-    role: "Admin",
-    scope: "team",
-  };
-
-  const handleSaveUser = (updatedUser) => {
-    console.log("Saving updated user:", updatedUser);
-    // Here you would typically update your state or call an API
-  };
-
   const supportUsers = users.filter((user) => user.needsSupport);
 
   return (
@@ -160,11 +147,9 @@ export default function UserManagement() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
-                    <EditUserModal user={user} onSave={handleSaveUser} />
+                    {/* <EditUserModal user={user} onSave={handleSaveUser} /> */}
                   </div>
-                  <Button variant="outline" size="icon">
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
+                  <RefreshButton onClick={() => {}} />
                 </div>
 
                 <UsersTable filteredUsers={filteredUsers} />

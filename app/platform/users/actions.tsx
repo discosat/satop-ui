@@ -9,18 +9,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
-import EditUserModal from "./editUserModal";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  scope: string;
-}
+import EditUserModal from "./edit-user-modal";
+import { User } from "./page";
 
 interface ActionsProps {
-  user?: User;
+  user: User;
 }
 
 export default function Actions({ user }: ActionsProps) {
@@ -57,8 +50,6 @@ export default function Actions({ user }: ActionsProps) {
           >
             Edit user
           </DropdownMenuItem>
-          <DropdownMenuItem>Change role</DropdownMenuItem>
-          <DropdownMenuItem>Reset password</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem className="text-red-600">
             Delete user
