@@ -26,7 +26,7 @@ interface ApplicationsTableProps {
 
 export function ApplicationsTable({ supportUsers }: ApplicationsTableProps) {
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md">
       <Table>
         <TableHeader>
           <TableRow>

@@ -147,7 +147,6 @@ export default function UserManagement() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
-                    {/* <EditUserModal user={user} onSave={handleSaveUser} /> */}
                   </div>
                   <RefreshButton onClick={() => {}} />
                 </div>
@@ -167,6 +166,10 @@ export default function UserManagement() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                <div className="flex justify-end">
+                  <RefreshButton onClick={() => {}} />
+                </div>
+
                 <ApplicationsTable supportUsers={supportUsers} />
               </CardContent>
             </Card>

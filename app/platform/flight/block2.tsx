@@ -37,6 +37,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { DevTools } from "@/components/devtools";
+import { Button } from "@/components/ui/button";
 
 type BlockType =
   | "if"
@@ -776,44 +777,15 @@ const BlockProgramming: React.FC = () => {
     }, 100); // Small delay to ensure nodes are rendered first
   }, [clearCanvas, setNodes, setEdges]);
 
-  // Help tooltip for the connection system
-  const ConnectionHelp = () => (
-    <div className="bg-white p-4 rounded-lg shadow-md mb-4">
-      <h3 className="font-bold text-lg mb-2">Connection Guide</h3>
-      <ul className="list-disc pl-6 space-y-1">
-        <li>
-          <span className="font-semibold">Top handle (blue):</span> Connect from
-          a parent block or previous block
-        </li>
-        <li>
-          <span className="font-semibold">Bottom handle (green):</span> Connect
-          to the next sequential block
-        </li>
-        <li>
-          <span className="font-semibold">Right handle (purple):</span> Connect
-          to a child block (only on container blocks)
-        </li>
-      </ul>
-      <p className="mt-2 text-sm text-gray-600">
-        Hover over handles to see their function. For the sample program
-        structure, first use the right handle of the Repeat block to connect to
-        the first GPIO Write, then use the bottom handles to chain the remaining
-        blocks in sequence.
-      </p>
-    </div>
-  );
-
   const Toolbar = useMemo(
     () => (
       <div className="mb-4">
-        <ConnectionHelp />
-
         <div className="flex flex-wrap gap-2 mb-4">
           <div className="flex flex-wrap gap-2 flex-1">
             {Object.entries(blockTypes).map(([type, block]) => (
               <div
                 key={type}
-                className={`${block.color} text-white px-4 py-2 rounded-lg flex items-center space-x-2 cursor-move`}
+                className={`${block.color} text-sm font-medium px-4 py-2 h-9 rounded-lg flex items-center  cursor-move`}
                 draggable
                 onDragStart={(event: React.DragEvent<HTMLDivElement>) => {
                   event.dataTransfer.setData("application/reactflow", type);
@@ -826,20 +798,14 @@ const BlockProgramming: React.FC = () => {
             ))}
           </div>
           <div className="flex gap-2">
-            <button
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
-              onClick={createExampleProgram}
-            >
+            <Button variant={"default"} onClick={createExampleProgram}>
               <Plus className="w-4 h-4" />
               <span>Load Example</span>
-            </button>
-            <button
-              className="bg-red-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
-              onClick={clearCanvas}
-            >
+            </Button>
+            <Button variant={"destructive"} onClick={clearCanvas}>
               <Trash2 className="w-4 h-4" />
               <span>Clear All</span>
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -857,8 +823,10 @@ const BlockProgramming: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2">
             <div
-              style={{ height: "600px" }}
-              className="border rounded-lg bg-gray-50"
+              style={{
+                height: "calc(100vh - 400px)",
+              }}
+              className="border rounded-lg h-full bg-primary-foreground"
             >
               <ReactFlow
                 nodes={nodes}
@@ -872,28 +840,49 @@ const BlockProgramming: React.FC = () => {
                 fitView
                 maxZoom={1.5}
                 minZoom={0.5}
-                /* defaultZoom={1} */
-                /* connectionLineType="smoothstep" */
                 connectionLineStyle={{ stroke: "#888" }}
               >
                 <Background />
-                <DevTools position="top-left" />
-                <Controls />
+                <DevTools position="top-right" />
               </ReactFlow>
             </div>
           </div>
-          <div className="lg:col-span-1">
-            <div className="p-4 bg-gray-100 rounded-lg h-full overflow-auto">
-              <h3 className="font-bold mb-2 flex items-center gap-2">
-                <Code className="w-4 h-4" />
-                Program Output
-              </h3>
-              <pre className="text-xs bg-gray-800 text-green-400 p-4 rounded-lg overflow-auto max-h-96">
-                {programOutput
-                  ? JSON.stringify(programOutput, null, 4)
-                  : "No valid program structure detected"}
-              </pre>
-            </div>
+          <div className="lg:col-span-1 ">
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Code className="w-4 h-4" />
+                  Program Output
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="relative">
+                  <pre className="text-sm bg-primary-foreground text-foreground p-4 rounded-lg border max-h-[calc(100vh-500px)] overflow-y-auto font-mono">
+                    {programOutput ? (
+                      JSON.stringify(programOutput, null, 2)
+                    ) : (
+                      <span className="text-muted-foreground">
+                        No valid program structure detected
+                      </span>
+                    )}
+                  </pre>
+                  {programOutput && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={() =>
+                        navigator.clipboard.writeText(
+                          JSON.stringify(programOutput, null, 2)
+                        )
+                      }
+                    >
+                      Copy
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </CardContent>
