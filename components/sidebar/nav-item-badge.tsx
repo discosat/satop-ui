@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Badge } from "./ui/badge";
+import { Badge } from "../ui/badge";
 
 interface NavItemBadge {
   value: number | (() => Promise<number>) | undefined;

@@ -1,5 +1,5 @@
-import Starfield from "../components/starfield";
-import ParticleBackground from "../components/particle-background";
+import Starfield from "../../components/starfield";
+import ParticleBackground from "../../components/particle-background";
 import Image from "next/image";
 import { me } from "../actions/me";
 import LoginForm from "./login-form";

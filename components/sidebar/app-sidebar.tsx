@@ -3,8 +3,8 @@
 import * as React from "react";
 import { House, SatelliteDish, SquareTerminal, User } from "lucide-react";
 import Image from "next/image";
-import { NavMain } from "@/components/nav-main";
-import { NavUser } from "@/components/nav-user";
+import { NavMain } from "@/components/sidebar/nav-main";
+import { NavUser } from "@/components/sidebar/nav-user";
 import {
   Sidebar,
   SidebarContent,
