@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
-import EditUserModal from "./edit-user-modal";
+import { EditUserModal } from "./edit-user-modal";
+import { DeleteUserModal } from "./delete-user-modal";
 import { User } from "./page";
 
 interface ActionsProps {
@@ -17,17 +18,29 @@ interface ActionsProps {
 }
 
 export default function Actions({ user }: ActionsProps) {
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const handleSaveUser = (updatedUser: User) => {
     // Handle saving the updated user data
     console.log("Saving user:", updatedUser);
     // Implement your save logic here
-    setDialogOpen(false);
+    setEditDialogOpen(false);
   };
 
-  const handleCancel = () => {
-    setDialogOpen(false);
+  const handleDeleteUser = (userId: string) => {
+    // Handle deleting the user
+    console.log("Deleting user with ID:", userId);
+    // Implement your delete logic here
+    setDeleteDialogOpen(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditDialogOpen(false);
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
   };
 
   return (
@@ -45,24 +58,38 @@ export default function Actions({ user }: ActionsProps) {
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
-              setDialogOpen(true);
+              setEditDialogOpen(true);
             }}
           >
             Edit user
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-red-600">
+          <DropdownMenuItem
+            className="text-red-600"
+            onSelect={(e) => {
+              e.preventDefault();
+              setDeleteDialogOpen(true);
+            }}
+          >
             Delete user
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       <EditUserModal
-        dialogOpen={dialogOpen}
-        setDialogOpen={setDialogOpen}
+        dialogOpen={editDialogOpen}
+        setDialogOpen={setEditDialogOpen}
         user={user}
         onSave={handleSaveUser}
-        onCancel={handleCancel}
+        onCancel={handleCancelEdit}
+      />
+
+      <DeleteUserModal
+        dialogOpen={deleteDialogOpen}
+        setDialogOpen={setDeleteDialogOpen}
+        user={user}
+        onDelete={handleDeleteUser}
+        onCancel={handleCancelDelete}
       />
     </>
   );

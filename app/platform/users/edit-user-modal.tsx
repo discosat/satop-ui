@@ -45,7 +45,7 @@ interface EditUserModalProps {
   onCancel?: () => void;
 }
 
-export default function EditUserModal({
+export function EditUserModal({
   user,
   dialogOpen,
   setDialogOpen,

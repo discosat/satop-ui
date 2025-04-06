@@ -88,7 +88,7 @@ export default function UsersTable({ filteredUsers }: UsersTableProps) {
                 </TableCell>
                 <TableCell>
                   {/*Todo add User to actions*/}
-                  <Actions />
+                  {user && <Actions user={user} />}
                 </TableCell>
               </TableRow>
             ))
