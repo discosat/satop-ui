@@ -1,11 +1,13 @@
 "use client";
 
 import type React from "react";
-
 import { useState, useRef, useEffect } from "react";
-import { X, Minus, Square } from "lucide-react";
+import { X, Minus, Square, Command, ChevronRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { Card, CardFooter, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 export default function Terminal() {
   const [input, setInput] = useState("");
@@ -147,53 +149,57 @@ export default function Terminal() {
   };
 
   return (
-    <div
-      className="w-full max-w-3xl mx-auto h-[500px] rounded-lg overflow-hidden border border-purple-800 shadow-lg bg-[#1a1a1a] text-white font-mono"
+    <Card
+      className="w-full h-[calc(100vh-200px)] flex flex-col mx-auto overflow-hidden"
       onClick={focusInput}
     >
-      {/* Terminal Header */}
-      <div className="flex items-center justify-between px-4 py-2 bg-[#2d2d2d] border-b border-purple-800">
-        <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 rounded-full bg-red-500"></div>
-          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+      <CardHeader className="p-2 border-b bg-muted/50">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+          </div>
+          <div className="text-sm text-muted-foreground">Terminal — zsh</div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-5 w-5 text-muted-foreground hover:text-foreground"
+            >
+              <Minus className="h-3 w-3" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-5 w-5 text-muted-foreground hover:text-foreground"
+            >
+              <Square className="h-3 w-3" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-5 w-5 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
-        <div className="text-sm text-gray-400">Terminal — zsh</div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-5 w-5 text-gray-400 hover:text-white"
-          >
-            <Minus className="h-3 w-3" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-5 w-5 text-gray-400 hover:text-white"
-          >
-            <Square className="h-3 w-3" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-5 w-5 text-gray-400 hover:text-white"
-          >
-            <X className="h-3 w-3" />
-          </Button>
-        </div>
-      </div>
+      </CardHeader>
 
-      {/* Terminal Content */}
-      <ScrollArea className="h-[calc(100%-40px)]" ref={scrollAreaRef}>
+      <ScrollArea
+        className="h-[calc(100%-40px)] bg-background"
+        ref={scrollAreaRef}
+      >
         <div className="p-4 min-h-full">
-          {/* Command History */}
           <div className="whitespace-pre-wrap">
             {history.map((line, i) => (
               <div
                 key={i}
                 className={
-                  line.includes(" % ") ? "text-purple-300" : "text-gray-300"
+                  line.includes(" % ")
+                    ? "text-primary"
+                    : "text-muted-foreground"
                 }
               >
                 {line}
@@ -201,19 +207,18 @@ export default function Terminal() {
             ))}
           </div>
 
-          {/* Current Input Line */}
           <form onSubmit={handleSubmit} className="flex items-center mt-1">
-            <span className="text-purple-300">
+            <span className="text-primary">
               {username}@{hostname} {currentDirectory} %
             </span>
-            <span className="ml-2 text-purple-100 flex-grow">
-              <input
+            <span className="ml-2 text-foreground flex-grow">
+              <Input
                 ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="bg-transparent border-none outline-none w-full text-purple-100"
+                className="bg-transparent border-none outline-none w-full text-foreground px-1 h-auto"
                 autoFocus
                 autoComplete="off"
                 spellCheck="false"
@@ -222,6 +227,27 @@ export default function Terminal() {
           </form>
         </div>
       </ScrollArea>
-    </div>
+      <CardFooter className="h-6 p-0 bg-muted/80 text-xs border-t">
+        <div className="w-full flex justify-between items-center px-2">
+          <div className="flex items-center">
+            <Badge
+              variant="outline"
+              className="h-5 px-1 mr-2 border-primary/50"
+            >
+              <Command className="h-3 w-3 mr-1" />
+              <span>{currentDirectory}</span>
+            </Badge>
+            <span className="text-muted-foreground">
+              {username}@{hostname}
+            </span>
+          </div>
+          <div className="flex items-center text-muted-foreground">
+            <span className="mr-2">utf-8</span>
+            <ChevronRight className="h-3 w-3" />
+            <span className="ml-2">{history.length} lines</span>
+          </div>
+        </div>
+      </CardFooter>
+    </Card>
   );
 }

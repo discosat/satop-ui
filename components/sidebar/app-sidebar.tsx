@@ -1,7 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { House, SatelliteDish, SquareTerminal, User } from "lucide-react";
+import {
+  House,
+  Notebook,
+  Satellite,
+  SatelliteDish,
+  SquareTerminal,
+  User,
+} from "lucide-react";
 import Image from "next/image";
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavUser } from "@/components/sidebar/nav-user";
@@ -33,13 +40,19 @@ const data = {
     {
       title: "Satellite Overpass",
       url: "/platform/satellite-overpass",
-      icon: SatelliteDish,
+      icon: Satellite,
       isActive: true,
     },
     {
       title: "Flight planning",
       url: "/platform/flight",
       scope: "fp",
+      icon: Notebook,
+      isActive: true,
+    },
+    {
+      title: "Terminal",
+      url: "/platform/terminal",
       icon: SquareTerminal,
       isActive: true,
     },
