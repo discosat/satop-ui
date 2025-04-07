@@ -20,7 +20,7 @@ export default async function LoginPage() {
         <div className="text-center space-y-4">
           <div className="flex justify-center items-center my-12">
             <Image
-              src="/logo.png"
+              src="/assets/logo.png"
               width={96}
               height={96}
               className="drop-shadow-[0_0_15px_rgba(216,180,254,0.6)]"

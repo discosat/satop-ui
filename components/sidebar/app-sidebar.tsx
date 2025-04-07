@@ -80,7 +80,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton size="lg" className="">
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg text-sidebar-primary-foreground">
                 <Image
-                  src="/logo.png"
+                  src="/assets/logo.png"
                   width={96}
                   height={96}
                   className=""
