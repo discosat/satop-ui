@@ -18,7 +18,7 @@ import { ApplicationsTable } from "./applications-table";
 import { RefreshButton } from "@/components/refresh-button";
 
 // Types
-export type UserRole = "viewer" | "scientist" | "admin" | "ground station";
+export type UserRole = "viewer" | "Operator" | "scientist" | "admin" | "ground station";
 export type UserType = "machine" | "human";
 
 export interface User {
