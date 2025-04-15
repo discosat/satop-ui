@@ -8,6 +8,9 @@ export async function GET() {
   });
 }
 
+// FORCED for github pages
+export const dynamic = "force-static";
+
 interface WAYFPayload extends JWTPayload {
   displayName: string[];
   eduPersonPrimaryAffiliation: string[];
