@@ -1,4 +1,4 @@
-import BlockProgramming from "@/app/platform/flight/block2";
+import BlockProgramming from "@/app/platform/flight/block";
 import { ReactFlowProvider } from "@xyflow/react";
 
 export default function Page() {

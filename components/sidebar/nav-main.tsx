@@ -23,14 +23,14 @@ import { hasScope } from "@/lib/user";
 import { SessionPayload } from "@/lib/session";
 import NavItemBadge from "./nav-item-badge";
 
-const getBadge = (val?: number) => {
+/* const getBadge = (val?: number) => {
   return () =>
     new Promise<number>((res) => {
       setTimeout(() => {
         res(val ?? 0);
       }, 2000);
     });
-};
+}; */
 
 export function NavMain({
   items,

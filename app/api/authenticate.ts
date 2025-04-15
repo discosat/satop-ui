@@ -1,8 +1,9 @@
-import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+/* import { cookies } from "next/headers";
+import { NextResponse } from "next/server"; */
 
-export async function POST(request: Request) {
-  const store = await cookies();
+// 🤬 I need to have shit compile
+export async function POST(/* request: Request */) {
+/*   const store = await cookies();
   store.set("");
-  const res = NextResponse.co();
+  const res = NextResponse.co(); */
 }
