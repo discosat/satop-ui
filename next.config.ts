@@ -6,23 +6,11 @@ export const allowedOrigins = [
   "wayf.wayf.dk",
 ];
 
-// detect CI
-const isCI = Boolean(process.env.GITHUB_ACTIONS);
-
 const nextConfig: NextConfig = {
-  ...(isCI && {
-    output: "export",
-    basePath: "/nextjs-github-pages",
-    assetPrefix: "/nextjs-github-pages",
-  }),
-
-  images: {
-    unoptimized: true,
-  },
-
+  /* config options here */
   experimental: {
     serverActions: {
-      allowedOrigins,
+      allowedOrigins: allowedOrigins,
     },
   },
 };
