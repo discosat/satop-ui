@@ -1,4 +1,5 @@
 "use client";
+import * as React from "react";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import {
   Breadcrumb,
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 export default function DashboardLayout({
   children,
@@ -24,21 +26,35 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
 
-  // Extract the current subroute from the pathname
-  const getSubroute = () => {
-    if (!pathname) return "Dashboard";
+  // Generate breadcrumb items from pathname
+  const getBreadcrumbs = () => {
+    if (!pathname)
+      return [{ label: "Platform", href: "/platform", current: true }];
 
-    // Split the path and get the last segment
+    // Split the path and filter out empty segments
     const segments = pathname.split("/").filter(Boolean);
-    if (segments.length === 0) return "Dashboard";
 
-    // Format the last segment by capitalizing first letter and replacing dashes/underscores with spaces
-    const lastSegment = segments[segments.length - 1];
-    return lastSegment
-      .split(/[-_]/)
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(" ");
+    // Create breadcrumb items from path segments
+    return segments.map((segment, index) => {
+      // Build the href for this breadcrumb level
+      const href = `/${segments.slice(0, index + 1).join("/")}`;
+
+      // Check if this is the last segment (current page)
+      const isCurrent = index === segments.length - 1;
+
+      // Format label - capitalize first letter and replace dashes with spaces
+      const label = segment
+        .split(/[-_]/)
+        .map(
+          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        )
+        .join(" ");
+
+      return { label, href, current: isCurrent };
+    });
   };
+
+  const breadcrumbs = getBreadcrumbs();
 
   return (
     <TooltipProvider>
@@ -51,13 +67,22 @@ export default function DashboardLayout({
               <Separator orientation="vertical" className="mr-2 h-4" />
               <Breadcrumb>
                 <BreadcrumbList>
-                  <BreadcrumbItem className="hidden md:block">
-                    <BreadcrumbLink href="#">Platform</BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator className="hidden md:block" />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>{getSubroute()}</BreadcrumbPage>
-                  </BreadcrumbItem>
+                  {breadcrumbs.map((crumb, index) => (
+                    <React.Fragment key={crumb.href}>
+                      <BreadcrumbItem>
+                        {crumb.current ? (
+                          <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                        ) : (
+                          <BreadcrumbLink asChild>
+                            <Link href={crumb.href}>{crumb.label}</Link>
+                          </BreadcrumbLink>
+                        )}
+                      </BreadcrumbItem>
+                      {index < breadcrumbs.length - 1 && (
+                        <BreadcrumbSeparator />
+                      )}
+                    </React.Fragment>
+                  ))}
                 </BreadcrumbList>
               </Breadcrumb>
             </div>

@@ -12,6 +12,7 @@
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
     "@monaco-editor/react": "^4.7.0",
+    "@radix-ui/react-alert-dialog": "^1.1.11",
     "@radix-ui/react-avatar": "^1.1.3",
     "@radix-ui/react-collapsible": "^1.1.3",
     "@radix-ui/react-dialog": "^1.1.6",
@@ -39,6 +40,7 @@
     "react-map-gl": "^8.0.2",
     "react-sat-map": "^0.4.2",
     "satellite.js": "^5.0.0",
+    "sonner": "^2.0.3",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.24.2"

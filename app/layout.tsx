@@ -4,6 +4,7 @@ import "./globals.css";
 import { me } from "./actions/me";
 import SessionProvider from "./providers/session-context-provider";
 import { ThemeProvider } from "@/app/providers/theme-provider";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,6 +40,7 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <SessionProvider payload={user}>{children}</SessionProvider>
+          <Toaster position="top-right" />
         </ThemeProvider>
       </body>
     </html>

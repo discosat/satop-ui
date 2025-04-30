@@ -1,9 +1,6 @@
 import { allowedOrigins } from "@/next.config";
 import { NextRequest, NextResponse } from "next/server";
 
-// FORCED for github pages
-export const dynamic = "force-static";
-
 export function GET(req: NextRequest) {
   return handle(req);
 }
