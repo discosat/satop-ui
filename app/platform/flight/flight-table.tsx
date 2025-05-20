@@ -15,9 +15,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-// Define FlightPlan interface based on the Python code model
 export interface FlightPlan {
   id: string;
   flight_plan: {
@@ -38,6 +37,17 @@ export default function FlightPlansTable({
   flightPlans,
 }: FlightPlansTableProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const query = searchParams.get("query");
+
+  const filteredPlans = query
+    ? flightPlans.filter(
+        (plan) =>
+          plan.flight_plan.name.toLowerCase().includes(query!.toLowerCase()) ||
+          plan.sat_name.toLowerCase().includes(query!.toLowerCase()) ||
+          plan.gs_id.toLowerCase().includes(query!.toLowerCase())
+      )
+    : flightPlans;
 
   // Format datetime for display
   const formatDate = (dateStr: string) => {
@@ -91,7 +101,7 @@ export default function FlightPlansTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {flightPlans.length === 0 ? (
+          {filteredPlans.length === 0 ? (
             <TableRow>
               <TableCell
                 colSpan={6}
@@ -101,7 +111,7 @@ export default function FlightPlansTable({
               </TableCell>
             </TableRow>
           ) : (
-            flightPlans.map((plan) => (
+            filteredPlans.map((plan) => (
               <TableRow
                 key={plan.id}
                 className="cursor-pointer hover:bg-muted/50"

@@ -1,4 +1,3 @@
-"use client";
 import {
   Card,
   CardContent,
@@ -7,13 +6,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import FlightPlansTable from "./flight-table";
-import { mockFlightPlans } from "./mock";
-import { RefreshButton } from "@/components/refresh-button";
-import { Input } from "@/components/ui/input";
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getFlightPlans } from "@/app/api/platform/flight/flight-plan-service";
+import { ServerRefreshButton } from "./server-refresh-button";
+import { SearchForm } from "./search-form";
 
-export default function Page() {
+export default async function Page({
+
+  
+}) {
+  const flightPlans = await getFlightPlans();
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -22,9 +26,6 @@ export default function Page() {
           <Plus className="mr-2 h-4 w-4" />
           Create new plan
         </Button>
-      </div>
-      <div className="flex flex-col">
-        <span>Goddag Radu jeg har været en git terrorist igen :)</span>
       </div>
 
       <Card>
@@ -36,43 +37,14 @@ export default function Page() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-between mb-4">
-            <div className="relative w-64">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search plans..." className="pl-8" />
-            </div>
-            <RefreshButton onClick={() => {}} />
+          <div className="flex justify-between mb-4 mt-2">
+            <SearchForm />
+            <ServerRefreshButton />
           </div>
 
-          <FlightPlansTable flightPlans={mockFlightPlans} />
+          <FlightPlansTable flightPlans={flightPlans} />
         </CardContent>
       </Card>
-
-      {/*  <div className="w-full">
-        <Tabs defaultValue="Scheduled">
-          <TabsList className="grid w-full lg:w-80 grid-cols-2">
-            <TabsTrigger value="Scheduled">Scheduled</TabsTrigger>
-            <TabsTrigger value="Create New">Create New</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="Scheduled" className="mt-6">
-            <Card>
-              <CardHeader className="pb-1">
-                <CardTitle>Scheduled Flight Plans</CardTitle>
-                <CardDescription>
-                  View, update and approve pending satellite command sequences
-                  awaiting transmission.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>hello other content</CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="Create New" className="mt-6">
-            <FlightPlanner />
-          </TabsContent>
-        </Tabs>
-      </div> */}
     </div>
   );
 }

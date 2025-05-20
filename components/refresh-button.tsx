@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils"; // Assuming you have this utility
 
 interface RefreshButtonProps {
-  onClick: () => void | Promise<void>;
+  onClick?: () => void | Promise<void>;
   duration?: number; // How long to show the animation in ms
   className?: string;
   variant?:
@@ -18,15 +18,17 @@ interface RefreshButtonProps {
     | "link";
   size?: "default" | "sm" | "lg" | "icon";
   title?: string;
+  
 }
 
 export function RefreshButton({
-  onClick,
+  onClick = () => {},
   duration = 750, // Default animation duration
   className,
   variant = "ghost",
   size = "icon",
   title = "Refresh",
+  
 }: RefreshButtonProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
