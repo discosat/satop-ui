@@ -83,7 +83,7 @@ export const CreateFlightPlanModal = () => {
   }, [open, form]);
 
   // Form submission handler
-  const onSubmit = async (values) => {
+  const onSubmit = async (values: z.output<typeof formSchema>) => {
     try {
       console.log("Submitting flight plan:", values);
       

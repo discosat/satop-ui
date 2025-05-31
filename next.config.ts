@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
       allowedOrigins: allowedOrigins,
     },
   },
+  output: "standalone"
 };
 
 export default nextConfig;
