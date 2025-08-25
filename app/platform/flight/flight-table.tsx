@@ -97,7 +97,6 @@ export default function FlightPlansTable({
             <TableHead>Ground Station</TableHead>
             <TableHead>Scheduled Time</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="w-[80px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -151,10 +150,6 @@ export default function FlightPlansTable({
                   </div>
                 </TableCell>
                 <TableCell>{getStatusBadge(plan.status)}</TableCell>
-                <TableCell>
-                  {/* <Actions  /> */}
-                  Actions will be here:)
-                </TableCell>
               </TableRow>
             ))
           )}

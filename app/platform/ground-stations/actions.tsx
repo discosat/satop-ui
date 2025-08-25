@@ -5,11 +5,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
 import { EditGroundStationModal } from "./edit-ground-station-modal";
@@ -28,16 +27,15 @@ export function GroundStationActions({ station }: { station: GroundStation }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setEditOpen(true)}>
-            <Pencil className="mr-2 h-4 w-4" /> Edit ground station
+            Edit ground station
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => setDeleteOpen(true)}
             className="text-red-600"
           >
-            <Trash className="mr-2 h-4 w-4" /> Delete ground station
+            Delete ground station
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
