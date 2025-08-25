@@ -6,7 +6,7 @@ import {
   Notebook,
   Satellite,
   SatelliteDish,
-  SquareTerminal,
+  /* SquareTerminal, */
   User,
 } from "lucide-react";
 import Image from "next/image";
@@ -30,7 +30,7 @@ const data = {
     email: "202007814@post.au.dk",
     avatar: "martin.jpeg",
   },
-  navMain: [
+  platform: [
     {
       title: "Home",
       url: "/platform",
@@ -50,12 +50,14 @@ const data = {
       icon: Notebook,
       isActive: true,
     },
-    {
+    /* {
       title: "Terminal",
       url: "/platform/terminal",
       icon: SquareTerminal,
       isActive: true,
-    },
+    }, */
+  ],
+  administration: [
     {
       title: "Ground stations",
       url: "/platform/ground-stations",
@@ -97,7 +99,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={data.platform} groupLabel="Platform" />
+        <NavMain items={data.administration} groupLabel="Administration" />
       </SidebarContent>
 
       <SidebarFooter>

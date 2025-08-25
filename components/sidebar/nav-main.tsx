@@ -23,17 +23,9 @@ import { hasScope } from "@/lib/user";
 import { SessionPayload } from "@/lib/session";
 import NavItemBadge from "./nav-item-badge";
 
-/* const getBadge = (val?: number) => {
-  return () =>
-    new Promise<number>((res) => {
-      setTimeout(() => {
-        res(val ?? 0);
-      }, 2000);
-    });
-}; */
-
 export function NavMain({
   items,
+  groupLabel = "Platform",
 }: {
   items: {
     title: string;
@@ -48,11 +40,12 @@ export function NavMain({
       scope?: string;
     }[];
   }[];
+  groupLabel?: string;
 }) {
   const session = useSession();
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarGroupLabel>{groupLabel}</SidebarGroupLabel>
       <SidebarMenu>
         {allowedItems(session, items).map((item) => (
           <Collapsible key={item.title} asChild defaultOpen={item.isActive}>
@@ -94,17 +87,11 @@ export function NavMain({
     </SidebarGroup>
   );
 }
-
 function allowedItems<T extends { scope?: string }>(
   session: SessionPayload | null,
   items: T[]
 ) {
   return items.filter(({ scope }) => {
-    console.log({
-      scope,
-      session,
-      has: hasScope(session, scope ?? ""),
-    });
     return !scope || hasScope(session, scope);
   });
 }
