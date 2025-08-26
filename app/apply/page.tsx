@@ -19,7 +19,7 @@ export default async function Apply() {
       <div className="absolute inset-0 bg-black opacity-30"></div>
       <Starfield />
       <ParticleBackground />
-      <div className="z-10 w-full max-w-md p-8 space-y-8 bg-space-card rounded-lg backdrop-blur-sm backdrop-filter border border-space-border shadow-space">
+      <div className="z-10 w-full max-w-md p-8 space-y-8 bg-space-card rounded-lg backdrop-blur-xs backdrop-filter border border-space-border shadow-space">
         <div className="text-center space-y-4">
           <div className="flex justify-center items-center my-12">
             <Image

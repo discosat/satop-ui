@@ -43,7 +43,7 @@ export function DeleteUserModal({
         <div className="py-4">
           <div className="rounded-md bg-red-200 p-4">
             <div className="flex">
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <svg
                   className="h-5 w-5 text-red-600"
                   viewBox="0 0 20 20"

@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  EllipsisIcon,
-  KeySquare,
-  LogOut,
-  Moon,
-  Sun,
-  UserCog,
-} from "lucide-react";
+import { EllipsisIcon, LogOut, Moon, Sun } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -65,7 +58,7 @@ export function NavUser({}: {
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
@@ -84,18 +77,10 @@ export function NavUser({}: {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <KeySquare />
-                Permissions
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <UserCog />
-                Edit profile
-              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setTheme(theme === "light" ? "dark" : "light")}
               >
-                <Sun className="h-[1.5rem] w-[1.3rem] dark:hidden" />
+                <Sun className="h-6 w-[1.3rem] dark:hidden" />
                 <Moon className="hidden h-5 w-5 dark:block" />
                 <span>Toggle theme</span>
               </DropdownMenuItem>

@@ -216,7 +216,7 @@ function MapSkeleton() {
         </div>
       </div>
       <div className="absolute top-4 right-4 z-10">
-        <div className="bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-lg w-64 h-64 animate-pulse">
+        <div className="bg-white/80 backdrop-blur-xs p-4 rounded-lg shadow-lg w-64 h-64 animate-pulse">
           <div className="h-6 w-36 bg-gray-300 rounded mb-4"></div>
           <div className="space-y-3">
             <div className="h-4 w-full bg-gray-300 rounded"></div>

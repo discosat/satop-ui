@@ -12,13 +12,14 @@ interface RefreshButtonProps {
   variant?:
     | "default"
     | "destructive"
-    | "outline"
     | "secondary"
     | "ghost"
-    | "link";
+    | "link"
+    | "outline"
+    | null;
+
   size?: "default" | "sm" | "lg" | "icon";
   title?: string;
-  
 }
 
 export function RefreshButton({
@@ -28,7 +29,6 @@ export function RefreshButton({
   variant = "ghost",
   size = "icon",
   title = "Refresh",
-  
 }: RefreshButtonProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
 

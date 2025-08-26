@@ -211,14 +211,14 @@ export default function Terminal() {
             <span className="text-primary">
               {username}@{hostname} {currentDirectory} %
             </span>
-            <span className="ml-2 text-foreground flex-grow">
+            <span className="ml-2 text-foreground grow">
               <Input
                 ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="bg-transparent border-none outline-none w-full text-foreground px-1 h-auto"
+                className="bg-transparent border-none outline-hidden w-full text-foreground px-1 h-auto"
                 autoFocus
                 autoComplete="off"
                 spellCheck="false"

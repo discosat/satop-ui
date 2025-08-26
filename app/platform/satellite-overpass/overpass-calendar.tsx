@@ -200,10 +200,10 @@ export function OverpassCalendar({ satellites }: OverpassCalendarProps) {
   // Determine badge variant based on elevation
   const getElevationVariant = (
     elevation: number
-  ): "default" | "secondary" | "outline" => {
+  ): "default" | "secondary" | "outline-solid" => {
     if (elevation > 45) return "default";
     if (elevation > 25) return "secondary";
-    return "outline";
+    return "outline-solid";
   };
 
   const renderContent = () => {

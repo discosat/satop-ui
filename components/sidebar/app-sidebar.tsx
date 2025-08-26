@@ -1,15 +1,8 @@
 "use client";
 
 import * as React from "react";
-import {
-  House,
-  Notebook,
-  Satellite,
-  SatelliteDish,
-  /* SquareTerminal, */
-  User,
-} from "lucide-react";
-import Image from "next/image";
+import { House, Notebook, Satellite, SatelliteDish, User } from "lucide-react";
+
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavUser } from "@/components/sidebar/nav-user";
 import {
@@ -17,11 +10,9 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { Navheader } from "./nav-header";
 
 // This is sample data.
 const data = {
@@ -77,25 +68,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" className="">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg text-sidebar-primary-foreground">
-                <Image
-                  src="/assets/logo.png"
-                  width={96}
-                  height={96}
-                  className=""
-                  alt="Mission Control Logo"
-                />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">Discosat</span>
-                <span className="truncate text-xs">Operations</span>
-              </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <Navheader />
       </SidebarHeader>
 
       <SidebarContent>
