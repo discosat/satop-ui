@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, CheckCircle, XCircle } from "lucide-react";
 import FlightPlanner from "../flight-planner";
-import { mockFlightPlans } from "../mock";
 import {
   Card,
   CardContent,
@@ -24,7 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
+import { getFlightPlanById } from "@/app/api/platform/flight/flight-plan-service";
 
 export default function FlightPlanDetailPage() {
   const params = useParams();
@@ -36,12 +35,28 @@ export default function FlightPlanDetailPage() {
   const [updatedPlanData, setUpdatedPlanData] = useState<string | null>(null);
 
   const id = typeof params.id === "string" ? params.id : "";
+  console.log(id);
 
   useEffect(() => {
-    // In a real app, you would fetch the flight plan from an API
-    // For now, we'll use the mock data
-    const plan = mockFlightPlans.find((p) => p.id === id) || null;
-    setFlightPlan(plan);
+    let isCancelled = false;
+    const load = async () => {
+      if (!id) return;
+      try {
+        const plan = await getFlightPlanById(id);
+        if (!isCancelled) {
+          setFlightPlan(plan);
+        }
+      } catch (error) {
+        console.error("Failed to load flight plan", error);
+        if (!isCancelled) {
+          setFlightPlan(null);
+        }
+      }
+    };
+    load();
+    return () => {
+      isCancelled = true;
+    };
   }, [id]);
 
   const handleBack = () => {
@@ -66,11 +81,8 @@ export default function FlightPlanDetailPage() {
             body: parsedData,
           },
         });
-
-        toast.success("Flight plan saved successfully");
       } catch (err) {
         console.error("Failed to save flight plan:", err);
-        toast.error("Failed to save flight plan: Invalid JSON");
       } finally {
         setIsLoading(false);
       }
@@ -93,7 +105,6 @@ export default function FlightPlanDetailPage() {
         status: "approved",
       });
 
-      toast.success("Flight plan approved");
       setIsLoading(false);
       setShowApproveDialog(false);
 
@@ -115,7 +126,6 @@ export default function FlightPlanDetailPage() {
         status: "rejected",
       });
 
-      toast.error("Flight plan rejected");
       setIsLoading(false);
       setShowRejectDialog(false);
 

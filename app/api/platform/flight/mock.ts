@@ -1,6 +1,4 @@
-"use client";
-
-import { FlightPlan } from "./flight-table";
+import { FlightPlan } from "@/app/platform/flight/flight-table";
 
 // Mock data for flight plans based on the Python backend model
 export const mockFlightPlans: FlightPlan[] = [

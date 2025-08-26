@@ -54,11 +54,13 @@ const blockSnippets: { label: string; json: object; colorClass: string }[] = [
 interface FlightPlannerProps {
   initialData?: FlightPlan;
   onSave?: (data: string) => void;
+  onChange?: (data: string) => void;
 }
 
 export default function FlightPlanner({
   initialData,
   onSave,
+  onChange,
 }: FlightPlannerProps) {
   const [data, setData] = useState<string>("[]");
 
@@ -69,6 +71,12 @@ export default function FlightPlanner({
       setData("[]");
     }
   }, [initialData]);
+
+  useEffect(() => {
+    if (onChange) {
+      onChange(data);
+    }
+  }, [data, onChange]);
 
   const insertSnippet = (snippet: object) => {
     let arr: object[];
@@ -106,17 +114,18 @@ export default function FlightPlanner({
             <Button
               key={label}
               className={`${colorClass}`}
+              type="button"
               onClick={() => insertSnippet(json)}
             >
               {label}
             </Button>
           ))}
-          <Button variant="destructive" onClick={clearContent}>
+          <Button variant="destructive" type="button" onClick={clearContent}>
             <Trash2 className="w-4 h-4 mr-2" />
             Clear
           </Button>
           {onSave && (
-            <Button variant="default" onClick={handleSave}>
+            <Button variant="default" type="button" onClick={handleSave}>
               <Save className="w-4 h-4 mr-2" />
               Save
             </Button>
@@ -171,6 +180,7 @@ export default function FlightPlanner({
               size="icon"
               variant="ghost"
               className="absolute top-2 right-2"
+              type="button"
               onClick={copyContent}
             >
               <Copy className="w-4 h-4" />

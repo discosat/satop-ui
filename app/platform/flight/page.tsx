@@ -9,8 +9,8 @@ import FlightPlansTable from "./flight-table";
 import { getFlightPlans } from "@/app/api/platform/flight/flight-plan-service";
 import { ServerRefreshButton } from "./server-refresh-button";
 import { SearchForm } from "./search-form";
-import {CreateFlightPlanModal} from "./create-flight-plan";
-
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default async function Page({}) {
   const flightPlans = await getFlightPlans();
@@ -19,8 +19,9 @@ export default async function Page({}) {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Flight planning</h1>
-        
-        <CreateFlightPlanModal/>
+        <Link href="/platform/flight/new">
+          <Button>Create new plan</Button>
+        </Link>
       </div>
 
       <Card>
