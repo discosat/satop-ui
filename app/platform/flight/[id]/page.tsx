@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, CheckCircle, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import FlightPlanner from "../flight-planner";
 import {
   Card,
@@ -23,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getFlightPlanById } from "@/app/api/platform/flight/flight-plan-service";
+import { getFlightPlanById, updateFlightPlan, approveFlightPlan } from "@/app/api/platform/flight/flight-plan-service";
 
 export default function FlightPlanDetailPage() {
   const params = useParams();
@@ -63,77 +64,114 @@ export default function FlightPlanDetailPage() {
     router.back();
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!flightPlan || !updatedPlanData) return;
 
     setIsLoading(true);
-    // Simulate API call to save the updated flight plan
-    setTimeout(() => {
+    try {
+      // Parse the updated flight plan data
+      let parsedData;
       try {
-        // Parse the updated flight plan data
-        const parsedData = JSON.parse(updatedPlanData);
-
-        // Update the local state with the new data
-        setFlightPlan({
-          ...flightPlan,
-          flight_plan: {
-            ...flightPlan.flight_plan,
-            body: parsedData,
-          },
-        });
-      } catch (err) {
-        console.error("Failed to save flight plan:", err);
-      } finally {
-        setIsLoading(false);
+        parsedData = JSON.parse(updatedPlanData);
+      } catch {
+        throw new Error("Invalid JSON format in flight plan data");
       }
-    }, 1000);
+
+      // Create updated flight plan object
+      const updatedFlightPlan: FlightPlan = {
+        ...flightPlan,
+        flight_plan: {
+          ...flightPlan.flight_plan,
+          body: parsedData,
+        },
+      };
+
+      // Call the API to update the flight plan
+      const result = await updateFlightPlan(updatedFlightPlan);
+      
+      if (result) {
+        // Update the local state with the returned data
+        setFlightPlan(result);
+        setUpdatedPlanData(null); // Clear the pending changes
+        toast.success("Flight plan updated successfully");
+      } else {
+        throw new Error("Failed to update flight plan");
+      }
+    } catch (err) {
+      console.error("Failed to save flight plan:", err);
+      const message = err instanceof Error ? err.message : "Failed to save flight plan";
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleFlightPlannerSave = (data: string) => {
     setUpdatedPlanData(data);
-    handleSave();
   };
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     if (!flightPlan) return;
 
     setIsLoading(true);
-    // Simulate API call to approve the flight plan
-    setTimeout(() => {
-      setFlightPlan({
-        ...flightPlan,
-        status: "approved",
-      });
-
-      setIsLoading(false);
+    try {
+      const success = await approveFlightPlan(flightPlan.id, true);
+      
+      if (success) {
+        setFlightPlan({
+          ...flightPlan,
+          status: "approved",
+        });
+        setShowApproveDialog(false);
+        toast.success("Flight plan approved successfully");
+        
+        // Navigate back after a short delay
+        setTimeout(() => {
+          router.back();
+        }, 1500);
+      } else {
+        throw new Error("Failed to approve flight plan");
+      }
+    } catch (err) {
+      console.error("Failed to approve flight plan:", err);
+      const message = err instanceof Error ? err.message : "Failed to approve flight plan";
+      toast.error(message);
       setShowApproveDialog(false);
-
-      // Navigate back after a short delay
-      setTimeout(() => {
-        router.back();
-      }, 1500);
-    }, 1000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!flightPlan) return;
 
     setIsLoading(true);
-    // Simulate API call to reject the flight plan
-    setTimeout(() => {
-      setFlightPlan({
-        ...flightPlan,
-        status: "rejected",
-      });
-
-      setIsLoading(false);
+    try {
+      const success = await approveFlightPlan(flightPlan.id, false);
+      
+      if (success) {
+        setFlightPlan({
+          ...flightPlan,
+          status: "rejected",
+        });
+        setShowRejectDialog(false);
+        toast.success("Flight plan rejected successfully");
+        
+        // Navigate back after a short delay
+        setTimeout(() => {
+          router.back();
+        }, 1500);
+      } else {
+        throw new Error("Failed to reject flight plan");
+      }
+    } catch (err) {
+      console.error("Failed to reject flight plan:", err);
+      const message = err instanceof Error ? err.message : "Failed to reject flight plan";
+      toast.error(message);
       setShowRejectDialog(false);
-
-      // Navigate back after a short delay
-      setTimeout(() => {
-        router.back();
-      }, 1500);
-    }, 1000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!flightPlan) {
@@ -163,8 +201,6 @@ export default function FlightPlanDetailPage() {
           </h1>
         </div>
         <div className="flex gap-2">
-          {flightPlan.status === "pending" && (
-            <>
               <Button
                 variant="outline"
                 onClick={() => setShowRejectDialog(true)}
@@ -179,8 +215,6 @@ export default function FlightPlanDetailPage() {
                 <CheckCircle className="mr-2 h-4 w-4" />
                 Approve
               </Button>
-            </>
-          )}
           <Button onClick={handleSave} disabled={isLoading || !updatedPlanData}>
             <Save className="mr-2 h-4 w-4" />
             Save Changes

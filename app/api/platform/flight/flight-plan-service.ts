@@ -101,3 +101,68 @@ export async function createFlightPlan(flightPlan: FlightPlan): Promise<FlightPl
     throw error;
   }
 }
+
+export async function updateFlightPlan(flightPlan: FlightPlan): Promise<FlightPlan | null> {
+  if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
+    const index = mockFlightPlans.findIndex((p) => p.id === flightPlan.id);
+    if (index !== -1) {
+      mockFlightPlans[index] = flightPlan;
+      return flightPlan;
+    }
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/update/${flightPlan.id}`, {
+      method: 'PUT',
+      headers: {
+        authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(flightPlan),
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      throw new Error(`Failed to update flight plan (${response.status}): ${response.statusText} ${text}`.trim());
+    }
+
+    const data = await response.json();
+    return data 
+  } catch (error) {
+    console.error('Error updating flight plan:', error);
+    return null;
+  }
+}
+
+export async function approveFlightPlan(id: string, approved: boolean): Promise<boolean> {
+  if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
+    const index = mockFlightPlans.findIndex((p) => p.id === id);
+    if (index !== -1) {
+      mockFlightPlans[index].status = approved ? 'approved' : 'rejected';
+      return true;
+    }
+    return false;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/approve/${id}?approved=${approved}`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      throw new Error(`Failed to approve flight plan (${response.status}): ${response.statusText} ${text}`.trim());
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error approving flight plan:', error);
+    return false;
+  }
+}
