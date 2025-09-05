@@ -9,13 +9,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CalendarClock, Satellite, Radio, Clock } from "lucide-react";
+import { CalendarClock, Satellite, Radio, Clock, GitBranch } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useRouter, useSearchParams } from "next/navigation";
+
+export type FlightPlanStatus = "pending" | "approved" | "rejected" | "superseded" | "transmitted";
 
 export interface FlightPlan {
   id: string;
@@ -26,7 +28,8 @@ export interface FlightPlan {
   datetime: string;
   gs_id: string;
   sat_name: string;
-  status: "pending" | "approved" | "rejected";
+  status: FlightPlanStatus;
+  previous_plan_id?: string;
 }
 
 interface FlightPlansTableProps {
@@ -40,16 +43,17 @@ export default function FlightPlansTable({
   const searchParams = useSearchParams();
   const query = searchParams.get("query");
 
+  const activePlans = flightPlans.filter(plan => plan.status !== 'superseded');
+
   const filteredPlans = query
-    ? flightPlans.filter(
+    ? activePlans.filter(
         (plan) =>
           plan.flight_plan.name.toLowerCase().includes(query!.toLowerCase()) ||
           plan.sat_name.toLowerCase().includes(query!.toLowerCase()) ||
           plan.gs_id.toLowerCase().includes(query!.toLowerCase())
       )
-    : flightPlans;
+    : activePlans;
 
-  // Format datetime for display
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return new Intl.DateTimeFormat("en-US", {
@@ -59,7 +63,7 @@ export default function FlightPlansTable({
   };
 
   // Get status badge based on flight plan status
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: FlightPlanStatus) => {
     switch (status) {
       case "approved":
         return (
@@ -73,7 +77,13 @@ export default function FlightPlansTable({
             Rejected
           </Badge>
         );
-      default:
+      case "superseded":
+        return (
+          <Badge variant="secondary">
+            Superseded
+          </Badge>
+        );
+      default: // pending
         return (
           <Badge className="bg-yellow-200 text-yellow-800 hover:bg-yellow-200">
             Pending Approval
@@ -103,7 +113,7 @@ export default function FlightPlansTable({
           {filteredPlans.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={6}
+                colSpan={5}
                 className="text-center py-8 text-muted-foreground"
               >
                 No flight plans found
@@ -120,6 +130,17 @@ export default function FlightPlansTable({
                   <div className="flex items-center gap-2">
                     <CalendarClock className="w-4 h-4 text-muted-foreground" />
                     {plan.flight_plan.name || "Command Sequence"}
+                    {/* NEW: Add a visual indicator for versioned plans */}
+                    {plan.previous_plan_id && (
+                       <Tooltip>
+                         <TooltipTrigger>
+                           <GitBranch className="w-3 h-3 text-muted-foreground" />
+                         </TooltipTrigger>
+                         <TooltipContent>
+                           <p>This is a new version of another plan.</p>
+                         </TooltipContent>
+                       </Tooltip>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>

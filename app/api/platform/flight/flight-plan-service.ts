@@ -5,6 +5,11 @@ import { randomUUID } from "crypto";
 const API_URL = 'http://localhost:7889/api/plugins/scheduling'
 const token = 'steve;user,admin,test'
 
+export interface ApprovalResult {
+  success: boolean;
+  message: string;
+}
+
 export async function getFlightPlans(): Promise<FlightPlan[]> {
   try {
     if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
@@ -111,8 +116,17 @@ export async function updateFlightPlan(flightPlan: FlightPlan): Promise<FlightPl
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
     const index = mockFlightPlans.findIndex((p) => p.id === flightPlan.id);
     if (index !== -1) {
-      mockFlightPlans[index] = flightPlan;
-      return flightPlan;
+      mockFlightPlans[index].status = 'superseded';
+
+      const newVersion: FlightPlan = {
+        ...flightPlan,
+        id: randomUUID(),
+        status: 'pending',
+        previous_plan_id: flightPlan.id,
+      };
+      
+      mockFlightPlans.unshift(newVersion);
+      return newVersion;
     }
     return null;
   }
@@ -137,18 +151,18 @@ export async function updateFlightPlan(flightPlan: FlightPlan): Promise<FlightPl
     return data 
   } catch (error) {
     console.error('Error updating flight plan:', error);
-    return null;
+    throw error;
   }
 }
 
-export async function approveFlightPlan(id: string, approved: boolean): Promise<boolean> {
+export async function approveFlightPlan(id: string, approved: boolean): Promise<ApprovalResult> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
     const index = mockFlightPlans.findIndex((p) => p.id === id);
     if (index !== -1) {
       mockFlightPlans[index].status = approved ? 'approved' : 'rejected';
-      return true;
+      return { success: true, message: `Mock plan ${approved ? 'approved' : 'rejected'}` };
     }
-    return false;
+    return { success: false, message: 'Mock plan not found' };
   }
 
   try {
@@ -160,14 +174,18 @@ export async function approveFlightPlan(id: string, approved: boolean): Promise<
       },
     });
 
+    const responseData = await response.json();
+
     if (!response.ok) {
-      const text = await response.text().catch(() => '');
-      throw new Error(`Failed to approve flight plan (${response.status}): ${response.statusText} ${text}`.trim());
+      const errorMessage = responseData.detail || responseData.message || 'Unknown error occurred';
+      throw new Error(`Failed to approve flight plan (${response.status}): ${errorMessage}`);
     }
 
-    return true;
+    return {
+      success: true,
+      message: responseData.message || 'Operation successful.',
+    };
   } catch (error) {
-    console.error('Error approving flight plan:', error);
-    return false;
+    throw error;
   }
 }

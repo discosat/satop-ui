@@ -2,8 +2,9 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import Link from "next/link"; 
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Save, CheckCircle, XCircle, History } from "lucide-react";
 import { toast } from "sonner";
 import FlightPlanner from "../flight-planner";
 import {
@@ -36,12 +37,12 @@ export default function FlightPlanDetailPage() {
   const [updatedPlanData, setUpdatedPlanData] = useState<string | null>(null);
 
   const id = typeof params.id === "string" ? params.id : "";
-  console.log(id);
 
   useEffect(() => {
     let isCancelled = false;
     const load = async () => {
       if (!id) return;
+      setIsLoading(true);
       try {
         const plan = await getFlightPlanById(id);
         if (!isCancelled) {
@@ -52,12 +53,14 @@ export default function FlightPlanDetailPage() {
         if (!isCancelled) {
           setFlightPlan(null);
         }
+      } finally {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
       }
     };
     load();
-    return () => {
-      isCancelled = true;
-    };
+    return () => { isCancelled = true; };
   }, [id]);
 
   const handleBack = () => {
@@ -66,10 +69,8 @@ export default function FlightPlanDetailPage() {
 
   const handleSave = async () => {
     if (!flightPlan || !updatedPlanData) return;
-
     setIsLoading(true);
     try {
-      // Parse the updated flight plan data
       let parsedData;
       try {
         parsedData = JSON.parse(updatedPlanData);
@@ -77,8 +78,7 @@ export default function FlightPlanDetailPage() {
         throw new Error("Invalid JSON format in flight plan data");
       }
 
-      // Create updated flight plan object
-      const updatedFlightPlan: FlightPlan = {
+      const updatedFlightPlanPayload: FlightPlan = {
         ...flightPlan,
         flight_plan: {
           ...flightPlan.flight_plan,
@@ -86,16 +86,13 @@ export default function FlightPlanDetailPage() {
         },
       };
 
-      // Call the API to update the flight plan
-      const result = await updateFlightPlan(updatedFlightPlan);
+      const newVersion = await updateFlightPlan(updatedFlightPlanPayload);
       
-      if (result) {
-        // Update the local state with the returned data
-        setFlightPlan(result);
-        setUpdatedPlanData(null); // Clear the pending changes
-        toast.success("Flight plan updated successfully");
+      if (newVersion?.id) {
+        toast.success("New flight plan version created successfully!");
+        router.push(`/platform/flight/${newVersion.id}`);
       } else {
-        throw new Error("Failed to update flight plan");
+        throw new Error("Failed to create new version. API did not return a new flight plan.");
       }
     } catch (err) {
       console.error("Failed to save flight plan:", err);
@@ -109,32 +106,23 @@ export default function FlightPlanDetailPage() {
   const handleFlightPlannerSave = (data: string) => {
     setUpdatedPlanData(data);
   };
-
+  
   const handleApprove = async () => {
     if (!flightPlan) return;
-
     setIsLoading(true);
     try {
-      const success = await approveFlightPlan(flightPlan.id, true);
+      const result = await approveFlightPlan(flightPlan.id, true);
       
-      if (success) {
-        setFlightPlan({
-          ...flightPlan,
-          status: "approved",
-        });
+      if (result.success) {
+        setFlightPlan({ ...flightPlan, status: "approved" });
         setShowApproveDialog(false);
-        toast.success("Flight plan approved successfully");
-        
-        // Navigate back after a short delay
-        setTimeout(() => {
-          router.back();
-        }, 1500);
+        toast.success(result.message);
+        setTimeout(() => router.back(), 1500);
       } else {
-        throw new Error("Failed to approve flight plan");
+        throw new Error(result.message || "Failed to approve flight plan");
       }
     } catch (err) {
-      console.error("Failed to approve flight plan:", err);
-      const message = err instanceof Error ? err.message : "Failed to approve flight plan";
+      const message = err instanceof Error ? err.message : "Approval failed";
       toast.error(message);
       setShowApproveDialog(false);
     } finally {
@@ -144,29 +132,20 @@ export default function FlightPlanDetailPage() {
 
   const handleReject = async () => {
     if (!flightPlan) return;
-
     setIsLoading(true);
     try {
-      const success = await approveFlightPlan(flightPlan.id, false);
+      const result = await approveFlightPlan(flightPlan.id, false);
       
-      if (success) {
-        setFlightPlan({
-          ...flightPlan,
-          status: "rejected",
-        });
+      if (result.success) {
+        setFlightPlan({ ...flightPlan, status: "rejected" });
         setShowRejectDialog(false);
-        toast.success("Flight plan rejected successfully");
-        
-        // Navigate back after a short delay
-        setTimeout(() => {
-          router.back();
-        }, 1500);
+        toast.success(result.message);
+        setTimeout(() => router.back(), 1500);
       } else {
-        throw new Error("Failed to reject flight plan");
+        throw new Error(result.message || "Failed to reject flight plan");
       }
     } catch (err) {
-      console.error("Failed to reject flight plan:", err);
-      const message = err instanceof Error ? err.message : "Failed to reject flight plan";
+      const message = err instanceof Error ? err.message : "Rejection failed";
       toast.error(message);
       setShowRejectDialog(false);
     } finally {
@@ -174,6 +153,10 @@ export default function FlightPlanDetailPage() {
     }
   };
 
+  if (isLoading && !flightPlan) {
+     return <div className="p-6 text-center text-muted-foreground">Loading flight plan...</div>;
+  }
+  
   if (!flightPlan) {
     return (
       <div className="p-6">
@@ -188,6 +171,8 @@ export default function FlightPlanDetailPage() {
     );
   }
 
+  const isPending = flightPlan.status === 'pending';
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -201,24 +186,26 @@ export default function FlightPlanDetailPage() {
           </h1>
         </div>
         <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowRejectDialog(true)}
-              >
-                <XCircle className="mr-2 h-4 w-4" />
-                Reject
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowApproveDialog(true)}
-              >
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Approve
-              </Button>
-          <Button onClick={handleSave} disabled={isLoading || !updatedPlanData}>
-            <Save className="mr-2 h-4 w-4" />
-            Save Changes
-          </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowRejectDialog(true)}
+              disabled={!isPending || isLoading}
+            >
+              <XCircle className="mr-2 h-4 w-4" />
+              Reject
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowApproveDialog(true)}
+              disabled={!isPending || isLoading}
+            >
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Approve
+            </Button>
+            <Button onClick={handleSave} disabled={!isPending || isLoading || !updatedPlanData}>
+              <Save className="mr-2 h-4 w-4" />
+              Save Changes
+            </Button>
         </div>
       </div>
 
@@ -233,36 +220,40 @@ export default function FlightPlanDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <p className="text-sm font-medium">Satellite</p>
-              <p className="text-sm text-muted-foreground">
-                {flightPlan.sat_name}
-              </p>
+              <p className="text-sm text-muted-foreground">{flightPlan.sat_name}</p>
             </div>
             <div>
               <p className="text-sm font-medium">Ground Station</p>
-              <p className="text-sm text-muted-foreground">
-                {flightPlan.gs_id}
-              </p>
+              <p className="text-sm text-muted-foreground">{flightPlan.gs_id}</p>
             </div>
             <div>
               <p className="text-sm font-medium">Scheduled Time</p>
-              <p className="text-sm text-muted-foreground">
-                {new Date(flightPlan.datetime).toLocaleString()}
-              </p>
+              <p className="text-sm text-muted-foreground">{new Date(flightPlan.datetime).toLocaleString()}</p>
             </div>
             <div>
               <p className="text-sm font-medium">Status</p>
-              <p className="text-sm text-muted-foreground capitalize">
-                {flightPlan.status}
-              </p>
+              <p className="text-sm text-muted-foreground capitalize">{flightPlan.status}</p>
             </div>
+            {flightPlan.previous_plan_id && (
+              <div className="md:col-span-2">
+                <p className="text-sm font-medium">Version History</p>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <History className="w-4 h-4" />
+                  <span>This is a new version of plan:</span>
+                  <Link href={`/platform/flight/${flightPlan.previous_plan_id}`} className="text-blue-500 hover:underline truncate">
+                    {flightPlan.previous_plan_id}
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Flight Planner */}
       <FlightPlanner
         initialData={flightPlan}
         onSave={handleFlightPlannerSave}
+        isReadOnly={!isPending}
       />
 
       {/* Approve Dialog */}

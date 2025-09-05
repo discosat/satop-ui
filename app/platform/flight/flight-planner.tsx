@@ -55,12 +55,14 @@ interface FlightPlannerProps {
   initialData?: FlightPlan;
   onSave?: (data: string) => void;
   onChange?: (data: string) => void;
+  isReadOnly?: boolean;
 }
 
 export default function FlightPlanner({
   initialData,
   onSave,
   onChange,
+  isReadOnly,
 }: FlightPlannerProps) {
   const [data, setData] = useState<string>("[]");
 
@@ -143,6 +145,7 @@ export default function FlightPlanner({
                 value={data}
                 onChange={(value) => setData(value ?? "[]")}
                 options={{
+                  readOnly: isReadOnly,
                   automaticLayout: true,
                   theme: "vs-dark",
                   fontSize: 14,
