@@ -184,6 +184,13 @@
   }
 }
 
+@layer base {
+  button:not([disabled]),
+  [role="button"]:not([disabled]) {
+    cursor: pointer;
+  }
+}
+
 /* Enhanced glassmorphism effect */
 .backdrop-blur-sm {
   backdrop-filter: blur(4px);
