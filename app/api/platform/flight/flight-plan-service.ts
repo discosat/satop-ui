@@ -2,7 +2,7 @@ import { FlightPlan } from "@/app/platform/flight/flight-table";
 import { mockFlightPlans } from "./mock";
 import { randomUUID } from "crypto";
 
-const API_URL = 'http://0.0.0.0:7889/api/plugins/scheduling'
+const API_URL = 'http://localhost:7889/api/plugins/scheduling'
 const token = 'steve;user,admin,test'
 
 export async function getFlightPlans(): Promise<FlightPlan[]> {
@@ -17,6 +17,11 @@ export async function getFlightPlans(): Promise<FlightPlan[]> {
       },
       next: { revalidate: 60 } 
     });
+
+    if (response.status === 404) {
+      console.log("No flight plans found on the server, returning empty list.");
+      return [];
+    }
     
     if (!response.ok) {
       throw new Error(`Failed to fetch flight plans: ${response.statusText}`);
