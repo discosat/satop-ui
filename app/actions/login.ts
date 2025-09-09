@@ -3,17 +3,43 @@
 import { createSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 
-export async function login() {
-  await createSession({
-    userID: "1234",
-    name: "Jenny",
-    role: "admin",
-    avatar: "/assets/martin.jpeg",
-    email: "jenny@jenny.com",
-    scopes: ["fp", "fp.view", "fp.code", "entities", "entities.overview"],
-    accessToken: "access_token_placeholder",
-    refreshToken: "refresh_token_placeholder",
-  });
+export async function login(email: string, password: string) {
+  try {
+    const response = await fetch("http://localhost:7889/api/plugins/login/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+      console.error("Login failed:", await response.text());
+      return { error: "Invalid credentials" };
+    }
+
+    const data = await response.json();
+    console.log("--- RECEIVED FROM PYTHON BACKEND: ---", data);
+
+    await createSession({
+      // --- Temporary Mock Data ---
+      userID: "mock-user-id",
+      name: "Martin",
+      avatar: "/assets/martin.jpeg",
+      role: "viewer",
+      // --------------------------
+
+      email: email,
+
+      scopes: data.scopes,
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+    });
+
+  } catch (error) {
+    console.error("An error occurred during login:", error);
+    return { error: "An unexpected error occurred." };
+  }
 
   redirect("/platform");
 }
