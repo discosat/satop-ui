@@ -2,15 +2,14 @@ import { FlightPlan } from "@/app/platform/flight/flight-table";
 import { mockFlightPlans } from "./mock";
 import { randomUUID } from "crypto";
 
-const API_URL = 'http://localhost:7889/api/plugins/scheduling'
-const token = 'steve;user,admin,test'
+const API_URL = 'http://localhost:7889/api/plugins/scheduling';
 
 export interface ApprovalResult {
   success: boolean;
   message: string;
 }
 
-export async function getFlightPlans(): Promise<FlightPlan[]> {
+export async function getFlightPlans(accessToken: string): Promise<FlightPlan[]> {
   try {
     if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
       return mockFlightPlans;
@@ -18,7 +17,7 @@ export async function getFlightPlans(): Promise<FlightPlan[]> {
     const response = await fetch(`${API_URL}/get_all`, {
       method: 'GET',
       headers: {
-        authorization: `Bearer ${token}`,
+        authorization: `Bearer ${accessToken}`,
       },
       next: { revalidate: 60 } 
     });
@@ -41,35 +40,28 @@ export async function getFlightPlans(): Promise<FlightPlan[]> {
   }
 }
 
-export async function getFlightPlanById(id: string): Promise<FlightPlan | null> {
+export async function getFlightPlanById(id: string, accessToken: string): Promise<FlightPlan | null> {
   try {
     if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
-      console.log("IM IN MOCKED MODE??")
-      const plan = mockFlightPlans.find((p) => p.id === id);
-      console.log(plan);
-      return plan || null;
+      return mockFlightPlans.find((p) => p.id === id) || null;
     }
     const response = await fetch(`${API_URL}/get/${id}`, {
       method: 'GET',
       headers: {
-        authorization: `Bearer ${token}`,
+        authorization: `Bearer ${accessToken}`,
       },
       next: { revalidate: 60 }
     });
     
-    if (!response.ok) {
-      throw new Error(`Failed to fetch flight plan: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    return data
+    if (!response.ok) throw new Error(`Failed to fetch flight plan: ${response.statusText}`);
+    return await response.json();
   } catch (error) {
     console.error(`Error fetching flight plan ${id}:`, error);
     return null;
   }
 }
 
-export async function createFlightPlan(flightPlan: FlightPlan): Promise<FlightPlan> {
+export async function createFlightPlan(flightPlan: FlightPlan, accessToken: string): Promise<FlightPlan> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
     const created: FlightPlan = {
       ...flightPlan,
@@ -83,7 +75,7 @@ export async function createFlightPlan(flightPlan: FlightPlan): Promise<FlightPl
     const response = await fetch(`${API_URL}/save`, {
       method: 'POST',
       headers: {
-        authorization: `Bearer ${token}`,
+        authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(flightPlan),
@@ -112,7 +104,7 @@ export async function createFlightPlan(flightPlan: FlightPlan): Promise<FlightPl
   }
 }
 
-export async function updateFlightPlan(flightPlan: FlightPlan): Promise<FlightPlan | null> {
+export async function updateFlightPlan(flightPlan: FlightPlan, accessToken: string): Promise<FlightPlan | null> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
     const index = mockFlightPlans.findIndex((p) => p.id === flightPlan.id);
     if (index !== -1) {
@@ -131,31 +123,28 @@ export async function updateFlightPlan(flightPlan: FlightPlan): Promise<FlightPl
     return null;
   }
 
-  try {
-    const response = await fetch(`${API_URL}/update/${flightPlan.id}`, {
-      method: 'PUT',
-      headers: {
-        authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(flightPlan),
-      cache: 'no-store',
-    });
-
-    if (!response.ok) {
-      const text = await response.text().catch(() => '');
-      throw new Error(`Failed to update flight plan (${response.status}): ${response.statusText} ${text}`.trim());
+    try {
+        const response = await fetch(`${API_URL}/update/${flightPlan.id}`, {
+          method: 'PUT',
+          headers: {
+            authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(flightPlan),
+          cache: 'no-store',
+        });
+        if (!response.ok) {
+            const text = await response.text().catch(() => '');
+            throw new Error(`Failed to update flight plan (${response.status}): ${response.statusText} ${text}`.trim());
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error updating flight plan:', error);
+        throw error;
     }
-
-    const data = await response.json();
-    return data 
-  } catch (error) {
-    console.error('Error updating flight plan:', error);
-    throw error;
-  }
 }
 
-export async function approveFlightPlan(id: string, approved: boolean): Promise<ApprovalResult> {
+export async function approveFlightPlan(id: string, approved: boolean, accessToken: string): Promise<ApprovalResult> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
     const index = mockFlightPlans.findIndex((p) => p.id === id);
     if (index !== -1) {
@@ -165,27 +154,24 @@ export async function approveFlightPlan(id: string, approved: boolean): Promise<
     return { success: false, message: 'Mock plan not found' };
   }
 
-  try {
-    const response = await fetch(`${API_URL}/approve/${id}?approved=${approved}`, {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const responseData = await response.json();
-
-    if (!response.ok) {
-      const errorMessage = responseData.detail || responseData.message || 'Unknown error occurred';
-      throw new Error(`Failed to approve flight plan (${response.status}): ${errorMessage}`);
+    try {
+        const response = await fetch(`${API_URL}/approve/${id}?approved=${approved}`, {
+          method: 'POST',
+          headers: {
+            authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        const responseData = await response.json();
+        if (!response.ok) {
+            const errorMessage = responseData.detail || responseData.message || 'Unknown error occurred';
+            throw new Error(`Failed to approve flight plan (${response.status}): ${errorMessage}`);
+        }
+        return {
+          success: true,
+          message: responseData.message || 'Operation successful.',
+        };
+    } catch (error) {
+        throw error;
     }
-
-    return {
-      success: true,
-      message: responseData.message || 'Operation successful.',
-    };
-  } catch (error) {
-    throw error;
-  }
 }

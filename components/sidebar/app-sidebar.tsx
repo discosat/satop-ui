@@ -37,7 +37,7 @@ const data = {
     {
       title: "Flight planning",
       url: "/platform/flight",
-      scope: "fp",
+      scope: "scheduling.flightplan.read",
       icon: Notebook,
       isActive: true,
     },

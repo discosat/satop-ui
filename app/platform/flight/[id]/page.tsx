@@ -26,6 +26,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { getFlightPlanById, updateFlightPlan, approveFlightPlan } from "@/app/api/platform/flight/flight-plan-service";
+import { useSession } from "@/app/context";
+import Protected from "@/components/protected";
 
 export default function FlightPlanDetailPage() {
   const params = useParams();
@@ -36,15 +38,17 @@ export default function FlightPlanDetailPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [updatedPlanData, setUpdatedPlanData] = useState<string | null>(null);
 
+  const session = useSession();
+
   const id = typeof params.id === "string" ? params.id : "";
 
   useEffect(() => {
     let isCancelled = false;
     const load = async () => {
-      if (!id) return;
+      if (!id || !session) return;
       setIsLoading(true);
       try {
-        const plan = await getFlightPlanById(id);
+        const plan = await getFlightPlanById(id, session.accessToken);
         if (!isCancelled) {
           setFlightPlan(plan);
         }
@@ -61,14 +65,14 @@ export default function FlightPlanDetailPage() {
     };
     load();
     return () => { isCancelled = true; };
-  }, [id]);
+  }, [id, session]);
 
   const handleBack = () => {
     router.back();
   };
 
   const handleSave = async () => {
-    if (!flightPlan || !updatedPlanData) return;
+    if (!flightPlan || !updatedPlanData || !session) return;
     setIsLoading(true);
     try {
       let parsedData;
@@ -86,7 +90,7 @@ export default function FlightPlanDetailPage() {
         },
       };
 
-      const newVersion = await updateFlightPlan(updatedFlightPlanPayload);
+      const newVersion = await updateFlightPlan(updatedFlightPlanPayload, session.accessToken);
       
       if (newVersion?.id) {
         toast.success("New flight plan version created successfully!");
@@ -108,10 +112,10 @@ export default function FlightPlanDetailPage() {
   };
   
   const handleApprove = async () => {
-    if (!flightPlan) return;
+    if (!flightPlan || !session) return;
     setIsLoading(true);
     try {
-      const result = await approveFlightPlan(flightPlan.id, true);
+      const result = await approveFlightPlan(flightPlan.id, true, session.accessToken);
       
       if (result.success) {
         setFlightPlan({ ...flightPlan, status: "approved" });
@@ -131,10 +135,10 @@ export default function FlightPlanDetailPage() {
   };
 
   const handleReject = async () => {
-    if (!flightPlan) return;
+    if (!flightPlan || !session) return;
     setIsLoading(true);
     try {
-      const result = await approveFlightPlan(flightPlan.id, false);
+      const result = await approveFlightPlan(flightPlan.id, false, session.accessToken);
       
       if (result.success) {
         setFlightPlan({ ...flightPlan, status: "rejected" });
@@ -185,27 +189,35 @@ export default function FlightPlanDetailPage() {
             {flightPlan.flight_plan.name || "Command Sequence"}
           </h1>
         </div>
+        
         <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowRejectDialog(true)}
-              disabled={!isPending || isLoading}
-            >
-              <XCircle className="mr-2 h-4 w-4" />
-              Reject
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setShowApproveDialog(true)}
-              disabled={!isPending || isLoading}
-            >
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Approve
-            </Button>
-            <Button onClick={handleSave} disabled={!isPending || isLoading || !updatedPlanData}>
-              <Save className="mr-2 h-4 w-4" />
-              Save Changes
-            </Button>
+            <Protected scope="scheduling.flightplan.approve">
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowRejectDialog(true)}
+                  disabled={!isPending || isLoading}
+                >
+                  <XCircle className="mr-2 h-4 w-4" />
+                  Reject
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowApproveDialog(true)}
+                  disabled={!isPending || isLoading}
+                >
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Approve
+                </Button>
+              </>
+            </Protected>
+            
+            <Protected scope="scheduling.flightplan.update">
+              <Button onClick={handleSave} disabled={!isPending || isLoading || !updatedPlanData}>
+                <Save className="mr-2 h-4 w-4" />
+                Save Changes
+              </Button>
+            </Protected>
         </div>
       </div>
 

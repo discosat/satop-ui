@@ -1,15 +1,19 @@
 ## Development Setup
 
-This Next.js application requires a running instance of the `satop-platform` Python backend for authentication and data.
+This Next.js application can be run in two modes: **Live API Mode** for full end-to-end testing, and **Mocked Mode** for rapid, standalone UI development.
 
-### Step 1: Run the Backend
+### Running in Live API Mode (Connected to Backend)
 
-Before starting the frontend, you must have the backend server running. The easiest way is to use Docker Compose from the `satop-platform` repository.
+Use this mode for testing features that require a real database, verifying security rules, and ensuring the frontend and backend are correctly integrated.
 
-1.  Navigate to the `satop-platform` directory.
-2.  Ensure your `docker-compose.yml` has the test authentication mode enabled. This is crucial for easily creating the initial users.
+#### Step 1: Backend Setup
+
+This mode requires a running instance of the `satop-platform` Python backend.
+
+1.  Navigate to your local `satop-platform` repository.
+2.  Ensure your `docker-compose.yaml` has the test authentication mode enabled for creating initial users.
     ```yaml
-    # in docker-compose.yml
+    # in satop-platform/docker-compose.yaml
     services:
       dev:
         # ... other settings
@@ -20,138 +24,93 @@ Before starting the frontend, you must have the backend server running. The easi
     ```bash
     docker compose up dev
     ```
-    The backend API should now be available at `http://localhost:7889`.
+    The backend API will now be available at `http://localhost:7889`.
 
-### Step 2: Configure Frontend Environment
+#### Step 2: Seed the Backend with Test Users
 
-The frontend needs to know the URL of the backend API.
+Since the login is connected to the live backend, you must create user accounts before you can log in. Use the backend's API documentation (Swagger UI) to seed the database.
 
-1.  In the root of this `satop-ui` project, create a file named `.env.local` if it doesn't already exist.
-2.  Add the following line to it:
-    ```
-    NEXT_PUBLIC_API_URL=http://localhost:7889
-    ```
+1.  **Open the Backend API Docs:** Navigate to [http://localhost:7889/docs](http://localhost:7889/docs).
 
-### Step 3: Create Initial Seed Users
+2.  **Authorize as an Admin:**
 
-Since the login is now connected to the live backend, you must create user accounts in the backend's database before you can log in. The following steps will guide you through creating two standard test users using the backend's API documentation.
+    - Click the **Authorize** button.
+    - Enter the special test token: `Bearer admin-setup;*`
+    - Click "Authorize" and then "Close".
 
-**1. Open the Backend API Docs:**
-Navigate to [http://localhost:7889/docs](http://localhost:7889/docs).
+3.  **Create User Roles (`POST /api/auth/roles`):**
 
-**2. Authorize as an Admin:**
-To create roles and users, you must first act as a superuser.
+    - **`admin` Role:**
 
-- Click the **Authorize** button at the top right.
-- In the value field, enter the special test token: `Bearer admin-setup;*`
-- Click "Authorize" and then "Close".
-
-**3. Create User Roles:**
-Use the `POST /api/auth/roles` endpoint to create the following roles:
-
-- **`admin` Role:**
-  ```json
-  {
-    "name": "admin",
-    "scopes": ["*"]
-  }
-  ```
-- **`flight-operator` Role:**
-  ```json
-  {
-    "name": "flight-operator",
-    "scopes": ["scheduling.flightplan.create", "scheduling.flightplan.read"]
-  }
-  ```
-
-**4. Create the User "Admin Alice":**
-Follow these three API calls in order:
-
-- **A. Create Entity (`POST /api/auth/entities`):**
-
-  ```json
-  { "name": "Admin Alice", "type": "person", "roles": "admin" }
-  ```
-
-  > **Important:** Copy the `id` (UUID) from the response body.
-
-- **B. Connect Provider (`POST /api/auth/entities/{uuid}/providers`):**
-
-  - Paste Alice's `id` into the `uuid` field.
-  - Use this request body:
     ```json
-    { "provider": "email_password", "identity": "alice@discosat.dk" }
+    {
+      "name": "admin",
+      "scopes": ["*"]
+    }
     ```
 
-- **C. Create Password (`POST /api/plugins/login/user`):**
-  ```json
-  { "email": "alice@discosat.dk", "password": "password123" }
-  ```
+    - **`flight-operator` Role:**
 
-**5. Create the User "Operator Ollie":**
-Repeat the process for our standard operator user:
-
-- **A. Create Entity (`POST /api/auth/entities`):**
-
-  ```json
-  { "name": "Operator Ollie", "type": "person", "roles": "flight-operator" }
-  ```
-
-  > **Important:** Copy the `id` (UUID) from the response body.
-
-- **B. Connect Provider (`POST /api/auth/entities/{uuid}/providers`):**
-
-  - Paste Ollie's `id` into the `uuid` field.
-  - Use this request body:
     ```json
-    { "provider": "email_password", "identity": "ollie@discosat.dk" }
+    {
+      "name": "flight-operator",
+      "scopes": [
+        "scheduling.flightplan.create",
+        "scheduling.flightplan.read",
+        "scheduling.flightplan.update"
+      ]
+    }
     ```
 
-- **C. Create Password (`POST /api/plugins/login/user`):**
-  ```json
-  { "email": "ollie@discosat.dk", "password": "password123" }
-  ```
+4.  **Create the User "Admin Alice" (`admin`):**
+    Follow these three API calls in order, using the `id` from the first response in the second call.
+
+    1.  **Create Entity (`POST /api/auth/entities`):** `{ "name": "Admin Alice", "type": "person", "roles": "admin" }`
+    2.  **Connect Provider (`POST /api/auth/entities/{uuid}/providers`):** `{ "provider": "email_password", "identity": "alice@discosat.dk" }`
+    3.  **Create Password (`POST /api/plugins/login/user`):** `{ "email": "alice@discosat.dk", "password": "password123" }`
+
+5.  **Create the User "Operator Ollie" (`flight-operator`):**
+    Repeat the three steps for the operator user.
+    1.  **Create Entity (`POST /api/auth/entities`):** `{ "name": "Operator Ollie", "type": "person", "roles": "flight-operator" }`
+    2.  **Connect Provider (`POST /api/auth/entities/{uuid}/providers`):** `{ "provider": "email_password", "identity": "ollie@discosat.dk" }`
+    3.  **Create Password (`POST /api/plugins/login/user`):** `{ "email": "ollie@discosat.dk", "password": "password123" }`
 
 Your backend is now seeded with the necessary test accounts.
 
-### Step 4: Run the Frontend
+#### Step 3: Run the Frontend
 
-Now you can run the development server for the frontend.
+You are now ready to run the frontend in live mode.
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser. You can now log in using the credentials for either Alice or Ollie.
+### Running in Mocked Mode (Standalone Frontend)
 
-### Login Credentials
+Use this mode for rapid UI development, working on components, or when you are offline or do not need the backend. This mode does **not** require the Python backend to be running.
 
-| Role                | Email               | Password      | Permissions         |
-| ------------------- | ------------------- | ------------- | ------------------- |
-| **Admin**           | `alice@discosat.dk` | `password123` | All (`*`)           |
-| **Flight Operator** | `ollie@discosat.dk` | `password123` | Create & Read Plans |
+#### Step 1: Run the Frontend
+
+```bash
+npm run dev:mocked
+```
+
+The application will start on [http://localhost:3000](http://localhost:3000).
+
+#### How it Works:
+
+- **Login:** Any email and password will be accepted.
+- **Permissions:** You will be automatically logged in as a superuser with full admin permissions (`*` scope), allowing you to see and interact with all UI elements.
+- **Data:** All data is served from local mock files (e.g., `app/api/platform/flight/mock.ts`) and is not persistent.
+
+### Login Credentials (for Live API Mode)
+
+| Role                | Email               | Password      | Key Permissions              |
+| ------------------- | ------------------- | ------------- | ---------------------------- |
+| **Admin**           | `alice@discosat.dk` | `password123` | All (`*`)                    |
+| **Flight Operator** | `ollie@discosat.dk` | `password123` | Create, Read, & Update Plans |
 
 ---
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
 

@@ -11,10 +11,17 @@ import { ServerRefreshButton } from "./server-refresh-button";
 import { SearchForm } from "./search-form";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { me } from "@/app/actions/me"; 
+import { redirect } from "next/navigation";
 
 export default async function Page({}) {
-  const flightPlans = await getFlightPlans();
-
+  const session = await me();
+  if (!session) {
+    redirect('/login');
+  }
+  
+  const flightPlans = await getFlightPlans(session.accessToken);
+  
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
