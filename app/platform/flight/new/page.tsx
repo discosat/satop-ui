@@ -34,6 +34,7 @@ import FlightPlanner from "../flight-planner";
 import type { FlightPlan } from "../flight-table";
 import { createFlightPlan } from "@/app/api/platform/flight/flight-plan-service";
 import { toast } from "sonner";
+import { useSession } from "@/app/context";
 
 const formSchema = z.object({
   name: z
@@ -62,6 +63,8 @@ export default function NewFlightPlanPage() {
   const [bodyJson, setBodyJson] = useState<string>("[]");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const session = useSession();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { name: "", gs_id: "", sat_name: "" },
@@ -76,16 +79,17 @@ export default function NewFlightPlanPage() {
     }
   }, [bodyJson]);
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true);
-    try {
-      if (!Array.isArray(parsedBody)) {
-        toast.error("Commands must be a JSON array");
-        return;
-      }
+async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!session) {
+      toast.error("Authentication session not found. Please log in again.");
+      return;
+    }
 
+    setIsSubmitting(true);
+    
+    try {
       const payload: FlightPlan = {
-        id: "", // backend may assign
+        id: "", // backend will assign this
         flight_plan: {
           name: values.name,
           body: parsedBody as Record<string, unknown>[],
@@ -96,8 +100,10 @@ export default function NewFlightPlanPage() {
         status: "pending",
       };
 
-      const created = await createFlightPlan(payload);
-      toast.success("Flight plan created");
+      const created = await createFlightPlan(payload, session.accessToken);
+      
+      toast.success("Flight plan created successfully!");
+
       if (created?.id) {
         router.push(`/platform/flight/${created.id}`);
       } else {
@@ -110,7 +116,7 @@ export default function NewFlightPlanPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }
+}
 
   return (
     <div className="p-6 space-y-6">
