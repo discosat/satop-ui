@@ -13,6 +13,7 @@ import { MapPin, Link as LinkIcon, Radio, Clock } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
 import { GroundStationActions } from "./actions";
+import Link from "next/link";
 
 interface GroundStationsTableProps {
   groundStations: GroundStation[];
@@ -82,8 +83,14 @@ export default function GroundStationsTable({
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-blue-500" />
-                    {gs.location.latitude.toFixed(4)},{" "}
-                    {gs.location.longitude.toFixed(4)}
+                    <Link
+                      href={`https://www.google.com/maps?q=${gs.location.latitude},${gs.location.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline"
+                    >
+                      {gs.location.latitude}, {gs.location.longitude}
+                    </Link>
                   </div>
                 </TableCell>
                 <TableCell>
