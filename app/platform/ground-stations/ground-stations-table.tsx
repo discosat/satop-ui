@@ -29,7 +29,7 @@ export default function GroundStationsTable({
         const q = query.toLowerCase();
         return (
           gs.name.toLowerCase().includes(q) ||
-          gs.websocket_url.toLowerCase().includes(q) ||
+          gs.httpUrl.toLowerCase().includes(q) ||
           `${gs.location.latitude.toFixed(4)}, ${gs.location.longitude.toFixed(
             4
           )}`
@@ -54,7 +54,7 @@ export default function GroundStationsTable({
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Location</TableHead>
-            <TableHead>Websocket URL</TableHead>
+            <TableHead>HTTP URL</TableHead>
             <TableHead>Created</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="w-[80px]"></TableHead>
@@ -90,18 +90,18 @@ export default function GroundStationsTable({
                   <div className="flex items-center gap-2">
                     <LinkIcon className="w-4 h-4 text-muted-foreground" />
                     <span className="truncate max-w-[260px]">
-                      {gs.websocket_url}
+                      {gs.httpUrl}
                     </span>
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-muted-foreground" />
-                    {formatDate(gs.created_at)}
+                    {formatDate(gs.createdAt)}
                   </div>
                 </TableCell>
                 <TableCell>
-                  {gs.is_active ? (
+                  {gs.isActive ? (
                     <Badge className="bg-green-200 text-green-800 hover:bg-green-200">
                       Active
                     </Badge>

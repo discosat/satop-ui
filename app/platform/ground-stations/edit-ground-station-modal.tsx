@@ -37,10 +37,10 @@ const formSchema = z.object({
     .number({ invalid_type_error: "Longitude must be a number" })
     .min(-180)
     .max(180),
-  websocket_url: z
+  httpUrl: z
     .string()
-    .url({ message: "Please enter a valid websocket URL (wss://...)" }),
-  is_active: z.boolean().default(true),
+    .url({ message: "Please enter a valid HTTP URL" }),
+  isActive: z.boolean().default(true),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -62,8 +62,8 @@ export function EditGroundStationModal({
       name: station.name,
       latitude: station.location.latitude,
       longitude: station.location.longitude,
-      websocket_url: station.websocket_url,
-      is_active: station.is_active,
+      httpUrl: station.httpUrl,
+      isActive: station.isActive,
     },
   });
 
@@ -73,9 +73,9 @@ export function EditGroundStationModal({
       id: station.id,
       name: values.name,
       location: { latitude: values.latitude, longitude: values.longitude },
-      websocket_url: values.websocket_url,
-      created_at: station.created_at,
-      is_active: values.is_active,
+      httpUrl: values.httpUrl,
+      createdAt: station.createdAt,
+      isActive: values.isActive,
     });
     await refreshGroundStations();
     setSaving(false);
@@ -157,12 +157,12 @@ export function EditGroundStationModal({
 
             <FormField
               control={form.control}
-              name="websocket_url"
+              name="httpUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Websocket URL</FormLabel>
+                  <FormLabel>HTTP URL</FormLabel>
                   <FormControl>
-                    <Input placeholder="wss://example/ws" {...field} />
+                    <Input placeholder="http://example.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -171,7 +171,7 @@ export function EditGroundStationModal({
 
             <FormField
               control={form.control}
-              name="is_active"
+              name="isActive"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Status</FormLabel>

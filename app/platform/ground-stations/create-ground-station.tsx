@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { createGroundStation } from "@/app/api/platform/ground-stations/ground-station-service";
+import { refreshGroundStations } from "@/app/actions/ground-stations";
 import {
   Dialog,
   DialogContent,
@@ -25,40 +27,68 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   name: z.string().min(3, { message: "Name must be at least 3 characters." }),
-  latitude: z
-    .number({ invalid_type_error: "Latitude must be a number" })
-    .min(-90)
-    .max(90),
-  longitude: z
-    .number({ invalid_type_error: "Longitude must be a number" })
-    .min(-180)
-    .max(180),
-  websocket_url: z
+  latitude: z.coerce
+    .number({ 
+      required_error: "Latitude is required",
+      invalid_type_error: "Latitude must be a valid number" 
+    })
+    .min(-90, { message: "Latitude must be between -90 and 90 degrees" })
+    .max(90, { message: "Latitude must be between -90 and 90 degrees" }),
+  longitude: z.coerce
+    .number({ 
+      required_error: "Longitude is required",
+      invalid_type_error: "Longitude must be a valid number" 
+    })
+    .min(-180, { message: "Longitude must be between -180 and 180 degrees" })
+    .max(180, { message: "Longitude must be between -180 and 180 degrees" }),
+  httpUrl: z
     .string()
-    .url({ message: "Please enter a valid websocket URL (wss://...)" }),
+    .min(1, { message: "HTTP URL is required" })
+    .url({ message: "Please enter a valid HTTP URL" }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 export const CreateGroundStationModal = () => {
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      latitude: undefined as unknown as number,
-      longitude: undefined as unknown as number,
-      websocket_url: "",
+      latitude: undefined,
+      longitude: undefined,
+      httpUrl: "",
     },
   });
 
-  const onSubmit = async () => {
-    // Placeholder: wire to backend later
-    setOpen(false);
+  const onSubmit = async (values: FormValues) => {
+    setSaving(true);
+    try {
+      await createGroundStation({
+        name: values.name,
+        location: { 
+          latitude: values.latitude, 
+          longitude: values.longitude 
+        },
+        httpUrl: values.httpUrl,
+        isActive: true,
+      });
+      await refreshGroundStations();
+      toast.success("Ground station created successfully!");
+      form.reset();
+      setOpen(false);
+    } catch (error) {
+      console.error('Failed to create ground station:', error);
+      toast.error("Failed to create ground station.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -109,10 +139,11 @@ export const CreateGroundStationModal = () => {
                         type="number"
                         step="0.0001"
                         placeholder="e.g. 78.2232"
-                        value={field.value ?? ""}
-                        onChange={(e) =>
-                          field.onChange(parseFloat(e.target.value))
-                        }
+                        value={field.value == null || isNaN(field.value) ? "" : field.value.toString()}
+                        onChange={(e) => {
+                          const value = e.target.value === "" ? undefined : parseFloat(e.target.value);
+                          field.onChange(value);
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -130,10 +161,11 @@ export const CreateGroundStationModal = () => {
                         type="number"
                         step="0.0001"
                         placeholder="e.g. 15.6469"
-                        value={field.value ?? ""}
-                        onChange={(e) =>
-                          field.onChange(parseFloat(e.target.value))
-                        }
+                        value={field.value == null || isNaN(field.value) ? "" : field.value.toString()}
+                        onChange={(e) => {
+                          const value = e.target.value === "" ? undefined : parseFloat(e.target.value);
+                          field.onChange(value);
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -144,12 +176,12 @@ export const CreateGroundStationModal = () => {
 
             <FormField
               control={form.control}
-              name="websocket_url"
+              name="httpUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Websocket URL</FormLabel>
+                  <FormLabel>HTTP URL</FormLabel>
                   <FormControl>
-                    <Input placeholder="wss://example/ws" {...field} />
+                    <Input placeholder="http://example.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -157,7 +189,9 @@ export const CreateGroundStationModal = () => {
             />
 
             <DialogFooter>
-              <Button type="submit">Create</Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? "Creating..." : "Create"}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

@@ -15,6 +15,6 @@ export async function searchGroundStations(query: string): Promise<GroundStation
   const q = query.toLowerCase();
   return stations.filter((gs) =>
     gs.name.toLowerCase().includes(q) ||
-    gs.websocket_url.toLowerCase().includes(q)
+    gs.httpUrl.toLowerCase().includes(q)
   );
 } 
