@@ -14,7 +14,7 @@ export const mockFlightPlans: FlightPlan[] = [
           { name: "disable-camera", id: "main" },
         ],
       },
-      datetime: "2025-05-22T13:45:00+01:00",
+      scheduled_at: "2025-05-22T13:45:00+01:00",
       gs_id: "3d4f5g6h-7j8k-9l0p-1o2i-3u4y5t6r7e8w",
       sat_name: "EXPLORER-1",
       status: "pending",
@@ -32,7 +32,7 @@ export const mockFlightPlans: FlightPlan[] = [
           { name: "disable-camera", id: "main" },
         ],
       },
-      datetime: "2025-05-22T13:45:00+01:00",
+      scheduled_at: "2025-05-22T13:45:00+01:00",
       gs_id: "3d4f5g6h-7j8k-9l0p-1o2i-3u4y5t6r7e8w",
       sat_name: "EXPLORER-1",
       status: "superseded",
@@ -54,7 +54,7 @@ export const mockFlightPlans: FlightPlan[] = [
           },
         ],
       },
-      datetime: "2025-05-12T14:30:00+01:00",
+      scheduled_at: "2025-05-12T14:30:00+01:00",
       gs_id: "86c8a92b-571a-46cb-b306-e9be71959279",
       sat_name: "DISCO-2",
       status: "pending",
@@ -69,10 +69,12 @@ export const mockFlightPlans: FlightPlan[] = [
           { name: "downlink-data", target: "ground" },
         ],
       },
-      datetime: "2025-05-15T09:15:00+01:00",
+      scheduled_at: "2025-05-15T09:15:00+01:00",
       gs_id: "5f4e3d2c-1b2a-3c4d-5e6f-7g8h9i0j1k2l",
       sat_name: "ORION-1",
       status: "approved",
+      approver_id: "user-abc-123",
+      approval_date: "2025-05-14T10:00:00Z",
     },
     {
       id: "9z8y7x6w-5v4u-3t2s-1r0q-9p8o7n6m5l4k",
@@ -84,10 +86,12 @@ export const mockFlightPlans: FlightPlan[] = [
           { name: "check-power-levels", threshold: 75 },
         ],
       },
-      datetime: "2025-05-08T11:20:00+01:00",
+      scheduled_at: "2025-05-08T11:20:00+01:00",
       gs_id: "4j5k6l7m-8n9o-0p1q-2r3s-4t5u6v7w8x9y",
       sat_name: "AURORA-5",
       status: "rejected",
+      approver_id: "user-xyz-789",
+      approval_date: "2025-05-07T12:00:00Z",
     },
     {
       id: "1q2w3e4r-5t6y-7u8i-9o0p-1a2s3d4f5g6h",
@@ -118,7 +122,7 @@ export const mockFlightPlans: FlightPlan[] = [
           }
         ]
       },
-      datetime: "2025-05-20T16:00:00+01:00",
+      scheduled_at: "2025-05-20T16:00:00+01:00",
       gs_id: "7h8j9k0l-1z2x-3c4v-5b6n-7m8a9s0d1f2g",
       sat_name: "VOYAGER-9",
       status: "pending"
@@ -143,7 +147,7 @@ export const mockFlightPlans: FlightPlan[] = [
           }
         ]
       },
-      datetime: "2025-05-07T08:30:00+01:00",
+      scheduled_at: "2025-05-07T08:30:00+01:00",
       gs_id: "2s3d4f5g-6h7j-8k9l-0q1w-2e3r4t5y6u7i",
       sat_name: "PIONEER-3",
       status: "approved"

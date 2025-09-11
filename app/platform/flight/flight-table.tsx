@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CalendarClock, Satellite, Radio, Clock, GitBranch } from "lucide-react";
+import { CalendarClock, Satellite, Radio, Clock, GitBranch, UserCheck } from "lucide-react"; // Added UserCheck icon
 import {
   Tooltip,
   TooltipContent,
@@ -25,11 +25,13 @@ export interface FlightPlan {
     name: string;
     body: Record<string, unknown>[];
   };
-  datetime: string;
+  scheduled_at: string;
   gs_id: string;
   sat_name: string;
   status: FlightPlanStatus;
   previous_plan_id?: string;
+  approver_id?: string;
+  approval_date?: string;
 }
 
 interface FlightPlansTableProps {
@@ -55,6 +57,7 @@ export default function FlightPlansTable({
     : activePlans;
 
   const formatDate = (dateStr: string) => {
+    if (!dateStr) return 'N/A';
     const date = new Date(dateStr);
     return new Intl.DateTimeFormat("en-US", {
       dateStyle: "short",
@@ -66,29 +69,15 @@ export default function FlightPlansTable({
   const getStatusBadge = (status: FlightPlanStatus) => {
     switch (status) {
       case "approved":
-        return (
-          <Badge className="bg-green-200 text-green-800 hover:bg-green-200">
-            Approved
-          </Badge>
-        );
+        return <Badge className="bg-green-200 text-green-800 hover:bg-green-200">Approved</Badge>;
       case "rejected":
-        return (
-          <Badge className="bg-red-200 text-red-800 hover:bg-red-200">
-            Rejected
-          </Badge>
-        );
+        return <Badge className="bg-red-200 text-red-800 hover:bg-red-200">Rejected</Badge>;
       case "superseded":
-        return (
-          <Badge variant="secondary">
-            Superseded
-          </Badge>
-        );
+        return <Badge variant="secondary">Superseded</Badge>;
+      case "transmitted":
+        return <Badge className="bg-blue-200 text-blue-800 hover:bg-blue-200">Transmitted</Badge>;
       default: // pending
-        return (
-          <Badge className="bg-yellow-200 text-yellow-800 hover:bg-yellow-200">
-            Pending Approval
-          </Badge>
-        );
+        return <Badge className="bg-yellow-200 text-yellow-800 hover:bg-yellow-200">Pending Approval</Badge>;
     }
   };
 
@@ -130,7 +119,6 @@ export default function FlightPlansTable({
                   <div className="flex items-center gap-2">
                     <CalendarClock className="w-4 h-4 text-muted-foreground" />
                     {plan.flight_plan.name || "Command Sequence"}
-                    {/* NEW: Add a visual indicator for versioned plans */}
                     {plan.previous_plan_id && (
                        <Tooltip>
                          <TooltipTrigger>
@@ -167,10 +155,27 @@ export default function FlightPlansTable({
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-muted-foreground" />
-                    {formatDate(plan.datetime)}
+                    {formatDate(plan.scheduled_at)}
                   </div>
                 </TableCell>
-                <TableCell>{getStatusBadge(plan.status)}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    {getStatusBadge(plan.status)}
+                    {plan.approver_id && (plan.status === 'approved' || plan.status === 'rejected') && (
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <UserCheck className="w-3.5 h-3.5 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            {plan.status === 'approved' ? 'Approved' : 'Rejected'} by {plan.approver_id}
+                          </p>
+                          {plan.approval_date && <p>on {formatDate(plan.approval_date)}</p>}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                </TableCell>
               </TableRow>
             ))
           )}

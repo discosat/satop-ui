@@ -94,7 +94,7 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
           name: values.name,
           body: parsedBody as Record<string, unknown>[],
         },
-        datetime: new Date().toISOString(),
+        scheduled_at: new Date().toISOString(),
         gs_id: values.gs_id,
         sat_name: values.sat_name,
         status: "pending",

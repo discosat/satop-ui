@@ -240,7 +240,7 @@ export default function FlightPlanDetailPage() {
             </div>
             <div>
               <p className="text-sm font-medium">Scheduled Time</p>
-              <p className="text-sm text-muted-foreground">{new Date(flightPlan.datetime).toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground">{new Date(flightPlan.scheduled_at).toLocaleString()}</p>
             </div>
             <div>
               <p className="text-sm font-medium">Status</p>
