@@ -55,6 +55,11 @@ const data = {
       icon: SatelliteDish,
     },
     {
+      title: "Satellites",
+      url: "/platform/satellites",
+      icon: Satellite,
+    },
+    {
       title: "Users",
       url: "/platform/users",
       scope: "entities",

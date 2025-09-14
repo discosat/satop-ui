@@ -12,8 +12,8 @@ export async function refreshFlightPlans() {
 }
 
 // Server action to search flight plans
-export async function searchFlightPlans(query: string): Promise<FlightPlan[]> {
-  const plans = await fetchFlightPlans();
+export async function searchFlightPlans(query: string, accessToken: string): Promise<FlightPlan[]> {
+  const plans = await fetchFlightPlans(accessToken);
   
   if (!query) return plans;
   
