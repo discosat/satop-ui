@@ -13,6 +13,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { me } from "@/app/actions/me"; 
 import { redirect } from "next/navigation";
+import { Plus } from "lucide-react";
 
 export default async function Page({}) {
   const session = await me();
@@ -25,10 +26,21 @@ export default async function Page({}) {
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Flight planning</h1>
-        <Link href="/platform/flight/new">
-          <Button>Create new plan</Button>
-        </Link>
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold">Flight planning</h1>
+          <p className="text-muted-foreground">
+            Create and manage satellite command sequences for upcoming
+            overpasses.
+          </p>
+        </div>
+        <div>
+          <Link href="/platform/flight/new">
+          
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Create new plan</Button>
+          </Link>
+        </div>
       </div>
 
       <Card>

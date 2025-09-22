@@ -8,7 +8,7 @@ import "react-sat-map/style.css";
 import * as satellite from "satellite.js";
 import { SatelliteOrbit } from "./satellite-orbit";
 import Image from "next/image";
-import sat from "@/public/assets/sat.svg";
+import sat from "@/assets/sat.svg";
 import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
 
 type EciVec3 = {

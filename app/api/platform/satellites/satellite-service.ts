@@ -34,7 +34,7 @@ export async function getSatellites(): Promise<Satellite[]> {
 
 export async function getSatelliteById(id: string): Promise<Satellite | null> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
-    return mockSatellites.find(sat => sat.id === id) || null;
+    return mockSatellites.find(sat => sat.id === parseInt(id)) || null;
   }
 
   try {
