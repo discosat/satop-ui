@@ -1,7 +1,9 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Discosat: Flight planing",
+  title: "Discosat: Platform Overview",
+  description:
+    "Comprehensive satellite operations and flight planning platform",
 };
 
 export default function Page() {

@@ -1,5 +1,5 @@
 export interface GroundStation {
-  id: string;
+  id: number;
   name: string;
   // latitude, longitude in WGS84 for display convenience; backend stores GEOGRAPHY POINT(4326)
   location: { latitude: number; longitude: number };
@@ -10,7 +10,7 @@ export interface GroundStation {
 
 export const mockGroundStations: GroundStation[] = [
   {
-    id: "1",
+    id: 1,
     name: "Svalbard Ground Station",
     location: { latitude: 78.2232, longitude: 15.6469 },
     httpUrl: "http://svalbard.gs.example",
@@ -18,7 +18,7 @@ export const mockGroundStations: GroundStation[] = [
     isActive: true,
   },
   {
-    id: "2",
+    id: 2,
     name: "Vandenberg SFB",
     location: { latitude: 34.742, longitude: -120.5724 },
     httpUrl: "http://vandenberg.gs.example",
@@ -26,7 +26,7 @@ export const mockGroundStations: GroundStation[] = [
     isActive: true,
   },
   {
-    id: "3",
+    id: 3,
     name: "Perth Ground Station",
     location: { latitude: -31.9523, longitude: 115.8613 },
     httpUrl: "http://perth.gs.example",

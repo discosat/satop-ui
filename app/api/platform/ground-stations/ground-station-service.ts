@@ -36,7 +36,7 @@ export async function getGroundStations(): Promise<GroundStation[]> {
 export async function createGroundStation(station: Omit<GroundStation, 'id' | 'createdAt'>): Promise<GroundStation> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
     const newStation: GroundStation = {
-      id: String(mockGroundStations.length + 1),
+      id: mockGroundStations.length + 1,
       ...station,
       createdAt: new Date().toISOString(),
     };
@@ -89,7 +89,7 @@ export async function updateGroundStation(updated: GroundStation): Promise<Groun
   }
 }
 
-export async function deleteGroundStation(id: string): Promise<{ success: boolean }> {
+export async function deleteGroundStation(id: number): Promise<{ success: boolean }> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
     const idx = mockGroundStations.findIndex((g) => g.id === id);
     if (idx !== -1) {

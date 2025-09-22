@@ -50,18 +50,23 @@ const data = {
   ],
   administration: [
     {
+      title: "Overview",
+      url: "/administration",
+      icon: House,
+    },
+    {
       title: "Ground stations",
-      url: "/platform/ground-stations",
+      url: "/administration/ground-stations",
       icon: SatelliteDish,
     },
     {
       title: "Satellites",
-      url: "/platform/satellites",
+      url: "/administration/satellites",
       icon: Satellite,
     },
     {
       title: "Users",
-      url: "/platform/users",
+      url: "/administration/users",
       scope: "entities",
       icon: User,
       badge: 1,

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { SatelliteMarkers, Satellite } from "react-sat-map";
-import Map from "react-map-gl/maplibre";
+import Map, { Marker } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "react-sat-map/style.css";
 import * as satellite from "satellite.js";
@@ -10,6 +10,7 @@ import { SatelliteInfoCard } from "./satellite-info-card";
 import { SatelliteOrbit } from "./satellite-orbit";
 import Image from "next/image";
 import sat from "@/public/assets/sat.svg";
+import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
 
 type EciVec3 = {
   x: number;
@@ -27,9 +28,13 @@ export type SatelliteInfoType = {
 
 interface SatelliteMapProps {
   satellites: Satellite[];
+  groundStations: GroundStation[];
 }
 
-export function SatelliteMap({ satellites }: SatelliteMapProps) {
+export function SatelliteMap({
+  satellites,
+  groundStations,
+}: SatelliteMapProps) {
   const [viewState, setViewState] = useState({
     longitude: 0,
     latitude: 0,
@@ -58,9 +63,21 @@ export function SatelliteMap({ satellites }: SatelliteMapProps) {
   };
 
   // Calculate satellite position
-  const calculatePosition = () => {
+  const calculatePosition = useCallback(() => {
     try {
+      if (!satellites || satellites.length === 0) {
+        console.warn("No satellites available for position calculation");
+        setIsLoading(false);
+        return;
+      }
+
       const tle = satellites[0].tle;
+      if (!tle || !tle.line1 || !tle.line2) {
+        console.warn("No TLE data available for satellite");
+        setIsLoading(false);
+        return;
+      }
+
       const satrec = satellite.twoline2satrec(tle.line1, tle.line2);
       const date = new Date();
       const positionAndVelocity = satellite.propagate(satrec, date);
@@ -113,7 +130,7 @@ export function SatelliteMap({ satellites }: SatelliteMapProps) {
       console.error("Error calculating satellite position:", error);
       setIsLoading(false);
     }
-  };
+  }, [satellites]);
 
   // Center on satellite without changing zoom
   const centerOnSatellite = () => {
@@ -134,10 +151,27 @@ export function SatelliteMap({ satellites }: SatelliteMapProps) {
     const interval = setInterval(calculatePosition, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [calculatePosition]);
 
   if (isLoading) {
     return <MapSkeleton />;
+  }
+
+  if (!satellites || satellites.length === 0) {
+    return (
+      <div className="flex-1 flex flex-col relative">
+        <div className="h-full w-full rounded-lg bg-gray-200 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-lg font-semibold text-gray-600 mb-2">
+              No Satellites Available
+            </div>
+            <div className="text-sm text-gray-500">
+              No satellite data with TLE information found.
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -187,11 +221,23 @@ export function SatelliteMap({ satellites }: SatelliteMapProps) {
             </div>
           }
         />
+
+        {/* Ground Station Markers */}
+        {groundStations.map((station) => (
+          <Marker
+            key={station.id}
+            longitude={station.location.longitude}
+            latitude={station.location.latitude}
+            anchor="center"
+          >
+            <GroundStationMarker station={station} />
+          </Marker>
+        ))}
       </Map>
 
       <div className="absolute top-4 right-4 z-10">
         <SatelliteInfoCard
-          name={satellites[0].name}
+          name={satellites[0]?.name || "Unknown Satellite"}
           info={satelliteInfo}
           showOrbit={showOrbit}
           setShowOrbit={setShowOrbit}
@@ -199,6 +245,26 @@ export function SatelliteMap({ satellites }: SatelliteMapProps) {
           refreshPosition={refreshPosition}
           centerOnSatellite={centerOnSatellite}
         />
+      </div>
+    </div>
+  );
+}
+
+// Ground Station Marker Component
+function GroundStationMarker({ station }: { station: GroundStation }) {
+  return (
+    <div className="relative cursor-pointer group">
+      {/* Outer ring */}
+      <div className="absolute -top-3 -left-3 w-6 h-6 rounded-full bg-blue-500/20 border-2 border-blue-500" />
+      {/* Inner circle */}
+      <div className="absolute -top-2 -left-2 w-4 h-4 rounded-full bg-blue-500" />
+      {/* Center dot */}
+      <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-white" />
+
+      {/* Tooltip on hover */}
+      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-20">
+        {station.name}
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
       </div>
     </div>
   );

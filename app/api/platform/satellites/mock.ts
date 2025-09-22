@@ -7,7 +7,7 @@ export enum SatelliteStatus {
 }
 
 export interface Satellite {
-  id: string;
+  id: number;
   name: string;
   noradId: string;
   status: SatelliteStatus;
@@ -20,7 +20,7 @@ export interface Satellite {
 
 export const mockSatellites: Satellite[] = [
   {
-    id: "1",
+    id: 1,
     name: "ISS (ZARYA)",
     noradId: "25544",
     status: SatelliteStatus.Active,

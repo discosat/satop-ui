@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
@@ -35,33 +35,37 @@ import type { FlightPlan } from "../flight-table";
 import { createFlightPlan } from "@/app/api/platform/flight/flight-plan-service";
 import { toast } from "sonner";
 import { useSession } from "@/app/context";
+import { getSatellites } from "@/app/api/platform/satellites/satellite-service";
+import { getGroundStations } from "@/app/api/platform/ground-stations/ground-station-service";
+import type { Satellite } from "@/app/api/platform/satellites/mock";
+import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
 
 const formSchema = z.object({
   name: z
     .string()
     .min(3, { message: "Flight plan name must be at least 3 characters." }),
-  gs_id: z.string().min(1, { message: "Please select a ground station." }),
-  sat_name: z.string().min(1, { message: "Please select a satellite." }),
+  gs_id: z
+    .string()
+    .min(1, { message: "Please select a ground station." })
+    .refine((val) => !val.startsWith("__"), { 
+      message: "Please select a valid ground station." 
+    }),
+  sat_name: z
+    .string()
+    .min(1, { message: "Please select a satellite." })
+    .refine((val) => !val.startsWith("__"), { 
+      message: "Please select a valid satellite." 
+    }),
 });
 
-const mockGroundStations = [
-  { id: "gs-001", name: "Svalbard Ground Station" },
-  { id: "gs-002", name: "Vandenberg SFB" },
-  { id: "gs-003", name: "Fairbanks-Alaska" },
-  { id: "gs-004", name: "Perth Ground Station" },
-];
-
-const mockSatellites = [
-  { id: "sat-001", name: "EarthObserver-1" },
-  { id: "sat-002", name: "OceanMonitor-2" },
-  { id: "sat-003", name: "AtmosphereAnalyzer-1" },
-  { id: "sat-004", name: "ClimateTracker-3" },
-];
-
-export default function NewFlightPlanPage() {
+export default function  NewFlightPlanPage() {
   const router = useRouter();
   const [bodyJson, setBodyJson] = useState<string>("[]");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [satellites, setSatellites] = useState<Satellite[]>([]);
+  const [groundStations, setGroundStations] = useState<GroundStation[]>([]);
+  const [satellitesError, setSatellitesError] = useState<string | null>(null);
+  const [groundStationsError, setGroundStationsError] = useState<string | null>(null);
 
   const session = useSession();
 
@@ -69,6 +73,37 @@ export default function NewFlightPlanPage() {
     resolver: zodResolver(formSchema),
     defaultValues: { name: "", gs_id: "", sat_name: "" },
   });
+
+  // Fetch satellites and ground stations on component mount
+  useEffect(() => {
+    const fetchSatellites = async () => {
+      try {
+        const satellitesData = await getSatellites();
+        // Filter out any satellites with empty id or name
+  
+        setSatellites(satellitesData);
+        setSatellitesError(null);
+      } catch (error) {
+        console.error("Error fetching satellites:", error);
+        setSatellitesError("Failed to load satellites");
+      }
+    };
+
+    const fetchGroundStations = async () => {
+      try {
+        const groundStationsData = await getGroundStations();
+        // Filter out any ground stations with empty id or name
+        setGroundStations(groundStationsData);
+        setGroundStationsError(null);
+      } catch (error) {
+        console.error("Error fetching ground stations:", error);
+        setGroundStationsError("Failed to load ground stations");
+      }
+    };
+
+    fetchSatellites();
+    fetchGroundStations();
+  }, []);
 
   const parsedBody = useMemo(() => {
     try {
@@ -171,11 +206,21 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {mockGroundStations.map((gs) => (
-                            <SelectItem key={gs.id} value={gs.id}>
-                              {gs.name}
+                          {groundStationsError ? (
+                            <SelectItem value="__error__" disabled>
+                              {groundStationsError}
                             </SelectItem>
-                          ))}
+                          ) : groundStations.length === 0 ? (
+                            <SelectItem value="__empty__" disabled>
+                              No ground stations available
+                            </SelectItem>
+                          ) : (
+                            groundStations.map((gs) => (
+                              <SelectItem key={gs.id} value={String(gs.id)}>
+                                {gs.name}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       <FormDescription>
@@ -203,11 +248,21 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {mockSatellites.map((sat) => (
-                            <SelectItem key={sat.id} value={sat.name}>
-                              {sat.name}
+                          {satellitesError ? (
+                            <SelectItem value="__error__" disabled>
+                              {satellitesError}
                             </SelectItem>
-                          ))}
+                          ) : satellites.length === 0 ? (
+                            <SelectItem value="__empty__" disabled>
+                              No satellites available
+                            </SelectItem>
+                          ) : (
+                            satellites.map((sat) => (
+                              <SelectItem key={sat.id} value={sat.name}>
+                                {sat.name}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       <FormDescription>
@@ -234,7 +289,16 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button 
+                  type="submit" 
+                  disabled={
+                    isSubmitting || 
+                    !!satellitesError ||
+                    !!groundStationsError ||
+                    satellites.length === 0 ||
+                    groundStations.length === 0
+                  }
+                >
                   Create
                 </Button>
               </div>

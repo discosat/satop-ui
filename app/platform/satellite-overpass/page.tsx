@@ -1,28 +1,33 @@
-"use client";
-
 import { Satellite } from "react-sat-map";
+import { getGroundStations } from "@/app/api/platform/ground-stations/ground-station-service";
+import { getSatellites } from "@/app/api/platform/satellites/satellite-service";
+import type { Satellite as ApiSatellite } from "@/app/api/platform/satellites/mock";
 
 import { SatelliteMap } from "./satellite-map";
 import { OverpassCalendar } from "./overpass-calendar";
 
-// TODO: We can request this Data from the API or otherwise the just straight up call the TLE API
-const satellites: Satellite[] = [
-  {
-    name: "ISS (ZARYA)",
-    tle: {
-      line1:
-        "1 25544U 98067A   24357.81415843  .00061122  00000+0  10662-2 0  9993",
-      line2:
-        "2 25544  51.6377 100.8061 0005268 355.1085 147.9826 15.50107458487805",
-    },
-  },
-];
+export default async function Page() {
+  const groundStations = await getGroundStations();
+  const apiSatellites = await getSatellites();
 
-export default function Page() {
+  // Transform API satellite data to react-sat-map format
+  const satellitesWithTLE: Satellite[] = apiSatellites
+    .filter((sat: ApiSatellite) => sat.tleLine1 && sat.tleLine2)
+    .map((sat: ApiSatellite) => ({
+      name: sat.name,
+      tle: {
+        line1: sat.tleLine1!,
+        line2: sat.tleLine2!,
+      },
+    }));
+
   return (
     <div className="relative w-full flex flex-row p-4 gap-4 flex-1">
-      <OverpassCalendar satellites={satellites} />
-      <SatelliteMap satellites={satellites} />
+      <OverpassCalendar satellites={satellitesWithTLE} />
+      <SatelliteMap
+        satellites={satellitesWithTLE}
+        groundStations={groundStations}
+      />
     </div>
   );
 }
