@@ -17,15 +17,11 @@ import UsersTable from "./users-table";
 import { ApplicationsTable } from "./applications-table";
 import { RefreshButton } from "@/components/refresh-button";
 
-// Types
-export type UserRole = "viewer" | "Operator" | "scientist" | "admin" | "ground station";
-export type UserType = "machine" | "human";
-
+export type UserRole = "viewer" | "Operator" | "admin";
 export interface User {
   id: string;
   name: string;
   email: string;
-  type: UserType;
   role: UserRole;
   scopes?: string[];
   avatarUrl: string;
@@ -41,16 +37,14 @@ const users: User[] = [
     email: "alex@example.com",
     role: "admin",
     scopes: [],
-    type: "human",
     avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
   },
   {
     id: "2",
     name: "Sam Wilson",
     email: "sam@example.com",
-    role: "scientist",
+    role: "Operator",
     scopes: ["fp.program", "fp.create"],
-    type: "human",
     avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sam",
   },
   {
@@ -58,7 +52,6 @@ const users: User[] = [
     name: "Taylor Smith",
     email: "taylor@example.com",
     role: "viewer",
-    type: "human",
     scopes: ["fp.program"],
     avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Taylor",
   },
@@ -66,26 +59,23 @@ const users: User[] = [
     id: "4",
     name: "SDU Ground Station",
     email: "gssdu@discosat.dk",
-    role: "ground station",
-    type: "machine",
+    role: "Operator",
     avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Morgan",
   },
   {
     id: "5",
     name: "AU Ground Station",
     email: "gsau@discosat.dk",
-    role: "ground station",
-    type: "machine",
+    role: "Operator",
     avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Morgan",
   },
   {
     id: "6",
     name: "Casey Brown",
     email: "casey@example.com",
-    role: "scientist",
+    role: "Operator",
     avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Casey",
     needsSupport: true,
-    type: "human",
     supportReason:
       "I wish to photograph the disko islands for thermal springs.",
   },
@@ -105,7 +95,12 @@ export default function UserManagement() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">User Management</h1>
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold">Users</h1>
+          <p className="text-muted-foreground">
+            Manage user accounts and permissions
+          </p>
+        </div>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
           Add User

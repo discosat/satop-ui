@@ -1,7 +1,6 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -10,12 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Bot } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+
 import Actions from "./actions";
 import { User } from "./page";
 import { RoleBadge } from "./role-badge";
@@ -65,18 +59,6 @@ export default function UsersTable({ filteredUsers }: UsersTableProps) {
                       </AvatarFallback>
                     </Avatar>
                     {user.name}
-                    {user.type === "machine" && (
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Badge className="px-0.5 bg-gray-800 text-gray-600 hover:bg-gray-800">
-                            <Bot className="w-4 h-4" />
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Machine</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
                   </div>
                 </TableCell>
                 <TableCell>{user.email}</TableCell>

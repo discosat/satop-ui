@@ -21,7 +21,12 @@ export default async function Page() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Satellites</h1>
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold">Satellites</h1>
+          <p className="text-muted-foreground">
+            Manage and onboard satellites.
+          </p>
+        </div>
       </div>
 
       <Card>
