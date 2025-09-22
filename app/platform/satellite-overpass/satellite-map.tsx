@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { SatelliteMarkers, Satellite } from "react-sat-map";
 import Map, { Marker } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "react-sat-map/style.css";
 import * as satellite from "satellite.js";
-import { SatelliteInfoCard } from "./satellite-info-card";
 import { SatelliteOrbit } from "./satellite-orbit";
 import Image from "next/image";
 import sat from "@/public/assets/sat.svg";
@@ -29,11 +28,15 @@ export type SatelliteInfoType = {
 interface SatelliteMapProps {
   satellites: Satellite[];
   groundStations: GroundStation[];
+  onSatelliteInfoUpdate?: (info: SatelliteInfoType) => void;
+  showOrbit?: string;
 }
 
 export function SatelliteMap({
   satellites,
   groundStations,
+  onSatelliteInfoUpdate,
+  showOrbit = "orbit",
 }: SatelliteMapProps) {
   const [viewState, setViewState] = useState({
     longitude: 0,
@@ -48,19 +51,10 @@ export function SatelliteMap({
     timestamp: new Date(),
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [showOrbit, setShowOrbit] = useState<string>("orbit");
-
-  // Manual refresh of satellite position
-  const refreshPosition = () => {
-    setIsLoading(true);
-    calculatePosition();
-    // Force orbital path to update by regenerating the timestamp
-    setSatelliteInfo((prev) => ({
-      ...prev,
-      timestamp: new Date(),
-    }));
-    setTimeout(() => setIsLoading(false), 500); // Simulate loading for better UX
-  };
+  
+  // Use ref to avoid dependency issues with onSatelliteInfoUpdate
+  const onSatelliteInfoUpdateRef = useRef(onSatelliteInfoUpdate);
+  onSatelliteInfoUpdateRef.current = onSatelliteInfoUpdate;
 
   // Calculate satellite position
   const calculatePosition = useCallback(() => {
@@ -116,13 +110,16 @@ export function SatelliteMap({
         }));
 
         // Update satellite info for display
-        setSatelliteInfo({
+        const newSatelliteInfo = {
           altitude: geodeticCoordinates.height,
           velocity: velocityMag,
           latitude: latitudeDeg,
           longitude: longitudeDeg,
           timestamp: date,
-        });
+        };
+        
+        setSatelliteInfo(newSatelliteInfo);
+        onSatelliteInfoUpdateRef.current?.(newSatelliteInfo);
 
         setIsLoading(false);
       }
@@ -131,17 +128,6 @@ export function SatelliteMap({
       setIsLoading(false);
     }
   }, [satellites]);
-
-  // Center on satellite without changing zoom
-  const centerOnSatellite = () => {
-    calculatePosition();
-    // Don't change the zoom level to avoid disorienting the user
-    setViewState((prev) => ({
-      ...prev,
-      longitude: satelliteInfo.longitude,
-      latitude: satelliteInfo.latitude,
-    }));
-  };
 
   useEffect(() => {
     // Calculate the initial position
@@ -159,7 +145,7 @@ export function SatelliteMap({
 
   if (!satellites || satellites.length === 0) {
     return (
-      <div className="flex-1 flex flex-col relative">
+      <div className="h-full w-full relative">
         <div className="h-full w-full rounded-lg bg-gray-200 flex items-center justify-center">
           <div className="text-center">
             <div className="text-lg font-semibold text-gray-600 mb-2">
@@ -175,7 +161,7 @@ export function SatelliteMap({
   }
 
   return (
-    <div className="flex-1 flex flex-col relative">
+    <div className="h-full w-full relative">
       <Map
         {...viewState}
         style={{
@@ -234,18 +220,6 @@ export function SatelliteMap({
           </Marker>
         ))}
       </Map>
-
-      <div className="absolute top-4 right-4 z-10">
-        <SatelliteInfoCard
-          name={satellites[0]?.name || "Unknown Satellite"}
-          info={satelliteInfo}
-          showOrbit={showOrbit}
-          setShowOrbit={setShowOrbit}
-          isLoading={isLoading}
-          refreshPosition={refreshPosition}
-          centerOnSatellite={centerOnSatellite}
-        />
-      </div>
     </div>
   );
 }
@@ -273,7 +247,7 @@ function GroundStationMarker({ station }: { station: GroundStation }) {
 // Skeleton loading component for the map
 function MapSkeleton() {
   return (
-    <div className="flex-1 flex flex-col relative">
+    <div className="h-full w-full relative">
       <div className="h-full w-full rounded-lg bg-gray-200 animate-pulse flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-gray-300 animate-pulse"></div>

@@ -4,6 +4,11 @@
 
 @source '../*.{js,ts,jsx,tsx,mdx}';
 
+/* Ensure html and body take full height */
+html, body {
+  height: 100%;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme {
