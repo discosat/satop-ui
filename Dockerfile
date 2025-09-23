@@ -1,5 +1,5 @@
 # Use the official Node.js image as base
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -29,6 +29,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Set environment variables for build (using mocked data)
 ENV MOCKED=1
 ENV NEXT_PUBLIC_MOCKED=1
+ENV SESSION_COOKIE_SECRET=32-character-long-secret-key-12345678900000
 
 # Build the application
 RUN npm run build

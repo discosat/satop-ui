@@ -1,4 +1,3 @@
-import { Metadata } from "next";
 import {
   Card,
   CardContent,
@@ -11,10 +10,6 @@ import { getGroundStations } from "@/app/api/platform/ground-stations/ground-sta
 import { ServerRefreshButton } from "./server-refresh-button";
 import { SearchForm } from "./search-form";
 import { CreateGroundStationModal } from "./create-ground-station";
-
-export const metadata: Metadata = {
-  title: "Discosat: Ground stations",
-};
 
 export default async function Page() {
   const groundStations = await getGroundStations();

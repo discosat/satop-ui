@@ -1,4 +1,3 @@
-import { Metadata } from "next";
 import {
   Card,
   CardContent,
@@ -10,10 +9,6 @@ import SatellitesTable from "./satellites-table";
 import { getSatellites } from "@/app/api/platform/satellites/satellite-service";
 import { ServerRefreshButton } from "./server-refresh-button";
 import { SearchForm } from "./search-form";
-
-export const metadata: Metadata = {
-  title: "Discosat: Satellites",
-};
 
 export default async function Page() {
   const satellites = await getSatellites();
