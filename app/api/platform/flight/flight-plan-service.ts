@@ -2,23 +2,20 @@ import { FlightPlan } from "@/app/platform/flight/flight-table";
 import { mockFlightPlans } from "./mock";
 import { randomUUID } from "crypto";
 
-const API_URL = 'http://localhost:7889/api/plugins/flight-plans/';
+const API_URL = 'http://localhost:5111/api/v1/flight-plans';
 
 export interface ApprovalResult {
   success: boolean;
   message: string;
 }
 
-export async function getFlightPlans(accessToken: string): Promise<FlightPlan[]> {
+export async function getFlightPlans(): Promise<FlightPlan[]> {
   try {
     if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
       return mockFlightPlans;
     }
     const response = await fetch(API_URL, {
       method: 'GET',
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-      },
       next: { revalidate: 60 } 
     });
 
@@ -39,16 +36,13 @@ export async function getFlightPlans(accessToken: string): Promise<FlightPlan[]>
   }
 }
 
-export async function getFlightPlanById(id: string, accessToken: string): Promise<FlightPlan | null> {
+export async function getFlightPlanById(id: string): Promise<FlightPlan | null> {
   try {
     if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
       return mockFlightPlans.find((p) => p.id === id) || null;
     }
     const response = await fetch(`${API_URL}${id}`, {
       method: 'GET',
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-      },
       next: { revalidate: 60 }
     });
     
@@ -60,7 +54,7 @@ export async function getFlightPlanById(id: string, accessToken: string): Promis
   }
 }
 
-export async function createFlightPlan(flightPlan: FlightPlan, accessToken: string): Promise<FlightPlan> {
+export async function createFlightPlan(flightPlan: FlightPlan): Promise<FlightPlan> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
     const created: FlightPlan = {
       ...flightPlan,
@@ -74,7 +68,6 @@ export async function createFlightPlan(flightPlan: FlightPlan, accessToken: stri
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
-        authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(flightPlan),

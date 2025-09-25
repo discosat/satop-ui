@@ -21,7 +21,7 @@ export default async function Page({}) {
     redirect('/login');
   }
   
-  const flightPlans = await getFlightPlans(session.accessToken);
+  const flightPlans = await getFlightPlans();
   
   return (
     <div className="p-6 space-y-6">

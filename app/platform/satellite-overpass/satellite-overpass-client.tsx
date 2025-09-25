@@ -63,10 +63,7 @@ export function SatelliteOverpassClient({
     return groundStations.find(gs => gs.id.toString() === selectedGroundStation);
   }, [groundStations, selectedGroundStation]);
 
-  // TODO: Implement date range filtering
-  // const dateRange = useMemo(() => {
-  //   return getDateRangeFromPeriod(selectedTimePeriod);
-  // }, [selectedTimePeriod]);
+  
 
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);

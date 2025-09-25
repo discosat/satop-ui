@@ -48,7 +48,7 @@ export default function FlightPlanDetailPage() {
       if (!id || !session) return;
       setIsLoading(true);
       try {
-        const plan = await getFlightPlanById(id, session.accessToken);
+        const plan = await getFlightPlanById(id);
         if (!isCancelled) {
           setFlightPlan(plan);
         }

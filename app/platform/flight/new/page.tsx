@@ -35,9 +35,8 @@ import type { FlightPlan } from "../flight-table";
 import { createFlightPlan } from "@/app/api/platform/flight/flight-plan-service";
 import { toast } from "sonner";
 import { useSession } from "@/app/context";
-import { getSatellites } from "@/app/api/platform/satellites/satellite-service";
+import { getSatellites, Satellite } from "@/app/api/platform/satellites/satellite-service";
 import { getGroundStations } from "@/app/api/platform/ground-stations/ground-station-service";
-import type { Satellite } from "@/app/api/platform/satellites/mock";
 import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
 
 const formSchema = z.object({
@@ -135,7 +134,7 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
         status: "pending",
       };
 
-      const created = await createFlightPlan(payload, session.accessToken);
+      const created = await createFlightPlan(payload);
       
       toast.success("Flight plan created successfully!");
 
