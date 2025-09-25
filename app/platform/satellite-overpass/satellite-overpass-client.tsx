@@ -15,7 +15,7 @@ import { Rocket, Radio } from "lucide-react";
 import type { SatelliteInfoType } from "./satellite-map";
 
 interface SatelliteOverpassClientProps {
-  satellites: Satellite[];
+  satellites: (Satellite & { id: number })[];
   groundStations: GroundStation[];
 }
 
@@ -124,6 +124,7 @@ export function SatelliteOverpassClient({
               key={`calendar-${refreshKey}`}
               satellites={filteredSatellites}
               groundStation={selectedGroundStationData}
+              timePeriod={selectedTimePeriod}
             />
           </div>
         </div>

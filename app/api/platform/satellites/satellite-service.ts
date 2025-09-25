@@ -1,6 +1,35 @@
-import { mockSatellites, Satellite } from "./mock";
+import { mockSatellites } from "./mock";
 
 const API_URL = 'http://localhost:5111/api/v1/satellites';
+
+export const SatelliteStatus = {
+  Active: 0,
+  Inactive: 1,
+  Decommissioned: 2,
+  UnderMaintenance: 3,
+  Launching: 4,
+} as const;
+
+
+
+export type SatelliteStatus = typeof SatelliteStatus[keyof typeof SatelliteStatus];
+
+
+
+export interface Satellite {
+  id: number;
+  name: string;
+  noradId: string;
+  status: SatelliteStatus;
+  tle: Tle
+  createdAt: string;
+  lastUpdate: string;
+}
+
+export interface Tle {
+  line1: string;
+  line2: string;
+}
 
 export async function getSatellites(): Promise<Satellite[]> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {

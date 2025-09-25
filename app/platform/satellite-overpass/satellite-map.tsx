@@ -10,6 +10,7 @@ import { SatelliteOrbit } from "./satellite-orbit";
 import Image from "next/image";
 import sat from "@/assets/sat.svg";
 import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
+import { useTheme } from "next-themes";
 
 type EciVec3 = {
   x: number;
@@ -38,6 +39,7 @@ export function SatelliteMap({
   onSatelliteInfoUpdate,
   showOrbit = "orbit",
 }: SatelliteMapProps) {
+  const theme = useTheme();
   const [viewState, setViewState] = useState({
     longitude: 0,
     latitude: 0,
@@ -51,6 +53,7 @@ export function SatelliteMap({
     timestamp: new Date(),
   });
   const [isLoading, setIsLoading] = useState(true);
+
   
   // Use ref to avoid dependency issues with onSatelliteInfoUpdate
   const onSatelliteInfoUpdateRef = useRef(onSatelliteInfoUpdate);
@@ -172,9 +175,10 @@ export function SatelliteMap({
         }}
         projection={"mercator"}
         interactive={true}
-        //mapStyle="https://tile.openstreetmap.jp/styles/maptiler-basic-en/style.json"
-        //mapStyle="https://demotiles.maplibre.org/style.json"
-        mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+        mapStyle = {theme.theme === "dark"
+          ? "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
+          : "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+        }
         touchPitch={false}
         dragRotate={false}
         onMove={(evt) => setViewState(evt.viewState)}

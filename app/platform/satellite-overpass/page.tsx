@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { Satellite } from "react-sat-map";
 import { getGroundStations } from "@/app/api/platform/ground-stations/ground-station-service";
 import { getSatellites } from "@/app/api/platform/satellites/satellite-service";
-import type { Satellite as ApiSatellite } from "@/app/api/platform/satellites/mock";
+import type { Satellite as ApiSatellite } from "@/app/api/platform/satellites/satellite-service";
 import {
   Card,
   CardContent,
@@ -21,14 +21,15 @@ export default async function Page() {
   const groundStations = await getGroundStations();
   const apiSatellites = await getSatellites();
 
-  // Transform API satellite data to react-sat-map format
-  const satellitesWithTLE: Satellite[] = apiSatellites
-    .filter((sat: ApiSatellite) => sat.tleLine1 && sat.tleLine2)
+  // Transform API satellite data to react-sat-map format with ID preservation
+  const satellitesWithTLE: (Satellite & { id: number })[] = apiSatellites
+    .filter((sat: ApiSatellite) => sat.tle.line1 && sat.tle.line2)
     .map((sat: ApiSatellite) => ({
+      id: sat.id,
       name: sat.name,
       tle: {
-        line1: sat.tleLine1!,
-        line2: sat.tleLine2!,
+        line1: sat.tle.line1,
+        line2: sat.tle.line2,
       },
     }));
 

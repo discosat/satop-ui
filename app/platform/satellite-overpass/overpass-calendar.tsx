@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import * as satellite from "satellite.js";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -19,157 +18,113 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Satellite } from "react-sat-map";
 import { RefreshButton } from "@/components/refresh-button";
 import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
+import { getOverpassWindows, type Overpass as APIOverpass, type OverpassQueryParams } from "@/app/api/platform/overpass/overpass-service";
+import type { TimePeriod } from "./time-period-select";
 
-interface Overpass {
-  start: Date;
-  end: Date;
-  maxElevation: number;
-  maxElevationTime: Date;
-}
-
-interface ObserverLocation {
-  latitude: number;
-  longitude: number;
-  height: number;
+// Extended satellite interface that includes the original API ID
+interface SatelliteWithId extends Satellite {
+  id?: number;
 }
 
 interface OverpassCalendarProps {
-  satellites: Satellite[];
+  satellites: SatelliteWithId[];
   groundStation?: GroundStation | null;
+  timePeriod?: TimePeriod;
 }
 
 export function OverpassCalendar({ 
   satellites, 
-  groundStation
+  groundStation,
+  timePeriod = "next-3-days"
 }: OverpassCalendarProps) {
-  const [overpasses, setOverpasses] = useState<Overpass[]>([]);
+  const [overpasses, setOverpasses] = useState<APIOverpass[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  //const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState<boolean>(false);
 
-  const issTLE = satellites[0];
-
-  // Use selected ground station location or default to Aarhus
-  const observerLocation: ObserverLocation = useMemo(() => ({
-    latitude: groundStation?.location.latitude ?? 56.162937,
-    longitude: groundStation?.location.longitude ?? 10.203921,
-    height: 0.01, // km above sea level (approximation)
-  }), [groundStation]);
-
-  // Convert degrees to radians
-  const deg2rad = (degrees: number): number => (degrees * Math.PI) / 180;
-
-  // Convert radians to degrees
-  const rad2deg = (radians: number): number => (radians * 180) / Math.PI;
-
-  // Check if the satellite is visible (elevation > 5 degrees)
-  const isVisible = (elevation: number): boolean => {
-    return elevation >= 5; // Minimum elevation of 5 degrees
+  // Get the selected satellite (first one if multiple)
+  const selectedSatellite = satellites?.[0];
+  
+  // Convert time period to date range
+  const getDateRangeFromPeriod = (period: TimePeriod): { start: Date; end: Date } => {
+    const now = new Date();
+    const start = new Date(now);
+    const end = new Date(start);
+    
+    switch (period) {
+      case "today":
+        end.setDate(start.getDate() + 1);
+        break;
+      case "tomorrow":
+        start.setDate(start.getDate() + 1);
+        end.setDate(start.getDate() + 1);
+        break;
+      case "next-3-days":
+        end.setDate(start.getDate() + 3);
+        break;
+      case "next-week":
+        end.setDate(start.getDate() + 7);
+        break;
+      case "next-2-weeks":
+        end.setDate(start.getDate() + 14);
+        break;
+      case "next-month":
+        end.setMonth(start.getMonth() + 1);
+        break;
+    }
+    
+    return { start, end };
   };
 
-  const calculateOverpasses = useCallback((): void => {
+  const fetchOverpasses = useCallback(async (): Promise<void> => {
+    if (!selectedSatellite || !groundStation) {
+      setOverpasses([]);
+      setLoading(false);
+      return;
+    }
+
     try {
-      // Parse the TLE data
-      const satrec = satellite.twoline2satrec(
-        issTLE.tle.line1,
-        issTLE.tle.line2
-      );
+      setLoading(true);
+      setError(null);
 
-      if (satrec.error) {
-        throw new Error(`Error parsing TLE: ${satrec.error}`);
-      }
+      // Get the satellite ID from the satellite data or use a default mapping
+      const satelliteId = selectedSatellite.id || (selectedSatellite.name.includes("ISS") ? 1 : 1);
 
-      // Observer geodetic coordinates
-      const observerGd = {
-        longitude: deg2rad(observerLocation.longitude),
-        latitude: deg2rad(observerLocation.latitude),
-        height: observerLocation.height,
+      const dateRange = getDateRangeFromPeriod(timePeriod);
+      
+      const queryParams: OverpassQueryParams = {
+        startTime: dateRange.start.toISOString(),
+        endTime: dateRange.end.toISOString(),
+        minimumElevation: 5, // Minimum 5 degrees elevation
+        maxResults: 50,
+        minimumDuration: 60 // Minimum 1 minute duration
       };
 
-      const foundOverpasses: Overpass[] = [];
-      let isInOverpass = false;
-      let currentOverpass: Overpass | null = null;
+      const data = await getOverpassWindows(
+        satelliteId,
+        groundStation.id,
+        queryParams
+      );
 
-      // Calculate positions for the next 24 hours in 1-minute intervals
-      const startDate = new Date();
-      const endDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
-
-      for (
-        let date = new Date(startDate);
-        date < endDate;
-        date = new Date(date.getTime() + 60 * 1000)
-      ) {
-        // Get satellite position
-        const positionAndVelocity = satellite.propagate(satrec, date);
-
-        if (positionAndVelocity.position && positionAndVelocity.velocity) {
-          if (typeof positionAndVelocity.position === "boolean") {
-            continue; // Skip if position is not available
-          }
-          // Get the satellite's position in ECEF coordinates
-
-          const gmst = satellite.gstime(date);
-          const positionEcf = satellite.eciToEcf(
-            positionAndVelocity.position,
-            gmst
-          );
-
-          // Get look angles (azimuth, elevation, range)
-          const lookAngles = satellite.ecfToLookAngles(observerGd, positionEcf);
-
-          // Check if satellite is visible
-          const visible = isVisible(rad2deg(lookAngles.elevation));
-
-          if (visible && !isInOverpass) {
-            // Start of an overpass
-            isInOverpass = true;
-            currentOverpass = {
-              start: new Date(date),
-              end: new Date(date), // Initialize with a default that will be updated later
-              maxElevation: rad2deg(lookAngles.elevation),
-              maxElevationTime: new Date(date),
-            };
-          } else if (visible && isInOverpass && currentOverpass) {
-            // During an overpass, update maximum elevation
-            if (rad2deg(lookAngles.elevation) > currentOverpass.maxElevation) {
-              currentOverpass.maxElevation = rad2deg(lookAngles.elevation);
-              currentOverpass.maxElevationTime = new Date(date);
-            }
-          } else if (!visible && isInOverpass && currentOverpass) {
-            // End of an overpass
-            isInOverpass = false;
-            currentOverpass.end = new Date(date);
-            foundOverpasses.push({ ...currentOverpass });
-            currentOverpass = null;
-          }
-        }
-      }
-
-      // If we're still in an overpass at the end of the calculation period
-      if (isInOverpass && currentOverpass) {
-        currentOverpass.end = new Date(endDate);
-        foundOverpasses.push({ ...currentOverpass });
-      }
-
-      setOverpasses(foundOverpasses);
-      setLoading(false);
+      setOverpasses(data);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
+    } finally {
       setLoading(false);
     }
-  }, [issTLE, observerLocation]);
+  }, [selectedSatellite, groundStation, timePeriod]);
 
   useEffect(() => {
     setIsMounted(true);
-    calculateOverpasses();
-  }, [calculateOverpasses]);
+    fetchOverpasses();
+  }, [fetchOverpasses]);
 
   // Format time only - fixed to prevent hydration mismatch
-  const formatTime = (date: Date): string => {
+  const formatTime = (dateString: string): string => {
     // Skip formatting during server render
     if (!isMounted) return "";
 
+    const date = new Date(dateString);
     return date.toLocaleTimeString("da-DK", {
       hour: "2-digit",
       minute: "2-digit",
@@ -178,13 +133,17 @@ export function OverpassCalendar({
   };
 
   // Calculate duration in minutes
-  const getDuration = (start: number, end: number): number => {
+  const getDuration = (startTime: string, endTime: string): number => {
+    const start = new Date(startTime).getTime();
+    const end = new Date(endTime).getTime();
     return Math.round((end - start) / (60 * 1000));
   };
 
   // Check if overpass is happening now
-  const isHappeningNow = (start: Date, end: Date): boolean => {
+  const isHappeningNow = (startTime: string, endTime: string): boolean => {
     const now = new Date();
+    const start = new Date(startTime);
+    const end = new Date(endTime);
     return now >= start && now <= end;
   };
 
@@ -196,6 +155,48 @@ export function OverpassCalendar({
     if (elevation >= 15) return { quality: "Fair", variant: "outline", color: "text-yellow-700 bg-yellow-100 border-yellow-200" };
     return { quality: "Poor", variant: "outline", color: "text-red-700 bg-red-100 border-red-200" };
   };
+
+  // Group overpasses by date
+  const groupOverpassesByDate = (passes: APIOverpass[]) => {
+    const groups: { [key: string]: APIOverpass[] } = {};
+    
+    passes.forEach(pass => {
+      const date = new Date(pass.startTime);
+      const dateKey = date.toDateString(); // e.g., "Mon Sep 25 2025"
+      
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(pass);
+    });
+    
+    return groups;
+  };
+
+  // Format date for display
+  const formatDateHeader = (dateString: string): string => {
+    if (!isMounted) return "";
+    
+    const date = new Date(dateString);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    
+    // Check if it's today or tomorrow
+    if (date.toDateString() === today.toDateString()) {
+      return "Today";
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+      return "Tomorrow";
+    } else {
+      return date.toLocaleDateString("da-DK", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      });
+    }
+  };
+
+  console.log("Overpasses:", overpasses);
 
   const renderContent = () => {
     if (loading) {
@@ -256,67 +257,91 @@ export function OverpassCalendar({
 
     return (
       <ScrollArea className="h-full w-full">
-        <div className="space-y-3 p-1">
-          {overpasses.map((pass, index) => {
-            const isNow = isHappeningNow(pass.start, pass.end);
-            const passQuality = getPassQuality(pass.maxElevation);
-            const duration = getDuration(pass.start.getTime(), pass.end.getTime());
-            
-            return (
-              <Card
-                key={index}
-                className={`transition-all hover:shadow-md ${
-                  isNow ? "ring-2 ring-primary ring-offset-2" : ""
-                }`}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    {/* Left side - Time window */}
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1">
-                        {isNow && (
-                          <ArrowUpRight className="h-4 w-4 text-primary" />
-                        )}
-                        <div className="text-sm font-medium">
-                          Pass #{index + 1}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-3 text-sm">
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="font-mono">
-                            {formatTime(pass.start)} - {formatTime(pass.end)}
-                          </span>
-                        </div>
-                        <div className="text-muted-foreground">
-                          ({duration} min)
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Right side - Elevation and quality */}
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <div className="text-sm font-medium">
-                          {pass.maxElevation.toFixed(1)}° max
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          at {formatTime(pass.maxElevationTime)}
-                        </div>
-                      </div>
-                      <Badge 
-                        variant="outline" 
-                        className={`${passQuality.color} border font-medium`}
-                      >
-                        {passQuality.quality}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+        <div className="space-y-4 p-1">
+          {(() => {
+            const groupedPasses = groupOverpassesByDate(overpasses);
+            const sortedDates = Object.keys(groupedPasses).sort((a, b) => 
+              new Date(a).getTime() - new Date(b).getTime()
             );
-          })}
+            
+            return sortedDates.map((dateKey) => (
+              <div key={dateKey} className="space-y-3">
+                {/* Date Header */}
+                <div className="sticky top-0 bg-background/95 backdrop-blur-sm border-b pb-2 mb-3">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    {formatDateHeader(dateKey)}
+                  </h3>
+                </div>
+                
+                {/* Passes for this date */}
+                <div className="space-y-3">
+                  {groupedPasses[dateKey].map((pass, passIndex) => {
+                    const isNow = isHappeningNow(pass.startTime, pass.endTime);
+                    const passQuality = getPassQuality(pass.maxElevation);
+                    const duration = getDuration(pass.startTime, pass.endTime);
+                    // Calculate global pass index
+                    const globalIndex = overpasses.findIndex(p => p === pass);
+                    
+                    return (
+                      <Card
+                        key={`${dateKey}-${passIndex}`}
+                        className={`transition-all hover:shadow-md ${
+                          isNow ? "ring-2 ring-primary ring-offset-2" : ""
+                        }`}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            {/* Left side - Time window */}
+                            <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-1">
+                                {isNow && (
+                                  <ArrowUpRight className="h-4 w-4 text-primary" />
+                                )}
+                                <div className="text-sm font-medium">
+                                  Pass #{globalIndex + 1}
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-3 text-sm">
+                                <div className="flex items-center gap-1.5">
+                                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                                  <span className="font-mono">
+                                    {formatTime(pass.startTime)} - {formatTime(pass.endTime)}
+                                  </span>
+                                </div>
+                                <div className="text-muted-foreground">
+                                  ({duration} min)
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Right side - Elevation and quality */}
+                            <div className="flex items-center gap-3">
+                              <div className="text-right">
+                                <div className="text-sm font-medium">
+                                  {pass.maxElevation.toFixed(1)}° max
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  at {formatTime(pass.maxElevationTime)}
+                                </div>
+                              </div>
+                              <Badge 
+                                variant="outline" 
+                                className={`${passQuality.color} border font-medium`}
+                              >
+                                {passQuality.quality}
+                              </Badge>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            ));
+          })()}
         </div>
       </ScrollArea>
     );
@@ -329,13 +354,20 @@ export function OverpassCalendar({
           <div>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Calendar className="h-5 w-5" />
-              ISS Overpasses
+              {selectedSatellite?.name || "Satellite"} Overpasses
             </CardTitle>
-            <CardDescription>Next 24 hours from now</CardDescription>
+            <CardDescription>
+              {timePeriod === "today" ? "Today" :
+               timePeriod === "tomorrow" ? "Tomorrow" :
+               timePeriod === "next-3-days" ? "Next 3 days" :
+               timePeriod === "next-week" ? "Next week" :
+               timePeriod === "next-2-weeks" ? "Next 2 weeks" :
+               "Next month"}
+            </CardDescription>
           </div>
           <RefreshButton
             onClick={() => {
-              calculateOverpasses();
+              fetchOverpasses();
             }}
           />
         </div>
@@ -345,8 +377,11 @@ export function OverpassCalendar({
         <div className="flex items-center gap-1.5 mb-3 text-sm text-muted-foreground flex-shrink-0">
           <MapPin className="h-3.5 w-3.5" />
           <span>
-            {groundStation?.name || 'Aarhus'} ({observerLocation.latitude.toFixed(2)}°N,{" "}
-            {observerLocation.longitude.toFixed(2)}°E)
+            {groundStation?.name || 'No ground station selected'} 
+            {groundStation && (
+              <>({groundStation.location.latitude.toFixed(2)}°N,{" "}
+              {groundStation.location.longitude.toFixed(2)}°E)</>
+            )}
           </span>
         </div>
         <div className="flex-1 min-h-0">
