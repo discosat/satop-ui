@@ -228,7 +228,7 @@ export default async function Page() {
                         <div className="flex items-center gap-2">
                           <MapPin className="w-4 h-4 text-blue-500" />
                           <span>
-                            {gs.location.latitude}, {gs.location.longitude}
+                            {gs.location.latitude}, {gs.location.longitude} ({gs.location.altitude}m)
                           </span>
                         </div>
                       </TableCell>

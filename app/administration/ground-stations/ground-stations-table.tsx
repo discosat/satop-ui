@@ -33,7 +33,7 @@ export default function GroundStationsTable({
           gs.httpUrl.toLowerCase().includes(q) ||
           `${gs.location.latitude.toFixed(4)}, ${gs.location.longitude.toFixed(
             4
-          )}`
+          )}, ${gs.location.altitude}m`
             .toLowerCase()
             .includes(q)
         );
@@ -89,7 +89,7 @@ export default function GroundStationsTable({
                       rel="noopener noreferrer"
                       className="text-blue-600 underline"
                     >
-                      {gs.location.latitude}, {gs.location.longitude}
+                      {gs.location.latitude}, {gs.location.longitude} ({gs.location.altitude}m)
                     </Link>
                   </div>
                 </TableCell>

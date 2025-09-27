@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Satellite, SatelliteStatus } from "@/app/api/platform/satellites/mock";
+
 import { SatelliteActions } from "./actions";
 import {
   Satellite as SatelliteIcon,
@@ -21,6 +21,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { Satellite, SatelliteStatus } from "@/app/api/platform/satellites/satellite-service";
 
 interface SatellitesTableProps {
   satellites: Satellite[];
@@ -65,8 +66,7 @@ export default function SatellitesTable({ satellites }: SatellitesTableProps) {
         const q = query.toLowerCase();
         return (
           sat.name.toLowerCase().includes(q) ||
-          sat.noradId.toLowerCase().includes(q) ||
-          sat.status.toLowerCase().includes(q)
+          sat.noradId.toLowerCase().includes(q)
         );
       })
     : satellites;
@@ -148,15 +148,15 @@ export default function SatellitesTable({ satellites }: SatellitesTableProps) {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {sat.lastTleUpdate ? (
+                  {sat.lastUpdate ? (
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-muted-foreground" />
                       <div>
                         <div className="text-sm">
-                          {formatDate(sat.lastTleUpdate)}
+                          {formatDate(sat.lastUpdate)}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {formatRelativeTime(sat.lastTleUpdate)}
+                          {formatRelativeTime(sat.lastUpdate)}
                         </div>
                       </div>
                     </div>

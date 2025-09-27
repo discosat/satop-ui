@@ -35,7 +35,7 @@ export function GroundStationSelect({
         <SelectContent>
           {groundStations.map((station) => (
             <SelectItem key={station.id} value={station.id.toString()}>
-              {station.name} (Lat: {station.location.latitude.toFixed(2)}, Lon: {station.location.longitude.toFixed(2)})
+              {station.name} (Lat: {station.location.latitude.toFixed(2)}, Lon: {station.location.longitude.toFixed(2)}, Alt: {station.location.altitude}m)
             </SelectItem>
           ))}
         </SelectContent>

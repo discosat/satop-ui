@@ -45,6 +45,13 @@ const formSchema = z.object({
     })
     .min(-180, { message: "Longitude must be between -180 and 180 degrees" })
     .max(180, { message: "Longitude must be between -180 and 180 degrees" }),
+  altitude: z.coerce
+    .number({ 
+      required_error: "Altitude is required",
+      invalid_type_error: "Altitude must be a valid number" 
+    })
+    .min(-1000, { message: "Altitude must be greater than -1000 meters" })
+    .max(10000, { message: "Altitude must be less than 10000 meters" }),
   httpUrl: z
     .string()
     .min(1, { message: "HTTP URL is required" })
@@ -63,6 +70,7 @@ export const CreateGroundStationModal = () => {
       name: "",
       latitude: undefined,
       longitude: undefined,
+      altitude: undefined,
       httpUrl: "",
     },
   });
@@ -74,7 +82,8 @@ export const CreateGroundStationModal = () => {
         name: values.name,
         location: { 
           latitude: values.latitude, 
-          longitude: values.longitude 
+          longitude: values.longitude,
+          altitude: values.altitude 
         },
         httpUrl: values.httpUrl,
         isActive: true,
@@ -127,7 +136,7 @@ export const CreateGroundStationModal = () => {
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="latitude"
@@ -161,6 +170,28 @@ export const CreateGroundStationModal = () => {
                         type="number"
                         step="0.0001"
                         placeholder="e.g. 15.6469"
+                        value={field.value == null || isNaN(field.value) ? "" : field.value.toString()}
+                        onChange={(e) => {
+                          const value = e.target.value === "" ? undefined : parseFloat(e.target.value);
+                          field.onChange(value);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="altitude"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Altitude (m)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="1"
+                        placeholder="e.g. 100"
                         value={field.value == null || isNaN(field.value) ? "" : field.value.toString()}
                         onChange={(e) => {
                           const value = e.target.value === "" ? undefined : parseFloat(e.target.value);

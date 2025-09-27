@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Satellite, SatelliteStatus } from "@/app/api/platform/satellites/mock";
 import {
   Satellite as SatelliteIcon,
   Calendar,
@@ -20,6 +19,7 @@ import {
   Check,
 } from "lucide-react";
 import { useState } from "react";
+import { Satellite, SatelliteStatus } from "@/app/api/platform/satellites/satellite-service";
 
 interface SatelliteDetailsModalProps {
   satellite: Satellite;
@@ -83,8 +83,8 @@ export function SatelliteDetailsModal({
   };
 
   const downloadTLE = () => {
-    if (satellite.tleLine1 && satellite.tleLine2) {
-      const tleData = `${satellite.name}\n${satellite.tleLine1}\n${satellite.tleLine2}`;
+    if (satellite.tle.line1 && satellite.tle.line2) {
+      const tleData = `${satellite.name}\n${satellite.tle.line1}\n${satellite.tle.line2}`;
       const blob = new Blob([tleData], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -151,7 +151,7 @@ export function SatelliteDetailsModal({
           </div>
 
           {/* TLE Data */}
-          {satellite.tleLine1 && satellite.tleLine2 && (
+          {satellite.tle.line1 && satellite.tle.line2 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">
@@ -163,7 +163,7 @@ export function SatelliteDetailsModal({
                     size="sm"
                     onClick={() =>
                       copyToClipboard(
-                        `${satellite.tleLine1}\n${satellite.tleLine2}`
+                        `${satellite.tle.line1}\n${satellite.tle.line2}`
                       )
                     }
                   >
@@ -187,7 +187,7 @@ export function SatelliteDetailsModal({
                     Line 1
                   </label>
                   <div className="bg-muted p-3 rounded-md font-mono text-sm break-all">
-                    {satellite.tleLine1}
+                    {satellite.tle.line1}
                   </div>
                 </div>
                 <div>
@@ -195,12 +195,12 @@ export function SatelliteDetailsModal({
                     Line 2
                   </label>
                   <div className="bg-muted p-3 rounded-md font-mono text-sm break-all">
-                    {satellite.tleLine2}
+                    {satellite.tle.line2}
                   </div>
                 </div>
               </div>
 
-              {satellite.lastTleUpdate && (
+              {satellite.lastUpdate && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">
                     Last TLE Update
@@ -208,10 +208,10 @@ export function SatelliteDetailsModal({
                   <div className="flex items-center gap-2 mt-1">
                     <Clock className="w-4 h-4 text-muted-foreground" />
                     <p className="text-sm">
-                      {formatDate(satellite.lastTleUpdate)}
+                      {formatDate(satellite.lastUpdate)}
                     </p>
                     <span className="text-xs text-muted-foreground">
-                      ({formatRelativeTime(satellite.lastTleUpdate)})
+                      ({formatRelativeTime(satellite.lastUpdate)})
                     </span>
                   </div>
                 </div>
@@ -238,7 +238,7 @@ export function SatelliteDetailsModal({
                 </label>
                 <div className="flex items-center gap-2 mt-1">
                   <Clock className="w-4 h-4 text-muted-foreground" />
-                  <p className="text-sm">{formatDate(satellite.updatedAt)}</p>
+                  <p className="text-sm">{formatDate(satellite.lastUpdate)}</p>
                 </div>
               </div>
             </div>

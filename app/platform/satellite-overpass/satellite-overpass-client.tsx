@@ -63,8 +63,6 @@ export function SatelliteOverpassClient({
     return groundStations.find(gs => gs.id.toString() === selectedGroundStation);
   }, [groundStations, selectedGroundStation]);
 
-  
-
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);
   };

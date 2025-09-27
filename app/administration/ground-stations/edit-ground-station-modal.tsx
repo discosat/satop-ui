@@ -37,10 +37,13 @@ const formSchema = z.object({
     .number({ invalid_type_error: "Longitude must be a number" })
     .min(-180)
     .max(180),
+  altitude: z
+    .number({ invalid_type_error: "Altitude must be a number" })
+    .min(-1000, { message: "Altitude must be greater than -1000 meters" })
+    .max(10000, { message: "Altitude must be less than 10000 meters" }),
   httpUrl: z
     .string()
     .url({ message: "Please enter a valid HTTP URL" }),
-  isActive: z.boolean().default(true),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -62,8 +65,8 @@ export function EditGroundStationModal({
       name: station.name,
       latitude: station.location.latitude,
       longitude: station.location.longitude,
+      altitude: station.location.altitude,
       httpUrl: station.httpUrl,
-      isActive: station.isActive,
     },
   });
 
@@ -72,10 +75,14 @@ export function EditGroundStationModal({
     await updateGroundStation({
       id: station.id,
       name: values.name,
-      location: { latitude: values.latitude, longitude: values.longitude },
+      location: { 
+        latitude: values.latitude, 
+        longitude: values.longitude,
+        altitude: values.altitude 
+      },
       httpUrl: values.httpUrl,
       createdAt: station.createdAt,
-      isActive: values.isActive,
+      isActive: station.isActive, // Keep existing status
     });
     await refreshGroundStations();
     setSaving(false);
@@ -112,7 +119,7 @@ export function EditGroundStationModal({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="latitude"
@@ -153,6 +160,27 @@ export function EditGroundStationModal({
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="altitude"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Altitude (m)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="1"
+                        placeholder="e.g. 100"
+                        value={field.value ?? ""}
+                        onChange={(e) =>
+                          field.onChange(parseFloat(e.target.value))
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             <FormField
@@ -164,29 +192,6 @@ export function EditGroundStationModal({
                   <FormControl>
                     <Input placeholder="http://example.com" {...field} />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="isActive"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="checkbox"
-                      checked={field.value}
-                      onChange={(e) =>
-                        field.onChange((e.target as HTMLInputElement).checked)
-                      }
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Uncheck to disable this station.
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
