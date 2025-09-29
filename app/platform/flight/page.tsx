@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { me } from "@/app/actions/me"; 
 import { redirect } from "next/navigation";
 import { Plus } from "lucide-react";
+import { getSatellites } from "@/app/api/platform/satellites/satellite-service";
+import { getGroundStations } from "@/app/api/platform/ground-stations/ground-station-service";
 
 export default async function Page({}) {
   const session = await me();
@@ -22,7 +24,9 @@ export default async function Page({}) {
   }
   
   const flightPlans = await getFlightPlans();
-  
+  const satellites = await getSatellites();
+  const groundStations = await getGroundStations();
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -57,7 +61,11 @@ export default async function Page({}) {
             <ServerRefreshButton />
           </div>
 
-          <FlightPlansTable flightPlans={flightPlans} />
+          <FlightPlansTable 
+            flightPlans={flightPlans} 
+            satellites={satellites}
+            groundStations={groundStations}
+          />
         </CardContent>
       </Card>
     </div>

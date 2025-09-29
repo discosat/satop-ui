@@ -1,7 +1,6 @@
 export interface GroundStation {
   id: number;
   name: string;
-  // latitude, longitude, altitude in WGS84 for display convenience; backend stores GEOGRAPHY POINT(4326)
   location: { latitude: number; longitude: number; altitude: number };
   httpUrl: string;
   createdAt: string;
@@ -33,4 +32,19 @@ export const mockGroundStations: GroundStation[] = [
     createdAt: new Date().toISOString(),
     isActive: false,
   },
+  {
+    id: 4,
+    name: "Kiruna Ground Station",
+    location: { latitude: 67.8558, longitude: 20.2253, altitude: 390 },
+    httpUrl: "http://kiruna.gs.example",
+    createdAt: new Date().toISOString(),
+    isActive: true,
+  },
 ]; 
+
+// We need to figure out how to associate a specific overpass with a schedule(flight plan)
+
+
+// Core problem we must solve. Given a ground station and a time window. We must find out how long the satelitte should sleep after recieving the command from the groundstation before being above a specific coordinate on the earth where it will run a command to take a picture.
+// We have already found the communication window with the groundstation using spg4. Now we need to find the next time the satellite will be above a specific coordinate on the earth.
+// We can do this by using spg4 to propagate the satellite's position over time and check when it will be above the desired coordinate.

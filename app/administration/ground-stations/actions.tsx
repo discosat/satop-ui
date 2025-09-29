@@ -8,15 +8,60 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Activity } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
+import { checkGroundStationHealth } from "@/app/api/platform/ground-stations/ground-station-service";
 import { EditGroundStationModal } from "./edit-ground-station-modal";
 import { DeleteGroundStationModal } from "./delete-ground-station-modal";
 
 export function GroundStationActions({ station }: { station: GroundStation }) {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
+
+  const handleHealthCheck = async () => {
+    setIsCheckingHealth(true);
+    try {
+      const healthData = await checkGroundStationHealth(station.id);
+      if (healthData) {
+        const isHealthy = healthData.status.toLowerCase() === 'healthy';
+        toast.success(
+          `Health Check: ${healthData.name}`,
+          {
+            description: `Status: ${healthData.status} (checked at ${new Date(healthData.checkedAt).toLocaleString()})`,
+            style: {
+              background: isHealthy ? '#22c55e' : '#ef4444',
+              color: 'white',
+              border: 'none'
+            }
+          }
+        );
+      } else {
+        toast.error("Health Check Failed", {
+          description: "Unable to retrieve health status from the ground station",
+          style: {
+            background: '#ef4444',
+            color: 'white',
+            border: 'none'
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Health check error:', error);
+      toast.error("Health Check Error", {
+        description: "An error occurred while checking the ground station health",
+        style: {
+          background: '#ef4444',
+          color: 'white',
+          border: 'none'
+        }
+      });
+    } finally {
+      setIsCheckingHealth(false);
+    }
+  };
 
   return (
     <>
@@ -27,6 +72,14 @@ export function GroundStationActions({ station }: { station: GroundStation }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem 
+            onClick={handleHealthCheck}
+            disabled={isCheckingHealth}
+          >
+            <Activity className="mr-2 h-4 w-4" />
+            {isCheckingHealth ? "Checking..." : "Health Check"}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setEditOpen(true)}>
             Edit ground station
           </DropdownMenuItem>

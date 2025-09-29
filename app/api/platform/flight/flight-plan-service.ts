@@ -1,12 +1,27 @@
-import { FlightPlan } from "@/app/platform/flight/flight-table";
 import { mockFlightPlans } from "./mock";
-import { randomUUID } from "crypto";
 
 const API_URL = 'http://localhost:5111/api/v1/flight-plans';
 
 export interface ApprovalResult {
   success: boolean;
   message: string;
+}
+
+export type FlightPlanStatus = "pending" | "approved" | "rejected" | "superseded" | "transmitted";
+
+export interface FlightPlan {
+  id: number;
+  flightPlanBody: {
+    name: string;
+    body: string;
+  };
+  scheduledAt: string;
+  gsId: number;
+  satId: number;
+  status: string;
+  previousPlanId?: string;
+  approverId?: string;
+  approvalDate?: string;
 }
 
 export async function getFlightPlans(): Promise<FlightPlan[]> {
@@ -36,12 +51,12 @@ export async function getFlightPlans(): Promise<FlightPlan[]> {
   }
 }
 
-export async function getFlightPlanById(id: string): Promise<FlightPlan | null> {
+export async function getFlightPlanById(id: number): Promise<FlightPlan | null> {
   try {
     if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
       return mockFlightPlans.find((p) => p.id === id) || null;
     }
-    const response = await fetch(`${API_URL}${id}`, {
+    const response = await fetch(`${API_URL}/${id}`, {
       method: 'GET',
       next: { revalidate: 60 }
     });
@@ -58,7 +73,7 @@ export async function createFlightPlan(flightPlan: FlightPlan): Promise<FlightPl
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
     const created: FlightPlan = {
       ...flightPlan,
-      id: flightPlan.id || randomUUID(),
+      id: flightPlan.id || Math.floor(Math.random() * 10000),
     };
     mockFlightPlans.unshift(created);
     return created;
@@ -91,7 +106,7 @@ export async function updateFlightPlan(flightPlan: FlightPlan, accessToken: stri
     const index = mockFlightPlans.findIndex((p) => p.id === flightPlan.id);
     if (index !== -1) {
       mockFlightPlans[index].status = 'superseded';
-      const newVersion: FlightPlan = { ...flightPlan, id: randomUUID(), status: 'pending', previous_plan_id: flightPlan.id };
+      const newVersion: FlightPlan = { ...flightPlan, id: Math.floor(Math.random() * 10000), status: 'pending', previousPlanId: flightPlan.id.toString() };
       mockFlightPlans.unshift(newVersion);
       return newVersion;
     }
@@ -99,7 +114,7 @@ export async function updateFlightPlan(flightPlan: FlightPlan, accessToken: stri
   }
 
   try {
-    const response = await fetch(`${API_URL}${flightPlan.id}`, {
+    const response = await fetch(`${API_URL}/${flightPlan.id}`, {
       method: 'PUT',
       headers: {
         authorization: `Bearer ${accessToken}`,
@@ -121,7 +136,7 @@ export async function updateFlightPlan(flightPlan: FlightPlan, accessToken: stri
 
 export async function approveFlightPlan(id: string, approved: boolean, accessToken: string): Promise<ApprovalResult> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
-    const index = mockFlightPlans.findIndex((p) => p.id === id);
+    const index = mockFlightPlans.findIndex((p) => p.id === Number(id));
     if (index !== -1) {
       mockFlightPlans[index].status = approved ? 'approved' : 'rejected';
       return { success: true, message: `Mock plan ${approved ? 'approved' : 'rejected'}` };
@@ -134,7 +149,7 @@ export async function approveFlightPlan(id: string, approved: boolean, accessTok
       status: approved ? 'approved' : 'rejected',
     };
 
-    const response = await fetch(`${API_URL}${id}`, {
+    const response = await fetch(`${API_URL}/${id}`, {
       method: 'PATCH',
       headers: {
         authorization: `Bearer ${accessToken}`,

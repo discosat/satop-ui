@@ -113,3 +113,51 @@ export async function deleteGroundStation(id: number): Promise<{ success: boolea
   }
   return { success: false };
 }
+
+// health check endpoint
+export interface GroundStationHealthResponse {
+  id: number;
+  name: string;
+  isActive: boolean;
+  lastUpdated: string;
+  status: string;
+  checkedAt: string;
+  checkType: string;
+}
+
+export async function checkGroundStationHealth(id: number): Promise<GroundStationHealthResponse | null> {
+  if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
+    const station = mockGroundStations.find((g) => g.id === id);
+    if (!station) return null;
+    
+    return {
+      id: station.id,
+      name: station.name,
+      isActive: station.isActive,
+      lastUpdated: new Date().toISOString(),
+      status: station.isActive ? "Healthy" : "Unhealthy",
+      checkedAt: new Date().toISOString(),
+      checkType: "Mock Health Check"
+    };
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}/${id}/health`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store' // Don't cache health checks as they should be real-time
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to check ground station health: ${response.statusText}`);
+    }
+    
+    const healthData = await response.json();
+    return healthData;
+  } catch (error) {
+    console.error(`Error checking health of ground station ${id}:`, error);
+    return null;
+  }
+}

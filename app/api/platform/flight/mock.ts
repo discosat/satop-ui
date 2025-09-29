@@ -1,47 +1,48 @@
-import { FlightPlan } from "@/app/platform/flight/flight-table";
+import { FlightPlan } from "./flight-plan-service";
+
 
 // Mock data for flight plans based on the Python backend model
 export const mockFlightPlans: FlightPlan[] = [
     {
-      id: "8k9l0p1o-2i3u-4y5t-6r7e-8w9q0a1s2d3f",
-      flight_plan: {
+      id: 1,
+      flightPlanBody: {
         name: "Camera Calibration",
-        body: [
+        body: JSON.stringify([
           { name: "enable-camera", id: "main" },
           { name: "set-exposure", value: 150 },
           { name: "capture-calibration", frames: 5 },
           { name: "adjust-focus", value: "auto" },
           { name: "disable-camera", id: "main" },
-        ],
+        ]),
       },
-      scheduled_at: "2025-05-22T13:45:00+01:00",
-      gs_id: "3d4f5g6h-7j8k-9l0p-1o2i-3u4y5t6r7e8w",
-      sat_name: "EXPLORER-1",
+      scheduledAt: "2025-05-22T13:45:00+01:00",
+      gsId: 1,
+      satId: 1,
       status: "pending",
-      previous_plan_id: "OLD-8k9l0p1o-2i3u-4y5t-6r7e-8w9q0a1s2d3f",
+      previousPlanId: "2",
     },
     {
-      id: "OLD-8k9l0p1o-2i3u-4y5t-6r7e-8w9q0a1s2d3f",
-      flight_plan: {
+      id: 2,
+      flightPlanBody: {
         name: "Camera Calibration",
-        body: [
+        body: JSON.stringify([
           { name: "enable-camera", id: "main" },
           { name: "set-exposure", value: 120 },
           { name: "capture-calibration", frames: 5 },
           { name: "adjust-focus", value: "auto" },
           { name: "disable-camera", id: "main" },
-        ],
+        ]),
       },
-      scheduled_at: "2025-05-22T13:45:00+01:00",
-      gs_id: "3d4f5g6h-7j8k-9l0p-1o2i-3u4y5t6r7e8w",
-      sat_name: "EXPLORER-1",
+      scheduledAt: "2025-05-22T13:45:00+01:00",
+      gsId: 1,
+      satId: 1,
       status: "superseded",
     },
     {
-      id: "7f9c6e8a-5d4b-3c2a-1e0f-9d8c7b6a5e4d",
-      flight_plan: {
+      id: 3,
+      flightPlanBody: {
         name: "LED Blink Sequence",
-        body: [
+        body: JSON.stringify([
           {
             name: "repeat-n",
             count: 10,
@@ -52,52 +53,52 @@ export const mockFlightPlans: FlightPlan[] = [
               { name: "wait-sec", duration: 1 },
             ],
           },
-        ],
+        ]),
       },
-      scheduled_at: "2025-05-12T14:30:00+01:00",
-      gs_id: "86c8a92b-571a-46cb-b306-e9be71959279",
-      sat_name: "DISCO-2",
+      scheduledAt: "2025-05-12T14:30:00+01:00",
+      gsId: 2,
+      satId: 2,
       status: "pending",
     },
     {
-      id: "2a1b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
-      flight_plan: {
+      id: 4,
+      flightPlanBody: {
         name: "Sensor Data Collection",
-        body: [
+        body: JSON.stringify([
           { name: "start-data-collection", sensor: "temperature", duration: 300 },
           { name: "start-data-collection", sensor: "radiation", duration: 300 },
           { name: "downlink-data", target: "ground" },
-        ],
+        ]),
       },
-      scheduled_at: "2025-05-15T09:15:00+01:00",
-      gs_id: "5f4e3d2c-1b2a-3c4d-5e6f-7g8h9i0j1k2l",
-      sat_name: "ORION-1",
+      scheduledAt: "2025-05-15T09:15:00+01:00",
+      gsId: 3,
+      satId: 3,
       status: "approved",
-      approver_id: "user-abc-123",
-      approval_date: "2025-05-14T10:00:00Z",
+      approverId: "user-abc-123",
+      approvalDate: "2025-05-14T10:00:00Z",
     },
     {
-      id: "9z8y7x6w-5v4u-3t2s-1r0q-9p8o7n6m5l4k",
-      flight_plan: {
+      id: 5,
+      flightPlanBody: {
         name: "Solar Panel Deployment",
-        body: [
+        body: JSON.stringify([
           { name: "deploy-solar-panels", angle: 90 },
           { name: "wait-min", duration: 10 },
           { name: "check-power-levels", threshold: 75 },
-        ],
+        ]),
       },
-      scheduled_at: "2025-05-08T11:20:00+01:00",
-      gs_id: "4j5k6l7m-8n9o-0p1q-2r3s-4t5u6v7w8x9y",
-      sat_name: "AURORA-5",
+      scheduledAt: "2025-05-08T11:20:00+01:00",
+      gsId: 4,
+      satId: 4,
       status: "rejected",
-      approver_id: "user-xyz-789",
-      approval_date: "2025-05-07T12:00:00Z",
+      approverId: "user-xyz-789",
+      approvalDate: "2025-05-07T12:00:00Z",
     },
     {
-      id: "1q2w3e4r-5t6y-7u8i-9o0p-1a2s3d4f5g6h",
-      flight_plan: {
+      id: 6,
+      flightPlanBody: {
         name: "Thruster Test Sequence",
-        body: [
+        body: JSON.stringify([
           {
             name: "enable-thrusters",
             group: "attitude"
@@ -120,18 +121,18 @@ export const mockFlightPlans: FlightPlan[] = [
             name: "disable-thrusters",
             group: "attitude"
           }
-        ]
+        ])
       },
-      scheduled_at: "2025-05-20T16:00:00+01:00",
-      gs_id: "7h8j9k0l-1z2x-3c4v-5b6n-7m8a9s0d1f2g",
-      sat_name: "VOYAGER-9",
+      scheduledAt: "2025-05-20T16:00:00+01:00",
+      gsId: 5,
+      satId: 5,
       status: "pending"
     },
     {
-      id: "5t6y7u8i-9o0p-1q2w-3e4r-5t6y7u8i9o0p",
-      flight_plan: {
+      id: 7,
+      flightPlanBody: {
         name: "System Diagnostics",
-        body: [
+        body: JSON.stringify([
           {
             name: "run-diagnostics",
             level: "comprehensive",
@@ -145,11 +146,11 @@ export const mockFlightPlans: FlightPlan[] = [
             name: "transmit-data",
             priority: "high"
           }
-        ]
+        ])
       },
-      scheduled_at: "2025-05-07T08:30:00+01:00",
-      gs_id: "2s3d4f5g-6h7j-8k9l-0q1w-2e3r4t5y6u7i",
-      sat_name: "PIONEER-3",
+      scheduledAt: "2025-05-07T08:30:00+01:00",
+      gsId: 6,
+      satId: 6,
       status: "approved"
     },
   ];

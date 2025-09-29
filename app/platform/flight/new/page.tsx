@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import FlightPlanner from "../flight-planner";
-import type { FlightPlan } from "../flight-table";
+import type { FlightPlan } from "@/app/api/platform/flight/flight-plan-service";
 import { createFlightPlan } from "@/app/api/platform/flight/flight-plan-service";
 import { toast } from "sonner";
 import { useSession } from "@/app/context";
@@ -39,17 +39,23 @@ import { getSatellites, Satellite } from "@/app/api/platform/satellites/satellit
 import { getGroundStations } from "@/app/api/platform/ground-stations/ground-station-service";
 import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
 
+
+// A flight plan requires a name, a ground station id, a satellite name
+
+// Should the flight plan page still be generic and support sending all possible commands to the satelitte?
+// Or should we become more specific and only support the image command for now?
+
 const formSchema = z.object({
   name: z
     .string()
     .min(3, { message: "Flight plan name must be at least 3 characters." }),
-  gs_id: z
+  gsId: z
     .string()
     .min(1, { message: "Please select a ground station." })
     .refine((val) => !val.startsWith("__"), { 
       message: "Please select a valid ground station." 
     }),
-  sat_name: z
+  satId: z
     .string()
     .min(1, { message: "Please select a satellite." })
     .refine((val) => !val.startsWith("__"), { 
@@ -70,7 +76,7 @@ export default function  NewFlightPlanPage() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: "", gs_id: "", sat_name: "" },
+    defaultValues: { name: "", gsId: "", satId: "" },
   });
 
   // Fetch satellites and ground stations on component mount
@@ -123,14 +129,14 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
     
     try {
       const payload: FlightPlan = {
-        id: "", // backend will assign this
-        flight_plan: {
+        id: 0, // backend will assign this
+        flightPlanBody: {
           name: values.name,
-          body: parsedBody as Record<string, unknown>[],
+          body: JSON.stringify(parsedBody),
         },
-        scheduled_at: new Date().toISOString(),
-        gs_id: values.gs_id,
-        sat_name: values.sat_name,
+        scheduledAt: new Date().toISOString(),
+        gsId: Number(values.gsId),
+        satId: Number(values.satId),
         status: "pending",
       };
 
@@ -191,7 +197,7 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
 
                 <FormField
                   control={form.control}
-                  name="gs_id"
+                  name="gsId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Ground station</FormLabel>
@@ -233,7 +239,7 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
 
                 <FormField
                   control={form.control}
-                  name="sat_name"
+                  name="satId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Satellite</FormLabel>
@@ -257,7 +263,7 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
                             </SelectItem>
                           ) : (
                             satellites.map((sat) => (
-                              <SelectItem key={sat.id} value={sat.name}>
+                              <SelectItem key={sat.id} value={sat.id.toString()}>
                                 {sat.name}
                               </SelectItem>
                             ))

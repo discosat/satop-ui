@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2, Copy, Save } from "lucide-react";
 import { toast } from "sonner";
-import type { FlightPlan } from "./flight-table";
+import type { FlightPlan } from "@/app/api/platform/flight/flight-plan-service";
 
 const blockSnippets: { label: string; json: object; colorClass: string }[] = [
   {
@@ -67,8 +67,15 @@ export default function FlightPlanner({
   const [data, setData] = useState<string>("[]");
 
   useEffect(() => {
-    if (initialData && initialData.flight_plan.body) {
-      setData(JSON.stringify(initialData.flight_plan.body, null, 2));
+    if (initialData && initialData.flightPlanBody.body) {
+      try {
+        // Parse the JSON string and format it
+        const parsedBody = JSON.parse(initialData.flightPlanBody.body);
+        setData(JSON.stringify(parsedBody, null, 2));
+      } catch {
+        // If parsing fails, just use the body as-is
+        setData(initialData.flightPlanBody.body);
+      }
     } else {
       setData("[]");
     }

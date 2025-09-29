@@ -14,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { FlightPlan } from "../flight-table";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,7 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getFlightPlanById, updateFlightPlan, approveFlightPlan } from "@/app/api/platform/flight/flight-plan-service";
+import { getFlightPlanById, updateFlightPlan, approveFlightPlan, FlightPlan } from "@/app/api/platform/flight/flight-plan-service";
 import { useSession } from "@/app/context";
 import Protected from "@/components/protected";
 
@@ -48,7 +48,7 @@ export default function FlightPlanDetailPage() {
       if (!id || !session) return;
       setIsLoading(true);
       try {
-        const plan = await getFlightPlanById(id);
+        const plan = await getFlightPlanById(Number(id));
         if (!isCancelled) {
           setFlightPlan(plan);
         }
@@ -84,9 +84,9 @@ export default function FlightPlanDetailPage() {
 
       const updatedFlightPlanPayload: FlightPlan = {
         ...flightPlan,
-        flight_plan: {
-          ...flightPlan.flight_plan,
-          body: parsedData,
+        flightPlanBody: {
+          ...flightPlan.flightPlanBody,
+          body: JSON.stringify(parsedData),
         },
       };
 
@@ -115,7 +115,7 @@ export default function FlightPlanDetailPage() {
     if (!flightPlan || !session) return;
     setIsLoading(true);
     try {
-      const result = await approveFlightPlan(flightPlan.id, true, session.accessToken);
+      const result = await approveFlightPlan(flightPlan.id.toString(), true, session.accessToken);
       
       if (result.success) {
         setFlightPlan({ ...flightPlan, status: "approved" });
@@ -138,7 +138,7 @@ export default function FlightPlanDetailPage() {
     if (!flightPlan || !session) return;
     setIsLoading(true);
     try {
-      const result = await approveFlightPlan(flightPlan.id, false, session.accessToken);
+      const result = await approveFlightPlan(flightPlan.id.toString(), false, session.accessToken);
       
       if (result.success) {
         setFlightPlan({ ...flightPlan, status: "rejected" });
@@ -186,7 +186,7 @@ export default function FlightPlanDetailPage() {
             Back
           </Button>
           <h1 className="text-3xl font-bold">
-            {flightPlan.flight_plan.name || "Command Sequence"}
+            {flightPlan.flightPlanBody.name || "Command Sequence"}
           </h1>
         </div>
         
@@ -232,28 +232,28 @@ export default function FlightPlanDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <p className="text-sm font-medium">Satellite</p>
-              <p className="text-sm text-muted-foreground">{flightPlan.sat_name}</p>
+              <p className="text-sm text-muted-foreground">Satellite ID: {flightPlan.satId}</p>
             </div>
             <div>
               <p className="text-sm font-medium">Ground Station</p>
-              <p className="text-sm text-muted-foreground">{flightPlan.gs_id}</p>
+              <p className="text-sm text-muted-foreground">GS ID: {flightPlan.gsId}</p>
             </div>
             <div>
               <p className="text-sm font-medium">Scheduled Time</p>
-              <p className="text-sm text-muted-foreground">{new Date(flightPlan.scheduled_at).toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground">{new Date(flightPlan.scheduledAt).toLocaleString()}</p>
             </div>
             <div>
               <p className="text-sm font-medium">Status</p>
               <p className="text-sm text-muted-foreground capitalize">{flightPlan.status}</p>
             </div>
-            {flightPlan.previous_plan_id && (
+            {flightPlan.previousPlanId && (
               <div className="md:col-span-2">
                 <p className="text-sm font-medium">Version History</p>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <History className="w-4 h-4" />
                   <span>This is a new version of plan:</span>
-                  <Link href={`/platform/flight/${flightPlan.previous_plan_id}`} className="text-blue-500 hover:underline truncate">
-                    {flightPlan.previous_plan_id}
+                  <Link href={`/platform/flight/${flightPlan.previousPlanId}`} className="text-blue-500 hover:underline truncate">
+                    {flightPlan.previousPlanId}
                   </Link>
                 </div>
               </div>
