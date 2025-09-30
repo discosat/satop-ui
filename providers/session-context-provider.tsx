@@ -1,7 +1,7 @@
 "use client";
 
 import { SessionPayload } from "@/lib/session";
-import { SessionContextProvider } from "../context";
+import { SessionContextProvider } from "../app/context";
 
 export default function SessionProvider({
   children,
