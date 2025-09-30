@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Eye, Download, RefreshCw, Info } from "lucide-react";
 import { useState } from "react";
-import type { Satellite } from "@/app/api/platform/satellites/mock";
+import type { Satellite } from "@/app/api/platform/satellites/satellite-service";
 import { SatelliteDetailsModal } from "./satellite-details-modal";
 
 export function SatelliteActions({ satellite }: { satellite: Satellite }) {
@@ -21,8 +21,8 @@ export function SatelliteActions({ satellite }: { satellite: Satellite }) {
   };
 
   const handleDownloadTLE = () => {
-    if (satellite.tleLine1 && satellite.tleLine2) {
-      const tleData = `${satellite.name}\n${satellite.tleLine1}\n${satellite.tleLine2}`;
+    if (satellite.tle?.line1 && satellite.tle?.line2) {
+      const tleData = `${satellite.name}\n${satellite.tle.line1}\n${satellite.tle.line2}`;
       const blob = new Blob([tleData], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -39,6 +39,8 @@ export function SatelliteActions({ satellite }: { satellite: Satellite }) {
     // In a real application, this would trigger a TLE refresh
     console.log(`Refreshing TLE for satellite ${satellite.id}`);
     // You could implement a refresh function here
+
+    
   };
 
   return (
@@ -55,7 +57,7 @@ export function SatelliteActions({ satellite }: { satellite: Satellite }) {
             View details
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          {satellite.tleLine1 && satellite.tleLine2 && (
+          {satellite.tle?.line1 && satellite.tle?.line2 && (
             <DropdownMenuItem onClick={handleDownloadTLE}>
               <Download className="w-4 h-4 mr-2" />
               Download TLE

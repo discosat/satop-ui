@@ -31,21 +31,16 @@ export function GroundStationActions({ station }: { station: GroundStation }) {
           `Health Check: ${healthData.name}`,
           {
             description: `Status: ${healthData.status} (checked at ${new Date(healthData.checkedAt).toLocaleString()})`,
-            style: {
-              background: isHealthy ? '#22c55e' : '#ef4444',
-              color: 'white',
-              border: 'none'
-            }
           }
         );
+        if (!isHealthy) {
+          toast.error("Ground station is not healthy", {
+            description: "Please investigate the issue.",
+          });
+        }
       } else {
         toast.error("Health Check Failed", {
           description: "Unable to retrieve health status from the ground station",
-          style: {
-            background: '#ef4444',
-            color: 'white',
-            border: 'none'
-          }
         });
       }
     } catch (error) {
