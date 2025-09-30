@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -82,13 +83,23 @@ const users: User[] = [
 ];
 
 export default function UserManagement() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("query") || "");
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    
+    const params = new URLSearchParams(searchParams);
+    if (value) {
+      params.set("query", value);
+    } else {
+      params.delete("query");
+    }
+    router.replace(`${pathname}?${params.toString()}`);
+  };
 
   const supportUsers = users.filter((user) => user.needsSupport);
 
@@ -140,13 +151,13 @@ export default function UserManagement() {
                       placeholder="Search users..."
                       className="pl-8"
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={handleSearchChange}
                     />
                   </div>
                   <RefreshButton onClick={() => {}} />
                 </div>
 
-                <UsersTable filteredUsers={filteredUsers} />
+                <UsersTable users={users} />
               </CardContent>
             </Card>
           </TabsContent>
