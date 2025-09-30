@@ -56,9 +56,17 @@ export default async function Page({}) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-between mb-4 mt-2">
-            <SearchForm />
-            <ServerRefreshButton />
+          <div className="space-y-4 mb-4 mt-2">
+            <div className="flex justify-between items-start">
+              <div className="flex-1 mr-4">
+                <SearchForm 
+                  flightPlans={flightPlans}
+                  satellites={satellites}
+                  groundStations={groundStations}
+                />
+              </div>
+              <ServerRefreshButton />
+            </div>
           </div>
 
           <FlightPlansTable 
