@@ -15,7 +15,7 @@ This mode requires a running instance of the `satop-platform` Python backend.
     ```bash
     docker compose up dev
     ```
-3.  The backend API will start on `http://localhost:7889`. The database is **automatically seeded** with default users, so no manual setup is needed.
+3.  The backend API will start on `http://localhost:7890`. The database is **automatically seeded** with default users, so no manual setup is needed.
 
 #### Step 2: Run the Frontend
 
