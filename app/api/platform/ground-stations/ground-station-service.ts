@@ -1,6 +1,15 @@
 import { mockGroundStations, GroundStation } from "./mock";
 
-const API_URL = 'http://localhost:5111/api/v1/ground-stations';
+export type GroundStationWithApiKey = GroundStation & {
+  applicationId: string;
+  rawApiKey: string;
+};
+
+export type CreateGroundStationPayload = Omit<GroundStation, 'id' | 'createdAt' | 'isActive'> & {
+  isActive?: boolean;
+};
+
+const API_URL = 'http://localhost:7890/api/v1/ground-stations';
 
 export async function getGroundStations(): Promise<GroundStation[]> {
 
@@ -33,14 +42,19 @@ export async function getGroundStations(): Promise<GroundStation[]> {
   }
 }
 
-export async function createGroundStation(station: Omit<GroundStation, 'id' | 'createdAt'>): Promise<GroundStation> {
+export async function createGroundStation(
+  station: CreateGroundStationPayload
+): Promise<GroundStationWithApiKey> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
-    const newStation: GroundStation = {
+    const newStation: GroundStationWithApiKey = {
       id: mockGroundStations.length + 1,
-      ...station,
       createdAt: new Date().toISOString(),
+      isActive: station.isActive ?? false,
+      ...station,
+      applicationId: `mock-app-id-${Date.now()}`,
+      rawApiKey: `mock-api-key-${Date.now()}-you-wont-see-this-again`,
     };
-    mockGroundStations.push(newStation);
+    mockGroundStations.push(newStation as GroundStation);
     return newStation;
   }
 
@@ -51,10 +65,13 @@ export async function createGroundStation(station: Omit<GroundStation, 'id' | 'c
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(station),
-      next: { revalidate: 60 } 
     });
     
-    if (!response.ok) throw new Error(`Failed to create ground station: ${response.statusText}`);
+    if (!response.ok) {
+        const errorBody = await response.text();
+        console.error('Failed to create ground station:', response.statusText, errorBody);
+        throw new Error(`Failed to create ground station: ${response.statusText}`);
+    }
     return await response.json();
   } catch (error) {
     console.error('Error creating ground station:', error);

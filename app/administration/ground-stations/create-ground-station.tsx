@@ -28,6 +28,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
+import { ApiKeyModal } from "./api-key-modal";
 
 const formSchema = z.object({
   name: z.string().min(3, { message: "Name must be at least 3 characters." }),
@@ -63,6 +64,9 @@ type FormValues = z.infer<typeof formSchema>;
 export const CreateGroundStationModal = () => {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  
+  const [apiKeyInfo, setApiKeyInfo] = useState<{ applicationId: string; rawApiKey: string } | null>(null);
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -78,7 +82,7 @@ export const CreateGroundStationModal = () => {
   const onSubmit = async (values: FormValues) => {
     setSaving(true);
     try {
-      await createGroundStation({
+      const newStationWithKey = await createGroundStation({
         name: values.name,
         location: { 
           latitude: values.latitude, 
@@ -86,12 +90,17 @@ export const CreateGroundStationModal = () => {
           altitude: values.altitude 
         },
         httpUrl: values.httpUrl,
-        isActive: true,
       });
-      await refreshGroundStations();
-      toast.success("Ground station created successfully!");
+      
+      setApiKeyInfo({
+        applicationId: newStationWithKey.applicationId,
+        rawApiKey: newStationWithKey.rawApiKey,
+      });
+      setShowApiKeyModal(true);
+      
       form.reset();
       setOpen(false);
+
     } catch (error) {
       console.error('Failed to create ground station:', error);
       toast.error("Failed to create ground station.");
@@ -101,132 +110,150 @@ export const CreateGroundStationModal = () => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          New ground station
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Create New Ground Station</DialogTitle>
-          <DialogDescription>
-            Define connection and location details.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            New ground station
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Create New Ground Station</DialogTitle>
+            <DialogDescription>
+              Define connection and location details.
+            </DialogDescription>
+          </DialogHeader>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-6 py-4"
-          >
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter name" {...field} />
-                  </FormControl>
-                  <FormDescription>Human-readable station name</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-3 gap-4">
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-6 py-4"
+            >
               <FormField
                 control={form.control}
-                name="latitude"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Latitude</FormLabel>
+                    <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        step="0.0001"
-                        placeholder="e.g. 78.2232"
-                        value={field.value == null || isNaN(field.value) ? "" : field.value.toString()}
-                        onChange={(e) => {
-                          const value = e.target.value === "" ? undefined : parseFloat(e.target.value);
-                          field.onChange(value);
-                        }}
-                      />
+                      <Input placeholder="Enter name" {...field} />
+                    </FormControl>
+                    <FormDescription>Human-readable station name</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="latitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Latitude</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.0001"
+                          placeholder="e.g. 78.2232"
+                          value={field.value == null || isNaN(field.value) ? "" : field.value.toString()}
+                          onChange={(e) => {
+                            const value = e.target.value === "" ? undefined : parseFloat(e.target.value);
+                            field.onChange(value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="longitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Longitude</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.0001"
+                          placeholder="e.g. 15.6469"
+                          value={field.value == null || isNaN(field.value) ? "" : field.value.toString()}
+                          onChange={(e) => {
+                            const value = e.target.value === "" ? undefined : parseFloat(e.target.value);
+                            field.onChange(value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="altitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Altitude (m)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="1"
+                          placeholder="e.g. 100"
+                          value={field.value == null || isNaN(field.value) ? "" : field.value.toString()}
+                          onChange={(e) => {
+                            const value = e.target.value === "" ? undefined : parseFloat(e.target.value);
+                            field.onChange(value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="httpUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>HTTP URL</FormLabel>
+                    <FormControl>
+                      <Input placeholder="http://example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="longitude"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Longitude</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.0001"
-                        placeholder="e.g. 15.6469"
-                        value={field.value == null || isNaN(field.value) ? "" : field.value.toString()}
-                        onChange={(e) => {
-                          const value = e.target.value === "" ? undefined : parseFloat(e.target.value);
-                          field.onChange(value);
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="altitude"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Altitude (m)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="1"
-                        placeholder="e.g. 100"
-                        value={field.value == null || isNaN(field.value) ? "" : field.value.toString()}
-                        onChange={(e) => {
-                          const value = e.target.value === "" ? undefined : parseFloat(e.target.value);
-                          field.onChange(value);
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
 
-            <FormField
-              control={form.control}
-              name="httpUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>HTTP URL</FormLabel>
-                  <FormControl>
-                    <Input placeholder="http://example.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <DialogFooter>
+                <Button type="submit" disabled={saving}>
+                  {saving ? "Creating..." : "Create"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
-            <DialogFooter>
-              <Button type="submit" disabled={saving}>
-                {saving ? "Creating..." : "Create"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+      {apiKeyInfo && (
+        <ApiKeyModal
+          open={showApiKeyModal}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setShowApiKeyModal(false);
+              setApiKeyInfo(null);
+              refreshGroundStations();
+              toast.success("Ground station created successfully!");
+            }
+          }}
+          applicationId={apiKeyInfo.applicationId}
+          apiKey={apiKeyInfo.rawApiKey}
+        />
+      )}
+    </>
   );
 };
