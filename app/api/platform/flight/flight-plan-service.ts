@@ -171,3 +171,63 @@ export async function approveFlightPlan(id: string, approved: boolean, accessTok
     throw error;
   }
 }
+
+export interface AssociateOverpassRequest {
+  startTime: string;
+  endTime: string;
+}
+
+export async function associateOverpass(
+  flightPlanId: number,
+  request: AssociateOverpassRequest
+): Promise<ApprovalResult> {
+  if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
+    try {
+      // Wire into the overpass mock so the calendar reflects the change
+      // We do a dynamic import to avoid circular import issues
+      const overpassModule: typeof import("@/app/api/platform/overpass/overpass-service") = await import("@/app/api/platform/overpass/overpass-service");
+      // Find the plan to copy metadata
+      const plan = mockFlightPlans.find((p) => p.id === flightPlanId);
+      if (!plan) {
+        return { success: false, message: "Mock plan not found" };
+      }
+      const association = {
+        id: plan.id,
+        name: plan.flightPlanBody?.name || `Plan ${plan.id}`,
+        scheduledAt: request.startTime,
+        status: "ASSIGNED_TO_OVERPASS",
+      } as const;
+      // We don't know sat/gs context here; record by time range only so the mock generator can match broadly
+      if (typeof overpassModule.addMockOverpassAssociation === "function") {
+        overpassModule.addMockOverpassAssociation({
+          startTime: request.startTime,
+          endTime: request.endTime,
+          associatedFlightPlan: association,
+        });
+      }
+      return { success: true, message: "Mock association created" };
+    } catch {
+      return { success: false, message: "Failed to create mock association" };
+    }
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/${flightPlanId}/associate-overpass`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      throw new Error(`Failed to associate overpass (${response.status}): ${response.statusText} ${text}`.trim());
+    }
+
+    return { success: true, message: 'Association created' };
+  } catch (error) {
+    console.error('Error associating overpass:', error);
+    throw error;
+  }
+}

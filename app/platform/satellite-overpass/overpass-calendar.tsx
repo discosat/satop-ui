@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -18,6 +19,9 @@ import {
   Info,
   Eye,
   CheckCircle2,
+  Filter,
+  Check,
+  ChevronDown,
 } from "lucide-react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -26,6 +30,34 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Satellite } from "react-sat-map";
 import { RefreshButton } from "@/components/refresh-button";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
 import {
   getOverpassWindows,
@@ -40,6 +72,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  getFlightPlans,
+  type FlightPlan,
+  associateOverpass,
+} from "@/app/api/platform/flight/flight-plan-service";
 
 // Extended satellite interface that includes the original API ID
 interface SatelliteWithId extends Satellite {
@@ -61,6 +98,19 @@ export function OverpassCalendar({
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState<boolean>(false);
+  // Associate dialog state
+  const [associateOpen, setAssociateOpen] = useState<boolean>(false);
+  const [associateTarget, setAssociateTarget] = useState<APIOverpass | null>(
+    null
+  );
+  const [flightPlans, setFlightPlans] = useState<FlightPlan[]>([]);
+  const [selectedFlightPlanId, setSelectedFlightPlanId] = useState<string>("");
+  const [associating, setAssociating] = useState<boolean>(false);
+  // Client-side filters
+  const [selectedQualities, setSelectedQualities] = useState<string[]>([]);
+  const [associationFilter, setAssociationFilter] = useState<
+    "any" | "associated" | "unassociated"
+  >("any");
 
   // Get the selected satellite (first one if multiple)
   const selectedSatellite = satellites?.[0];
@@ -142,6 +192,39 @@ export function OverpassCalendar({
     setIsMounted(true);
     fetchOverpasses();
   }, [fetchOverpasses]);
+
+  useEffect(() => {
+    const loadPlans = async () => {
+      try {
+        const plans = await getFlightPlans();
+        const effectiveSatId =
+          (selectedSatellite && selectedSatellite.id) ||
+          (selectedSatellite?.name?.includes("ISS") ? 1 : 1);
+        // Only APPROVED plans that match current satellite and ground station
+        const eligible = plans.filter(
+          (p) =>
+            p.status === "APPROVED" &&
+            !!groundStation &&
+            p.gsId === groundStation.id &&
+            p.satId === effectiveSatId
+        );
+        const sorted = eligible
+          .slice()
+          .sort((a, b) => Number(a.id) - Number(b.id));
+        setFlightPlans(sorted);
+        if (sorted.length > 0) {
+          setSelectedFlightPlanId(String(sorted[0].id));
+        } else {
+          setSelectedFlightPlanId("");
+        }
+      } catch {
+        // Ignore; UI will still show empty select
+      }
+    };
+    if (associateOpen) {
+      loadPlans();
+    }
+  }, [associateOpen, selectedSatellite, groundStation]);
 
   // Format time only - fixed to prevent hydration mismatch
   const formatTime = (dateString: string): string => {
@@ -252,6 +335,58 @@ export function OverpassCalendar({
 
   console.log("Overpasses:", overpasses);
 
+  // Derived: apply filters client-side
+  const filteredOverpasses = React.useMemo(() => {
+    const matchesQuality = (op: APIOverpass) => {
+      if (selectedQualities.length === 0) return true;
+      const q = getPassQuality(op.maxElevation).quality;
+      return selectedQualities.includes(q);
+    };
+    const matchesAssociation = (op: APIOverpass) => {
+      if (associationFilter === "any") return true;
+      const isAssociated = Boolean(op.associatedFlightPlan?.id);
+      return associationFilter === "associated" ? isAssociated : !isAssociated;
+    };
+    return overpasses.filter(
+      (op) => matchesQuality(op) && matchesAssociation(op)
+    );
+  }, [overpasses, selectedQualities, associationFilter]);
+
+  // Counts for badges
+  const qualityCounts = React.useMemo(() => {
+    const counts = new Map<string, number>();
+    ["Excellent", "Great"].forEach((label) => counts.set(label, 0));
+    overpasses.forEach((op) => {
+      const q = getPassQuality(op.maxElevation).quality;
+      if (counts.has(q)) counts.set(q, (counts.get(q) || 0) + 1);
+    });
+    return counts;
+  }, [overpasses]);
+
+  const associationCounts = React.useMemo(() => {
+    let associated = 0;
+    let unassociated = 0;
+    overpasses.forEach((op) => {
+      if (op.associatedFlightPlan?.id) associated += 1;
+      else unassociated += 1;
+    });
+    return { associated, unassociated };
+  }, [overpasses]);
+
+  const hasActiveFilters =
+    selectedQualities.length > 0 || associationFilter !== "any";
+
+  const toggleQuality = (label: string) => {
+    setSelectedQualities((prev) =>
+      prev.includes(label) ? prev.filter((q) => q !== label) : [...prev, label]
+    );
+  };
+
+  const clearFilters = () => {
+    setSelectedQualities([]);
+    setAssociationFilter("any");
+  };
+
   const renderContent = () => {
     if (loading) {
       return (
@@ -271,7 +406,7 @@ export function OverpassCalendar({
       );
     }
 
-    if (overpasses.length === 0) {
+    if (filteredOverpasses.length === 0) {
       return (
         <Card className="border-dashed border-2 border-muted-foreground/20">
           <CardContent className="p-6 text-center">
@@ -282,19 +417,19 @@ export function OverpassCalendar({
               </div>
               <div className="space-y-1">
                 <h3 className="font-medium text-sm text-muted-foreground">
-                  No visible passes found
+                  No passes match the current selection
                 </h3>
                 <p className="text-xs text-muted-foreground/80 max-w-xs">
-                  The ISS won&apos;t be visible from{" "}
+                  Try broadening your filters for more results from{" "}
                   <span className="font-medium">
                     {groundStation?.name || "Aarhus"}
                   </span>{" "}
-                  in the next 24 hours above 5° elevation.
+                  in the selected time period.
                 </p>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60 bg-muted/30 px-2 py-1 rounded-full">
                 <Info className="h-3 w-3" />
-                <span>Try checking again later</span>
+                <span>Clear filters to see all passes</span>
               </div>
             </div>
           </CardContent>
@@ -317,7 +452,7 @@ export function OverpassCalendar({
       <ScrollArea className="h-full w-full">
         <div className="space-y-4 p-1">
           {(() => {
-            const groupedPasses = groupOverpassesByDate(overpasses);
+            const groupedPasses = groupOverpassesByDate(filteredOverpasses);
             const sortedDates = Object.keys(groupedPasses).sort(
               (a, b) => new Date(a).getTime() - new Date(b).getTime()
             );
@@ -339,7 +474,9 @@ export function OverpassCalendar({
                     const passQuality = getPassQuality(pass.maxElevation);
                     const duration = getDuration(pass.startTime, pass.endTime);
                     // Calculate global pass index
-                    const globalIndex = overpasses.findIndex((p) => p === pass);
+                    const globalIndex = filteredOverpasses.findIndex(
+                      (p) => p === pass
+                    );
 
                     return (
                       <Card
@@ -402,6 +539,18 @@ export function OverpassCalendar({
                                   </Tooltip>
                                 </TooltipProvider>
                               )}
+                              {!pass.associatedFlightPlan?.id && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setAssociateTarget(pass);
+                                    setAssociateOpen(true);
+                                  }}
+                                >
+                                  Associate
+                                </Button>
+                              )}
 
                               <div className="text-right">
                                 <div className="text-sm font-medium">
@@ -455,11 +604,135 @@ export function OverpassCalendar({
                 : "Next month"}
             </CardDescription>
           </div>
-          <RefreshButton
-            onClick={() => {
-              fetchOverpasses();
-            }}
-          />
+          <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="justify-between text-muted-foreground"
+                >
+                  <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
+                  Quality
+                  {selectedQualities.length > 0 && (
+                    <Badge variant="secondary" className="ml-2">
+                      {selectedQualities.length}
+                    </Badge>
+                  )}
+                  <ChevronDown className="ml-2 h-4 w-4 text-muted-foreground" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[260px] p-0">
+                <Command>
+                  <CommandInput placeholder="Search quality..." />
+                  <CommandEmpty>No options.</CommandEmpty>
+                  <CommandGroup>
+                    {["Excellent", "Great", "Good", "Poor"].map((label) => (
+                      <CommandItem
+                        key={label}
+                        onSelect={() => toggleQuality(label)}
+                        className="flex items-center justify-between"
+                      >
+                        <div className="flex items-center">
+                          <div
+                            className={cn(
+                              "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                              selectedQualities.includes(label)
+                                ? "bg-primary text-primary-foreground"
+                                : "opacity-50 [&_svg]:invisible"
+                            )}
+                          >
+                            <Check className="h-4 w-4" />
+                          </div>
+                          <span>{label}</span>
+                        </div>
+                        <Badge variant="secondary" className="ml-2">
+                          {qualityCounts.get(label) || 0}
+                        </Badge>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </Command>
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="justify-between text-muted-foreground"
+                >
+                  <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
+                  Association
+                  {associationFilter !== "any" && (
+                    <Badge variant="secondary" className="ml-2">
+                      1
+                    </Badge>
+                  )}
+                  <ChevronDown className="ml-2 h-4 w-4 text-muted-foreground" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[280px] p-0">
+                <Command>
+                  <CommandEmpty>No options.</CommandEmpty>
+                  <CommandGroup>
+                    {[
+                      {
+                        value: "associated",
+                        label: "With flight plan",
+                        count: associationCounts.associated,
+                      },
+                      {
+                        value: "unassociated",
+                        label: "Without flight plan",
+                        count: associationCounts.unassociated,
+                      },
+                    ].map((item) => (
+                      <CommandItem
+                        key={item.value}
+                        onSelect={() =>
+                          setAssociationFilter((prev) =>
+                            prev === item.value
+                              ? "any"
+                              : (item.value as "associated" | "unassociated")
+                          )
+                        }
+                        className="flex items-center justify-between"
+                      >
+                        <div className="flex items-center">
+                          <div
+                            className={cn(
+                              "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                              associationFilter === item.value
+                                ? "bg-primary text-primary-foreground"
+                                : "opacity-50 [&_svg]:invisible"
+                            )}
+                          >
+                            <Check className="h-4 w-4" />
+                          </div>
+                          <span>{item.label}</span>
+                        </div>
+                        <Badge variant="secondary" className="ml-2">
+                          {item.count}
+                        </Badge>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </Command>
+              </PopoverContent>
+            </Popover>
+
+            {hasActiveFilters && (
+              <Button variant="outline" size="sm" onClick={clearFilters}>
+                Clear
+              </Button>
+            )}
+
+            <RefreshButton
+              onClick={() => {
+                fetchOverpasses();
+              }}
+            />
+          </div>
         </div>
       </CardHeader>
       <Separator />
@@ -481,6 +754,117 @@ export function OverpassCalendar({
       <CardFooter className="pt-0 text-xs text-muted-foreground flex-shrink-0">
         <p>Minimum elevation: 5° above horizon</p>
       </CardFooter>
+      <Dialog open={associateOpen} onOpenChange={setAssociateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Associate overpass to a flight plan</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="text-sm text-muted-foreground space-y-1">
+              {associateTarget ? (
+                <>
+                  <div>
+                    Window {formatTime(associateTarget.startTime)} -{" "}
+                    {formatTime(associateTarget.endTime)} (
+                    {getDuration(
+                      associateTarget.startTime,
+                      associateTarget.endTime
+                    )}{" "}
+                    min)
+                  </div>
+                  <div>
+                    Satellite:{" "}
+                    <span className="font-medium">
+                      {selectedSatellite?.name ||
+                        `Satellite ${satellites?.[0]?.id || ""}`}
+                    </span>
+                  </div>
+                  <div>
+                    Ground station:{" "}
+                    <span className="font-medium">
+                      {groundStation?.name || "—"}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                "Select a flight plan"
+              )}
+            </div>
+            <div className="space-y-1">
+              <Select
+                value={selectedFlightPlanId}
+                onValueChange={(v) => setSelectedFlightPlanId(v)}
+                disabled={flightPlans.length === 0}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue
+                    placeholder={
+                      flightPlans.length === 0
+                        ? "No eligible flight plans"
+                        : "Select flight plan"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {flightPlans.map((fp) => (
+                    <SelectItem key={fp.id} value={String(fp.id)}>
+                      {(fp.flightPlanBody?.name || `Plan ${fp.id}`) +
+                        ` • #${fp.id} • ${fp.status}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {flightPlans.length === 0 && (
+                <div className="text-xs text-muted-foreground">
+                  No APPROVED flight plans match the selected satellite and
+                  ground station. Approve a plan for{" "}
+                  {selectedSatellite?.name || "this satellite"} at{" "}
+                  {groundStation?.name || "this ground station"} to enable
+                  association.
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssociateOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={
+                !associateTarget ||
+                !selectedFlightPlanId ||
+                associating ||
+                flightPlans.length === 0
+              }
+              onClick={async () => {
+                if (!associateTarget || !selectedFlightPlanId) return;
+                setAssociating(true);
+                try {
+                  await associateOverpass(Number(selectedFlightPlanId), {
+                    startTime: associateTarget.startTime,
+                    endTime: associateTarget.endTime,
+                  });
+                  toast.success("Overpass associated to flight plan");
+                  setAssociateOpen(false);
+                  setAssociateTarget(null);
+                  await fetchOverpasses();
+                } catch (err) {
+                  const msg =
+                    err instanceof Error
+                      ? err.message
+                      : "Failed to associate overpass";
+                  toast.error("Association failed", { description: msg });
+                } finally {
+                  setAssociating(false);
+                }
+              }}
+            >
+              {associating ? "Associating..." : "Associate"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* toasts now handled by sonner's global component elsewhere */}
     </Card>
   );
 }
