@@ -9,7 +9,7 @@ export type CreateGroundStationPayload = Omit<GroundStation, 'id' | 'createdAt' 
   isActive?: boolean;
 };
 
-const API_URL = 'http://localhost:7890/api/v1/ground-stations';
+const API_URL = 'http://localhost:5111/api/v1/ground-stations';
 
 export async function getGroundStations(): Promise<GroundStation[]> {
 

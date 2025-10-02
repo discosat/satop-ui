@@ -15,6 +15,19 @@ export interface Overpass {
   durationSeconds: number;
   startAzimuth: number;
   endAzimuth: number;
+  associatedFlightPlan?: {
+    id: number;
+    name: string;
+    scheduledAt?: string;
+    status: string;
+    approverId?: string;
+    approvalDate?: string;
+  } | null;
+  tleData?: {
+    tleLine1: string;
+    tleLine2: string;
+    updateTime: string;
+  } | null;
 }
 
 export interface OverpassCalculationRequest {
@@ -131,6 +144,21 @@ function getMockOverpassWindows(
       durationSeconds: duration,
       startAzimuth: Math.random() * 360,
       endAzimuth: Math.random() * 360,
+      associatedFlightPlan: Math.random() < 0.5
+        ? {
+            id: Math.floor(Math.random() * 1000) + 1,
+            name: `Plan for pass ${i + 1}`,
+            scheduledAt: startTime.toISOString(),
+            status: 'ASSIGNED_TO_OVERPASS',
+            approverId: undefined,
+            approvalDate: undefined,
+          }
+        : null,
+      tleData: {
+        tleLine1: `1 25544U 98067A   ${String(i).padStart(2, '0')}00000  .00016717  00000-0  10270-3 0  900${i}`,
+        tleLine2: `2 25544  51.6445  97.9481 0007596  65.3937  72.2740 15.489${String(100 + i)}${i}    14`,
+        updateTime: now.toISOString(),
+      },
     });
   }
 

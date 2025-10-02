@@ -35,10 +35,12 @@ import type { FlightPlan } from "@/app/api/platform/flight/flight-plan-service";
 import { createFlightPlan } from "@/app/api/platform/flight/flight-plan-service";
 import { toast } from "sonner";
 import { useSession } from "@/app/context";
-import { getSatellites, Satellite } from "@/app/api/platform/satellites/satellite-service";
+import {
+  getSatellites,
+  Satellite,
+} from "@/app/api/platform/satellites/satellite-service";
 import { getGroundStations } from "@/app/api/platform/ground-stations/ground-station-service";
 import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
-
 
 // A flight plan requires a name, a ground station id, a satellite name
 
@@ -52,25 +54,27 @@ const formSchema = z.object({
   gsId: z
     .string()
     .min(1, { message: "Please select a ground station." })
-    .refine((val) => !val.startsWith("__"), { 
-      message: "Please select a valid ground station." 
+    .refine((val) => !val.startsWith("__"), {
+      message: "Please select a valid ground station.",
     }),
   satId: z
     .string()
     .min(1, { message: "Please select a satellite." })
-    .refine((val) => !val.startsWith("__"), { 
-      message: "Please select a valid satellite." 
+    .refine((val) => !val.startsWith("__"), {
+      message: "Please select a valid satellite.",
     }),
 });
 
-export default function  NewFlightPlanPage() {
+export default function NewFlightPlanPage() {
   const router = useRouter();
   const [bodyJson, setBodyJson] = useState<string>("[]");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [satellites, setSatellites] = useState<Satellite[]>([]);
   const [groundStations, setGroundStations] = useState<GroundStation[]>([]);
   const [satellitesError, setSatellitesError] = useState<string | null>(null);
-  const [groundStationsError, setGroundStationsError] = useState<string | null>(null);
+  const [groundStationsError, setGroundStationsError] = useState<string | null>(
+    null
+  );
 
   const session = useSession();
 
@@ -85,7 +89,7 @@ export default function  NewFlightPlanPage() {
       try {
         const satellitesData = await getSatellites();
         // Filter out any satellites with empty id or name
-  
+
         setSatellites(satellitesData);
         setSatellitesError(null);
       } catch (error) {
@@ -119,14 +123,14 @@ export default function  NewFlightPlanPage() {
     }
   }, [bodyJson]);
 
-async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!session) {
       toast.error("Authentication session not found. Please log in again.");
       return;
     }
 
     setIsSubmitting(true);
-    
+
     try {
       const payload: FlightPlan = {
         id: 0, // backend will assign this
@@ -137,11 +141,11 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
         scheduledAt: new Date().toISOString(),
         gsId: Number(values.gsId),
         satId: Number(values.satId),
-        status: "pending",
+        status: "PENDING",
       };
 
       const created = await createFlightPlan(payload);
-      
+
       toast.success("Flight plan created successfully!");
 
       if (created?.id) {
@@ -156,7 +160,7 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
     } finally {
       setIsSubmitting(false);
     }
-}
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -263,7 +267,10 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
                             </SelectItem>
                           ) : (
                             satellites.map((sat) => (
-                              <SelectItem key={sat.id} value={sat.id.toString()}>
+                              <SelectItem
+                                key={sat.id}
+                                value={sat.id.toString()}
+                              >
                                 {sat.name}
                               </SelectItem>
                             ))
@@ -294,10 +301,10 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={
-                    isSubmitting || 
+                    isSubmitting ||
                     !!satellitesError ||
                     !!groundStationsError ||
                     satellites.length === 0 ||

@@ -39,8 +39,6 @@ export function SatelliteActions({ satellite }: { satellite: Satellite }) {
     // In a real application, this would trigger a TLE refresh
     console.log(`Refreshing TLE for satellite ${satellite.id}`);
     // You could implement a refresh function here
-
-    
   };
 
   return (

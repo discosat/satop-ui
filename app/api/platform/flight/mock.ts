@@ -18,7 +18,7 @@ export const mockFlightPlans: FlightPlan[] = [
       scheduledAt: "2025-05-22T13:45:00+01:00",
       gsId: 1,
       satId: 1,
-      status: "pending",
+      status: "DRAFT",
       previousPlanId: "2",
     },
     {
@@ -36,7 +36,7 @@ export const mockFlightPlans: FlightPlan[] = [
       scheduledAt: "2025-05-22T13:45:00+01:00",
       gsId: 1,
       satId: 1,
-      status: "superseded",
+      status: "SUPERSEDED",
     },
     {
       id: 3,
@@ -58,7 +58,7 @@ export const mockFlightPlans: FlightPlan[] = [
       scheduledAt: "2025-05-12T14:30:00+01:00",
       gsId: 2,
       satId: 2,
-      status: "pending",
+      status: "DRAFT",
     },
     {
       id: 4,
@@ -73,7 +73,7 @@ export const mockFlightPlans: FlightPlan[] = [
       scheduledAt: "2025-05-15T09:15:00+01:00",
       gsId: 3,
       satId: 3,
-      status: "approved",
+      status: "APPROVED",
       approverId: "user-abc-123",
       approvalDate: "2025-05-14T10:00:00Z",
     },
@@ -90,7 +90,7 @@ export const mockFlightPlans: FlightPlan[] = [
       scheduledAt: "2025-05-08T11:20:00+01:00",
       gsId: 4,
       satId: 4,
-      status: "rejected",
+      status: "REJECTED",
       approverId: "user-xyz-789",
       approvalDate: "2025-05-07T12:00:00Z",
     },
@@ -126,7 +126,7 @@ export const mockFlightPlans: FlightPlan[] = [
       scheduledAt: "2025-05-20T16:00:00+01:00",
       gsId: 5,
       satId: 5,
-      status: "pending"
+      status: "DRAFT"
     },
     {
       id: 7,
@@ -151,6 +151,6 @@ export const mockFlightPlans: FlightPlan[] = [
       scheduledAt: "2025-05-07T08:30:00+01:00",
       gsId: 6,
       satId: 6,
-      status: "approved"
+      status: "APPROVED"
     },
   ];

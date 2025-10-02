@@ -7,19 +7,19 @@ export interface ApprovalResult {
   message: string;
 }
 
-export type FlightPlanStatus = "pending" | "approved" | "rejected" | "superseded" | "transmitted";
-
+export type FlightPlanStatus = "DRAFT" | "APPROVED" | "REJECTED" | "ASSIGNED_TO_OVERPASS"| "SUPERSEDED" | "TRANSMITTED";
 export interface FlightPlan {
   id: number;
+  previousPlanId?: string;
+  gsId: number;
+  satId: number;
+  overpassId?: number;
+  scheduledAt?: string;
   flightPlanBody: {
     name: string;
     body: string;
   };
-  scheduledAt: string;
-  gsId: number;
-  satId: number;
-  status: string;
-  previousPlanId?: string;
+  status: FlightPlanStatus;
   approverId?: string;
   approvalDate?: string;
 }
@@ -105,8 +105,8 @@ export async function updateFlightPlan(flightPlan: FlightPlan, accessToken: stri
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
     const index = mockFlightPlans.findIndex((p) => p.id === flightPlan.id);
     if (index !== -1) {
-      mockFlightPlans[index].status = 'superseded';
-      const newVersion: FlightPlan = { ...flightPlan, id: Math.floor(Math.random() * 10000), status: 'pending', previousPlanId: flightPlan.id.toString() };
+      mockFlightPlans[index].status = 'SUPERSEDED';
+      const newVersion: FlightPlan = { ...flightPlan, id: Math.floor(Math.random() * 10000), status: 'DRAFT', previousPlanId: flightPlan.id.toString() };
       mockFlightPlans.unshift(newVersion);
       return newVersion;
     }
@@ -138,7 +138,7 @@ export async function approveFlightPlan(id: string, approved: boolean, accessTok
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
     const index = mockFlightPlans.findIndex((p) => p.id === Number(id));
     if (index !== -1) {
-      mockFlightPlans[index].status = approved ? 'approved' : 'rejected';
+      mockFlightPlans[index].status = approved ? 'APPROVED' : 'REJECTED';
       return { success: true, message: `Mock plan ${approved ? 'approved' : 'rejected'}` };
     }
     return { success: false, message: 'Mock plan not found' };
@@ -146,7 +146,7 @@ export async function approveFlightPlan(id: string, approved: boolean, accessTok
 
   try {
     const body = {
-      status: approved ? 'approved' : 'rejected',
+      status: approved ? 'APPROVED' : 'REJECTED',
     };
 
     const response = await fetch(`${API_URL}/${id}`, {

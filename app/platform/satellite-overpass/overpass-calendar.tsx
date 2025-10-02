@@ -9,7 +9,16 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import { Clock, Calendar, MapPin, ArrowUpRight, Satellite as SatelliteIcon, Info, Eye } from "lucide-react";
+import {
+  Clock,
+  Calendar,
+  MapPin,
+  ArrowUpRight,
+  Satellite as SatelliteIcon,
+  Info,
+  Eye,
+  CheckCircle2,
+} from "lucide-react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -18,8 +27,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Satellite } from "react-sat-map";
 import { RefreshButton } from "@/components/refresh-button";
 import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
-import { getOverpassWindows, type Overpass as APIOverpass, type OverpassQueryParams } from "@/app/api/platform/overpass/overpass-service";
+import {
+  getOverpassWindows,
+  type Overpass as APIOverpass,
+  type OverpassQueryParams,
+} from "@/app/api/platform/overpass/overpass-service";
 import type { TimePeriod } from "./time-period-select";
+import Link from "next/link";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Extended satellite interface that includes the original API ID
 interface SatelliteWithId extends Satellite {
@@ -32,10 +52,10 @@ interface OverpassCalendarProps {
   timePeriod?: TimePeriod;
 }
 
-export function OverpassCalendar({ 
-  satellites, 
+export function OverpassCalendar({
+  satellites,
   groundStation,
-  timePeriod = "next-3-days"
+  timePeriod = "next-3-days",
 }: OverpassCalendarProps) {
   const [overpasses, setOverpasses] = useState<APIOverpass[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -44,13 +64,15 @@ export function OverpassCalendar({
 
   // Get the selected satellite (first one if multiple)
   const selectedSatellite = satellites?.[0];
-  
+
   // Convert time period to date range
-  const getDateRangeFromPeriod = (period: TimePeriod): { start: Date; end: Date } => {
+  const getDateRangeFromPeriod = (
+    period: TimePeriod
+  ): { start: Date; end: Date } => {
     const now = new Date();
     const start = new Date(now);
     const end = new Date(start);
-    
+
     switch (period) {
       case "today":
         end.setDate(start.getDate() + 1);
@@ -72,7 +94,7 @@ export function OverpassCalendar({
         end.setMonth(start.getMonth() + 1);
         break;
     }
-    
+
     return { start, end };
   };
 
@@ -88,16 +110,18 @@ export function OverpassCalendar({
       setError(null);
 
       // Get the satellite ID from the satellite data or use a default mapping
-      const satelliteId = selectedSatellite.id || (selectedSatellite.name.includes("ISS") ? 1 : 1);
+      const satelliteId =
+        selectedSatellite.id ||
+        (selectedSatellite.name.includes("ISS") ? 1 : 1);
 
       const dateRange = getDateRangeFromPeriod(timePeriod);
-      
+
       const queryParams: OverpassQueryParams = {
         startTime: dateRange.start.toISOString(),
         endTime: dateRange.end.toISOString(),
         minimumElevation: 5, // Minimum 5 degrees elevation
         maxResults: 50,
-        minimumDuration: 60 // Minimum 1 minute duration
+        minimumDuration: 60, // Minimum 1 minute duration
       };
 
       const data = await getOverpassWindows(
@@ -148,40 +172,70 @@ export function OverpassCalendar({
   };
 
   // Determine pass quality based on elevation
-  const getPassQuality = (elevation: number): { quality: string; variant: "default" | "secondary" | "outline"; color: string } => {
-    if (elevation >= 60) return { quality: "Excellent", variant: "default", color: "text-green-700 bg-green-100 border-green-200" };
-    if (elevation >= 40) return { quality: "Great", variant: "default", color: "text-blue-700 bg-blue-100 border-blue-200" };
-    if (elevation >= 25) return { quality: "Good", variant: "secondary", color: "text-orange-700 bg-orange-100 border-orange-200" };
-    if (elevation >= 15) return { quality: "Fair", variant: "outline", color: "text-yellow-700 bg-yellow-100 border-yellow-200" };
-    return { quality: "Poor", variant: "outline", color: "text-red-700 bg-red-100 border-red-200" };
+  const getPassQuality = (
+    elevation: number
+  ): {
+    quality: string;
+    variant: "default" | "secondary" | "outline";
+    color: string;
+  } => {
+    if (elevation >= 60)
+      return {
+        quality: "Excellent",
+        variant: "default",
+        color: "text-green-700 bg-green-100 border-green-200",
+      };
+    if (elevation >= 40)
+      return {
+        quality: "Great",
+        variant: "default",
+        color: "text-blue-700 bg-blue-100 border-blue-200",
+      };
+    if (elevation >= 25)
+      return {
+        quality: "Good",
+        variant: "secondary",
+        color: "text-orange-700 bg-orange-100 border-orange-200",
+      };
+    if (elevation >= 15)
+      return {
+        quality: "Fair",
+        variant: "outline",
+        color: "text-yellow-700 bg-yellow-100 border-yellow-200",
+      };
+    return {
+      quality: "Poor",
+      variant: "outline",
+      color: "text-red-700 bg-red-100 border-red-200",
+    };
   };
 
   // Group overpasses by date
   const groupOverpassesByDate = (passes: APIOverpass[]) => {
     const groups: { [key: string]: APIOverpass[] } = {};
-    
-    passes.forEach(pass => {
+
+    passes.forEach((pass) => {
       const date = new Date(pass.startTime);
       const dateKey = date.toDateString(); // e.g., "Mon Sep 25 2025"
-      
+
       if (!groups[dateKey]) {
         groups[dateKey] = [];
       }
       groups[dateKey].push(pass);
     });
-    
+
     return groups;
   };
 
   // Format date for display
   const formatDateHeader = (dateString: string): string => {
     if (!isMounted) return "";
-    
+
     const date = new Date(dateString);
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
-    
+
     // Check if it's today or tomorrow
     if (date.toDateString() === today.toDateString()) {
       return "Today";
@@ -231,7 +285,11 @@ export function OverpassCalendar({
                   No visible passes found
                 </h3>
                 <p className="text-xs text-muted-foreground/80 max-w-xs">
-                  The ISS won&apos;t be visible from <span className="font-medium">{groundStation?.name || 'Aarhus'}</span> in the next 24 hours above 5° elevation.
+                  The ISS won&apos;t be visible from{" "}
+                  <span className="font-medium">
+                    {groundStation?.name || "Aarhus"}
+                  </span>{" "}
+                  in the next 24 hours above 5° elevation.
                 </p>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60 bg-muted/30 px-2 py-1 rounded-full">
@@ -260,10 +318,10 @@ export function OverpassCalendar({
         <div className="space-y-4 p-1">
           {(() => {
             const groupedPasses = groupOverpassesByDate(overpasses);
-            const sortedDates = Object.keys(groupedPasses).sort((a, b) => 
-              new Date(a).getTime() - new Date(b).getTime()
+            const sortedDates = Object.keys(groupedPasses).sort(
+              (a, b) => new Date(a).getTime() - new Date(b).getTime()
             );
-            
+
             return sortedDates.map((dateKey) => (
               <div key={dateKey} className="space-y-3">
                 {/* Date Header */}
@@ -273,7 +331,7 @@ export function OverpassCalendar({
                     {formatDateHeader(dateKey)}
                   </h3>
                 </div>
-                
+
                 {/* Passes for this date */}
                 <div className="space-y-3">
                   {groupedPasses[dateKey].map((pass, passIndex) => {
@@ -281,8 +339,8 @@ export function OverpassCalendar({
                     const passQuality = getPassQuality(pass.maxElevation);
                     const duration = getDuration(pass.startTime, pass.endTime);
                     // Calculate global pass index
-                    const globalIndex = overpasses.findIndex(p => p === pass);
-                    
+                    const globalIndex = overpasses.findIndex((p) => p === pass);
+
                     return (
                       <Card
                         key={`${dateKey}-${passIndex}`}
@@ -302,12 +360,13 @@ export function OverpassCalendar({
                                   Pass #{globalIndex + 1}
                                 </div>
                               </div>
-                              
+
                               <div className="flex items-center gap-3 text-sm">
                                 <div className="flex items-center gap-1.5">
                                   <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                                   <span className="font-mono">
-                                    {formatTime(pass.startTime)} - {formatTime(pass.endTime)}
+                                    {formatTime(pass.startTime)} -{" "}
+                                    {formatTime(pass.endTime)}
                                   </span>
                                 </div>
                                 <div className="text-muted-foreground">
@@ -318,6 +377,32 @@ export function OverpassCalendar({
 
                             {/* Right side - Elevation and quality */}
                             <div className="flex items-center gap-3">
+                              {pass.associatedFlightPlan?.id && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Link
+                                        href={`/platform/flight/${pass.associatedFlightPlan.id}`}
+                                        className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-primary/10 text-primary hover:bg-primary/15 border border-primary/20"
+                                      >
+                                        <CheckCircle2 className="h-4 w-4" />
+                                        <span className="hidden sm:inline">
+                                          Assigned
+                                        </span>
+                                      </Link>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <div className="text-xs">
+                                        View flight plan
+                                        {pass.associatedFlightPlan.name
+                                          ? `: ${pass.associatedFlightPlan.name}`
+                                          : ""}
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+
                               <div className="text-right">
                                 <div className="text-sm font-medium">
                                   {pass.maxElevation.toFixed(1)}° max
@@ -326,8 +411,8 @@ export function OverpassCalendar({
                                   at {formatTime(pass.maxElevationTime)}
                                 </div>
                               </div>
-                              <Badge 
-                                variant="outline" 
+                              <Badge
+                                variant="outline"
                                 className={`${passQuality.color} border font-medium`}
                               >
                                 {passQuality.quality}
@@ -357,12 +442,17 @@ export function OverpassCalendar({
               {selectedSatellite?.name || "Satellite"} Overpasses
             </CardTitle>
             <CardDescription>
-              {timePeriod === "today" ? "Today" :
-               timePeriod === "tomorrow" ? "Tomorrow" :
-               timePeriod === "next-3-days" ? "Next 3 days" :
-               timePeriod === "next-week" ? "Next week" :
-               timePeriod === "next-2-weeks" ? "Next 2 weeks" :
-               "Next month"}
+              {timePeriod === "today"
+                ? "Today"
+                : timePeriod === "tomorrow"
+                ? "Tomorrow"
+                : timePeriod === "next-3-days"
+                ? "Next 3 days"
+                : timePeriod === "next-week"
+                ? "Next week"
+                : timePeriod === "next-2-weeks"
+                ? "Next 2 weeks"
+                : "Next month"}
             </CardDescription>
           </div>
           <RefreshButton
@@ -377,16 +467,16 @@ export function OverpassCalendar({
         <div className="flex items-center gap-1.5 mb-3 text-sm text-muted-foreground flex-shrink-0">
           <MapPin className="h-3.5 w-3.5" />
           <span>
-            {groundStation?.name || 'No ground station selected'} 
+            {groundStation?.name || "No ground station selected"}
             {groundStation && (
-              <>({groundStation.location.latitude.toFixed(2)}°N,{" "}
-              {groundStation.location.longitude.toFixed(2)}°E)</>
+              <>
+                ({groundStation.location.latitude.toFixed(2)}°N,{" "}
+                {groundStation.location.longitude.toFixed(2)}°E)
+              </>
             )}
           </span>
         </div>
-        <div className="flex-1 min-h-0">
-          {renderContent()}
-        </div>
+        <div className="flex-1 min-h-0">{renderContent()}</div>
       </CardContent>
       <CardFooter className="pt-0 text-xs text-muted-foreground flex-shrink-0">
         <p>Minimum elevation: 5° above horizon</p>
