@@ -17,8 +17,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { getSatellites } from "@/app/api/platform/satellites/satellite-service";
+import { Satellite } from "@/app/api/platform/satellites/types";
 import { getGroundStations } from "@/app/api/platform/ground-stations/ground-station-service";
-import type { Satellite } from "@/app/api/platform/satellites/satellite-service";
 import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
 import { Satellite as SatelliteIcon, Radio, MapPin, Hash } from "lucide-react";
 

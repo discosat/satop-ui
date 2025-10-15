@@ -59,11 +59,11 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
-import {
-  getOverpassWindows,
-  type Overpass as APIOverpass,
-  type OverpassQueryParams,
-} from "@/app/api/platform/overpass/overpass-service";
+import { getOverpassWindows } from "@/app/api/platform/overpass/overpass-service";
+import { 
+  type Overpass as APIOverpass, 
+  type OverpassQueryParams 
+} from "@/app/api/platform/overpass/types";
 import type { TimePeriod } from "./time-period-select";
 import Link from "next/link";
 import {

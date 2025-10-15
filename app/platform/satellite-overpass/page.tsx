@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { Satellite } from "react-sat-map";
 import { getGroundStations } from "@/app/api/platform/ground-stations/ground-station-service";
 import { getSatellites } from "@/app/api/platform/satellites/satellite-service";
-import type { Satellite as ApiSatellite } from "@/app/api/platform/satellites/satellite-service";
+import type { Satellite as ApiSatellite } from "@/app/api/platform/satellites/types";
 import {
   Card,
   CardContent,

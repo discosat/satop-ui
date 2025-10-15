@@ -43,7 +43,7 @@ import {
   FlightPlan,
   FlightPlanStatus,
 } from "@/app/api/platform/flight/flight-plan-service";
-import { Satellite } from "@/app/api/platform/satellites/satellite-service";
+import { Satellite } from "@/app/api/platform/satellites/types";
 import { GroundStation } from "@/app/api/platform/ground-stations/mock";
 import TablePagination from "@/components/ui/table-pagination";
 

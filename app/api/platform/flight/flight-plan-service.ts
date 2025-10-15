@@ -1,6 +1,9 @@
-import { mockFlightPlans } from "./mock";
+"use server";
 
-const API_URL = 'http://localhost:5111/api/v1/flight-plans';
+import { mockFlightPlans } from "./mock";
+import { apiClient } from "@/lib/api-client";
+
+const API_PATH = '/flight-plans';
 
 export interface ApprovalResult {
   success: boolean;
@@ -17,96 +20,70 @@ export interface FlightPlan {
   scheduledAt?: string;
   flightPlanBody: {
     name: string;
-    body: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    body: any;
   };
   status: FlightPlanStatus;
   approverId?: string;
   approvalDate?: string;
 }
 
-export async function getFlightPlans(): Promise<FlightPlan[]> {
-  try {
-    if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
-      return mockFlightPlans;
-    }
-    const response = await fetch(API_URL, {
-      method: 'GET',
-      next: { revalidate: 60 } 
-    });
+export type CreateFlightPlanPayload = Omit<FlightPlan, 'id' | 'status' | 'approverId' | 'approvalDate'>;
 
-    if (response.status === 404) {
-      console.log("No flight plans found on the server, returning empty list.");
-      return [];
-    }
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch flight plans: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    return data || [];
+export async function getFlightPlans(): Promise<FlightPlan[]> {
+  if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
+    return mockFlightPlans;
+  }
+  try {
+    return await apiClient.get<FlightPlan[]>(API_PATH);
   } catch (error) {
     console.error("Error fetching flight plans:", error);
-    return []; // Return empty array on error
+    return [];
   }
 }
 
 export async function getFlightPlanById(id: number): Promise<FlightPlan | null> {
+  if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
+    return mockFlightPlans.find((p) => p.id === id) || null;
+  }
   try {
-    if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
-      return mockFlightPlans.find((p) => p.id === id) || null;
-    }
-    const response = await fetch(`${API_URL}/${id}`, {
-      method: 'GET',
-      next: { revalidate: 60 }
-    });
-    
-    if (!response.ok) throw new Error(`Failed to fetch flight plan: ${response.statusText}`);
-    return await response.json();
+    return await apiClient.get<FlightPlan>(`${API_PATH}/${id}`);
   } catch (error) {
     console.error(`Error fetching flight plan ${id}:`, error);
     return null;
   }
 }
 
-export async function createFlightPlan(flightPlan: FlightPlan): Promise<FlightPlan> {
+export async function createFlightPlan(payload: CreateFlightPlanPayload): Promise<FlightPlan> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
     const created: FlightPlan = {
-      ...flightPlan,
-      id: flightPlan.id || Math.floor(Math.random() * 10000),
+      ...payload,
+      id: Math.floor(Math.random() * 10000),
+      status: "DRAFT",
     };
     mockFlightPlans.unshift(created);
     return created;
   }
 
   try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(flightPlan),
-      cache: 'no-store',
-    });
-
-    if (!response.ok) {
-      const text = await response.text().catch(() => '');
-      throw new Error(`Failed to create flight plan (${response.status}): ${response.statusText} ${text}`.trim());
-    }
-
-    return await response.json();
+    return await apiClient.post<CreateFlightPlanPayload, FlightPlan>(API_PATH, payload);
   } catch (error) {
     console.error('Error creating flight plan:', error);
     throw error;
   }
 }
 
-export async function updateFlightPlan(flightPlan: FlightPlan, accessToken: string): Promise<FlightPlan | null> {
+export async function updateFlightPlan(id: number, payload: CreateFlightPlanPayload): Promise<FlightPlan | null> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
-    const index = mockFlightPlans.findIndex((p) => p.id === flightPlan.id);
+    const index = mockFlightPlans.findIndex((p) => p.id === id);
     if (index !== -1) {
       mockFlightPlans[index].status = 'SUPERSEDED';
-      const newVersion: FlightPlan = { ...flightPlan, id: Math.floor(Math.random() * 10000), status: 'DRAFT', previousPlanId: flightPlan.id.toString() };
+      const newVersion: FlightPlan = { 
+        ...payload, 
+        id: Math.floor(Math.random() * 10000), 
+        status: 'DRAFT', 
+        previousPlanId: id.toString() 
+      };
       mockFlightPlans.unshift(newVersion);
       return newVersion;
     }
@@ -114,29 +91,16 @@ export async function updateFlightPlan(flightPlan: FlightPlan, accessToken: stri
   }
 
   try {
-    const response = await fetch(`${API_URL}/${flightPlan.id}`, {
-      method: 'PUT',
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(flightPlan),
-      cache: 'no-store',
-    });
-    if (!response.ok) {
-      const text = await response.text().catch(() => '');
-      throw new Error(`Failed to update flight plan (${response.status}): ${response.statusText} ${text}`.trim());
-    }
-    return await response.json();
+    return await apiClient.put<CreateFlightPlanPayload, FlightPlan>(`${API_PATH}/${id}`, payload);
   } catch (error) {
     console.error('Error updating flight plan:', error);
     throw error;
   }
 }
 
-export async function approveFlightPlan(id: string, approved: boolean, accessToken: string): Promise<ApprovalResult> {
+export async function approveFlightPlan(id: number, approved: boolean): Promise<ApprovalResult> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
-    const index = mockFlightPlans.findIndex((p) => p.id === Number(id));
+    const index = mockFlightPlans.findIndex((p) => p.id === id);
     if (index !== -1) {
       mockFlightPlans[index].status = approved ? 'APPROVED' : 'REJECTED';
       return { success: true, message: `Mock plan ${approved ? 'approved' : 'rejected'}` };
@@ -149,25 +113,9 @@ export async function approveFlightPlan(id: string, approved: boolean, accessTok
       status: approved ? 'APPROVED' : 'REJECTED',
     };
 
-    const response = await fetch(`${API_URL}/${id}`, {
-      method: 'PATCH',
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-
-    const responseData = await response.json();
-    if (!response.ok) {
-      const errorMessage = responseData.detail || responseData.message || 'Unknown error occurred';
-      throw new Error(`Failed to approve flight plan (${response.status}): ${errorMessage}`);
-    }
-    return {
-      success: true,
-      message: responseData.message || 'Operation successful.',
-    };
+    return await apiClient.patch<{ status: string }, ApprovalResult>(`${API_PATH}/${id}`, body);
   } catch (error) {
+    console.error('Error approving flight plan:', error);
     throw error;
   }
 }
@@ -185,7 +133,7 @@ export async function associateOverpass(
     try {
       // Wire into the overpass mock so the calendar reflects the change
       // We do a dynamic import to avoid circular import issues
-      const overpassModule: typeof import("@/app/api/platform/overpass/overpass-service") = await import("@/app/api/platform/overpass/overpass-service");
+      const overpassModule: typeof import("@/app/api/platform/overpass/mock") = await import("@/app/api/platform/overpass/mock");
       // Find the plan to copy metadata
       const plan = mockFlightPlans.find((p) => p.id === flightPlanId);
       if (!plan) {
@@ -212,20 +160,7 @@ export async function associateOverpass(
   }
 
   try {
-    const response = await fetch(`${API_URL}/${flightPlanId}/associate-overpass`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
-    });
-
-    if (!response.ok) {
-      const text = await response.text().catch(() => '');
-      throw new Error(`Failed to associate overpass (${response.status}): ${response.statusText} ${text}`.trim());
-    }
-
-    return { success: true, message: 'Association created' };
+    return await apiClient.post<AssociateOverpassRequest, ApprovalResult>(`${API_PATH}/${flightPlanId}/associate-overpass`, request);
   } catch (error) {
     console.error('Error associating overpass:', error);
     throw error;
