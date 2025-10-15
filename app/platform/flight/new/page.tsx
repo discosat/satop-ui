@@ -35,10 +35,8 @@ import type { FlightPlan } from "@/app/api/platform/flight/flight-plan-service";
 import { createFlightPlan } from "@/app/api/platform/flight/flight-plan-service";
 import { toast } from "sonner";
 import { useSession } from "@/app/context";
-import {
-  getSatellites,
-  Satellite,
-} from "@/app/api/platform/satellites/satellite-service";
+import { getSatellites } from "@/app/api/platform/satellites/satellite-service";
+import { Satellite } from "@/app/api/platform/satellites/types";
 import { getGroundStations } from "@/app/api/platform/ground-stations/ground-station-service";
 import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
 

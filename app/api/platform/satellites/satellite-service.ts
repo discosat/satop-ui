@@ -1,60 +1,17 @@
+"use server";
+
 import { mockSatellites } from "./mock";
-
-const API_URL = 'http://localhost:5111/api/v1/satellites';
-
-export const SatelliteStatus = {
-  Active: 0,
-  Inactive: 1,
-  Decommissioned: 2,
-  UnderMaintenance: 3,
-  Launching: 4,
-} as const;
-
-
-
-export type SatelliteStatus = typeof SatelliteStatus[keyof typeof SatelliteStatus];
-
-
-
-export interface Satellite {
-  id: number;
-  name: string;
-  noradId: string;
-  status: SatelliteStatus;
-  tle: Tle
-  createdAt: string;
-  lastUpdate: string;
-}
-
-export interface Tle {
-  line1: string;
-  line2: string;
-}
+import { apiClient } from "@/lib/api-client";
+import type { Satellite } from "./types";
+const API_PATH = '/satellites';
 
 export async function getSatellites(): Promise<Satellite[]> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
-    return mockSatellites;
+    return mockSatellites as Satellite[];
   }
 
   try {
-    const response = await fetch(API_URL, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      next: { revalidate: 60 } 
-    });
-    if (response.status === 404) {
-      console.log("No satellites found on the server, returning empty list.");
-      return [];
-    }
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch satellites: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    return data || [];
+    return await apiClient.get<Satellite[]>(API_PATH);
   } catch (error) {
     console.error("Error fetching satellites:", error);
     return [];
@@ -63,30 +20,16 @@ export async function getSatellites(): Promise<Satellite[]> {
 
 export async function getSatelliteById(id: string): Promise<Satellite | null> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
-    return mockSatellites.find(sat => sat.id === parseInt(id)) || null;
+    return (mockSatellites.find(sat => sat.id === parseInt(id)) as Satellite | undefined) || null;
   }
 
   try {
-    const response = await fetch(`${API_URL}/${id}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      next: { revalidate: 60 } 
-    });
-    
-    if (response.status === 404) {
+    return await apiClient.get<Satellite>(`${API_PATH}/${id}`);
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("404")) {
       return null;
     }
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch satellite: ${response.statusText}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
     console.error(`Error fetching satellite ${id}:`, error);
     return null;
   }
 }
-
