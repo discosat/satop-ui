@@ -10,15 +10,13 @@ export interface ApprovalResult {
 export type FlightPlanStatus = "DRAFT" | "APPROVED" | "REJECTED" | "ASSIGNED_TO_OVERPASS"| "SUPERSEDED" | "TRANSMITTED";
 export interface FlightPlan {
   id: number;
-  previousPlanId?: string;
+  previousPlanId?: number;
   gsId: number;
   satId: number;
   overpassId?: number;
+  name: string;
   scheduledAt?: string;
-  flightPlanBody: {
-    name: string;
-    body: string;
-  };
+  commands: object[];
   status: FlightPlanStatus;
   approverId?: string;
   approvalDate?: string;
@@ -106,7 +104,7 @@ export async function updateFlightPlan(flightPlan: FlightPlan, accessToken: stri
     const index = mockFlightPlans.findIndex((p) => p.id === flightPlan.id);
     if (index !== -1) {
       mockFlightPlans[index].status = 'SUPERSEDED';
-      const newVersion: FlightPlan = { ...flightPlan, id: Math.floor(Math.random() * 10000), status: 'DRAFT', previousPlanId: flightPlan.id.toString() };
+      const newVersion: FlightPlan = { ...flightPlan, id: Math.floor(Math.random() * 10000), status: 'DRAFT', previousPlanId: flightPlan.id };
       mockFlightPlans.unshift(newVersion);
       return newVersion;
     }
@@ -193,7 +191,7 @@ export async function associateOverpass(
       }
       const association = {
         id: plan.id,
-        name: plan.flightPlanBody?.name || `Plan ${plan.id}`,
+        name: plan.name || `Plan ${plan.id}`,
         scheduledAt: request.startTime,
         status: "ASSIGNED_TO_OVERPASS",
       } as const;

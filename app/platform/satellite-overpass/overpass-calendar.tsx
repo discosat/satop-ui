@@ -808,8 +808,7 @@ export function OverpassCalendar({
                 <SelectContent>
                   {flightPlans.map((fp) => (
                     <SelectItem key={fp.id} value={String(fp.id)}>
-                      {(fp.flightPlanBody?.name || `Plan ${fp.id}`) +
-                        ` • #${fp.id} • ${fp.status}`}
+                      {`${fp.name || `Plan ${fp.id}`} • #${fp.id} • ${fp.status}`}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -93,6 +93,8 @@ export function SearchForm({
       "APPROVED",
       "REJECTED",
       "TRANSMITTED",
+      "DRAFT",
+      "ASSIGNED_TO_OVERPASS",
     ] as FlightPlanStatus[];
     const counts = new Map<string, number>();
     statusOptions.forEach((status) => {
@@ -179,6 +181,10 @@ export function SearchForm({
         return "Rejected";
       case "TRANSMITTED":
         return "Transmitted";
+      case "DRAFT":
+        return "Draft";
+      case "ASSIGNED_TO_OVERPASS":
+        return "Assigned to Overpass";
       default:
         return status;
     }
@@ -387,6 +393,8 @@ export function SearchForm({
                     "APPROVED",
                     "REJECTED",
                     "TRANSMITTED",
+                    "DRAFT",
+                    "ASSIGNED_TO_OVERPASS",
                   ] as FlightPlanStatus[]
                 ).map((status) => (
                   <CommandItem

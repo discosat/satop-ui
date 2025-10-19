@@ -191,7 +191,7 @@ export default function FlightPlansTable({
           return (
             <div className="flex items-center gap-2">
               <CalendarClock className="w-4 h-4 text-muted-foreground" />
-              {plan.flightPlanBody.name || "Command Sequence"}
+              {plan.name || "Command Sequence"}
               {plan.previousPlanId && (
                 <Tooltip>
                   <TooltipTrigger>
@@ -485,7 +485,7 @@ export default function FlightPlansTable({
 
       // Search across multiple fields
       const searchFields = [
-        plan.flightPlanBody.name,
+        plan.name,
         plan.satelliteName,
         plan.groundStationName,
         plan.satId.toString(),

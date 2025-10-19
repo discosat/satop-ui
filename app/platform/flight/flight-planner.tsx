@@ -67,14 +67,13 @@ export default function FlightPlanner({
   const [data, setData] = useState<string>("[]");
 
   useEffect(() => {
-    if (initialData && initialData.flightPlanBody.body) {
+    if (initialData && initialData.commands) {
       try {
-        // Parse the JSON string and format it
-        const parsedBody = JSON.parse(initialData.flightPlanBody.body);
-        setData(JSON.stringify(parsedBody, null, 2));
+        // Format the commands array
+        setData(JSON.stringify(initialData.commands, null, 2));
       } catch {
-        // If parsing fails, just use the body as-is
-        setData(initialData.flightPlanBody.body);
+        // If parsing fails, use empty array
+        setData("[]");
       }
     } else {
       setData("[]");

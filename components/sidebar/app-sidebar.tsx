@@ -29,16 +29,16 @@ const data = {
       isActive: true,
     },
     {
-      title: "Satellite Overpass",
-      url: "/platform/satellite-overpass",
-      icon: Satellite,
-      isActive: true,
-    },
-    {
       title: "Flight planning",
       url: "/platform/flight",
       scope: "scheduling.flightplan.read",
       icon: Notebook,
+      isActive: true,
+    },
+    {
+      title: "Overpass schedule",
+      url: "/platform/satellite-overpass",
+      icon: Satellite,
       isActive: true,
     },
     /* {
