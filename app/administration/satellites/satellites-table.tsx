@@ -36,7 +36,7 @@ import {
   ArrowUpDown,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { Satellite, SatelliteStatus } from "@/app/api/platform/satellites/satellite-service";
+import { Satellite, SatelliteStatus } from "@/app/api/platform/satellites/types";
 import TablePagination from "@/components/ui/table-pagination";
 
 interface SatellitesTableProps {

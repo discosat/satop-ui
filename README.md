@@ -15,7 +15,7 @@ This mode requires a running instance of the `satop-platform` Python backend.
     ```bash
     docker compose up dev
     ```
-3.  The backend API will start on `http://localhost:7890`. The database is **automatically seeded** with default users, so no manual setup is needed.
+3.  The backend API will start on `http://localhost:7890`. The database is **automatically seeded** with a default admin user, so no manual setup is needed.
 
 #### Step 2: Run the Frontend
 
@@ -27,14 +27,11 @@ npm run dev
 
 #### Login Credentials
 
-Once the backend and frontend are running, you can log in with the default accounts that were automatically created:
+Once the backend and frontend are running, you can log in with the default account that was automatically created:
 
 - **Admin User**
   - **Email:** `admin@example.com`
   - **Password:** `adminpassword`
-- **Operator User**
-  - **Email:** `operator@example.com`
-  - **Password:** `operatorpassword`
 
 ### Running in Mocked Mode (Standalone Frontend)
 
