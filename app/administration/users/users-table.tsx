@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/table";
 import { ArrowUpDown, User as UserIcon, Mail } from "lucide-react";
 import Actions from "./actions";
-import { User } from "./page";
+import type { User } from "@/app/api/users/types";
 import { RoleBadge } from "./role-badge";
 import { ScopeBadge } from "./scope-badge";
 import TablePagination from "@/components/ui/table-pagination";
@@ -131,7 +131,7 @@ export default function UsersTable({ users }: UsersTableProps) {
         return (
           <div className="flex gap-2">
             <RoleBadge role={user.role} />
-            <ScopeBadge scopes={user?.scopes} />
+            <ScopeBadge scopes={user?.additionalScopes} />
           </div>
         );
       },
@@ -174,7 +174,7 @@ export default function UsersTable({ users }: UsersTableProps) {
         user.name,
         user.email,
         user.role,
-        user.id,
+        user.id.toString(),
       ];
       
       return searchFields.some(field => 

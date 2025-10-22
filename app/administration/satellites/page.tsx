@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import SatellitesTable from "./satellites-table";
-import { getSatellites } from "@/app/api/platform/satellites/satellite-service";
+import { getSatellites } from "@/app/api/satellites/satellite-service";
 import { ServerRefreshButton } from "./server-refresh-button";
 import { SearchForm } from "./search-form";
 

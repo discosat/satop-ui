@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2, Copy, Save } from "lucide-react";
 import { toast } from "sonner";
-import type { FlightPlan } from "@/app/api/platform/flight/types";
+import type { FlightPlan } from "@/app/api/flight/types";
 
 const blockSnippets: { label: string; json: object; colorClass: string }[] = [
   {

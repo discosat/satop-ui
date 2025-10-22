@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import FlightPlansTable from "./flight-table";
-import { getFlightPlans } from "@/app/api/platform/flight/flight-plan-service";
+import { getFlightPlans } from "@/app/api/flight/flight-plan-service";
 import { ServerRefreshButton } from "./server-refresh-button";
 import { SearchForm } from "./search-form";
 import Link from "next/link";
@@ -14,8 +14,8 @@ import { Button } from "@/components/ui/button";
 import { me } from "@/app/actions/me";
 import { redirect } from "next/navigation";
 import { Plus } from "lucide-react";
-import { getSatellites } from "@/app/api/platform/satellites/satellite-service";
-import { getGroundStations } from "@/app/api/platform/ground-stations/ground-station-service";
+import { getSatellites } from "@/app/api/satellites/satellite-service";
+import { getGroundStations } from "@/app/api/ground-stations/ground-station-service";
 
 export default async function Page({}) {
   const session = await me();

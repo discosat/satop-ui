@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { createGroundStation } from "@/app/api/platform/ground-stations/ground-station-service";
+import { createGroundStation } from "@/app/api/ground-stations/ground-station-service";
 import { refreshGroundStations } from "@/app/actions/ground-stations";
 import {
   Dialog,

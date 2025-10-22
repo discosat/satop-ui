@@ -113,7 +113,7 @@ export async function associateOverpass(
     try {
       // Wire into the overpass mock so the calendar reflects the change
       // We do a dynamic import to avoid circular import issues
-      const overpassModule: typeof import("@/app/api/platform/overpass/mock") = await import("@/app/api/platform/overpass/mock");
+      const overpassModule: typeof import("@/app/api/overpass/mock") = await import("@/app/api/overpass/mock");
       // Find the plan to copy metadata
       const plan = mockFlightPlans.find((p) => p.id === flightPlanId);
       if (!plan) {

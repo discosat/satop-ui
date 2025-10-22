@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Eye, Download, RefreshCw, Info } from "lucide-react";
 import { useState } from "react";
-import type { Satellite } from "@/app/api/platform/satellites/types";
+import type { Satellite } from "@/app/api/satellites/types";
 import { SatelliteDetailsModal } from "./satellite-details-modal";
 
 export function SatelliteActions({ satellite }: { satellite: Satellite }) {

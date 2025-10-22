@@ -27,9 +27,9 @@ import {
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
-import type { FlightPlan, FlightPlanStatus } from "@/app/api/platform/flight/types";
-import type { Satellite } from "@/app/api/platform/satellites/types";
-import type { GroundStation } from "@/app/api/platform/ground-stations/types";
+import type { FlightPlan, FlightPlanStatus } from "@/app/api/flight/types";
+import type { Satellite } from "@/app/api/satellites/types";
+import type { GroundStation } from "@/app/api/ground-stations/types";
 import { cn } from "@/lib/utils";
 
 interface SearchFormProps {

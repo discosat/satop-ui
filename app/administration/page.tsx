@@ -16,10 +16,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { getSatellites } from "@/app/api/platform/satellites/satellite-service";
-import { Satellite } from "@/app/api/platform/satellites/types";
-import { getGroundStations } from "@/app/api/platform/ground-stations/ground-station-service";
-import type { GroundStation } from "@/app/api/platform/ground-stations/types";
+import { getSatellites } from "@/app/api/satellites/satellite-service";
+import { Satellite } from "@/app/api/satellites/types";
+import { getGroundStations } from "@/app/api/ground-stations/ground-station-service";
+import type { GroundStation } from "@/app/api/ground-stations/types";
 import { Satellite as SatelliteIcon, Radio, MapPin, Hash } from "lucide-react";
 
 export const metadata: Metadata = {

@@ -23,8 +23,8 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import type { GroundStation } from "@/app/api/platform/ground-stations/types";
-import { updateGroundStation } from "@/app/api/platform/ground-stations/ground-station-service";
+import type { GroundStation } from "@/app/api/ground-stations/types";
+import { updateGroundStation } from "@/app/api/ground-stations/ground-station-service";
 import { refreshGroundStations } from "@/app/actions/ground-stations";
 
 const formSchema = z.object({

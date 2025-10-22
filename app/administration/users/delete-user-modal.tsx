@@ -9,13 +9,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { User } from "./page";
+import type { User } from "@/app/api/users/types";
 
 interface DeleteUserModalProps {
   user: User;
   dialogOpen: boolean;
   setDialogOpen: (open: boolean) => void;
-  onDelete: (userId: string) => void;
+  onDelete: (userId: number) => void;
   onCancel?: () => void;
 }
 

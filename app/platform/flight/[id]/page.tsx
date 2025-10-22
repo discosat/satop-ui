@@ -27,12 +27,12 @@ import {
   getFlightPlanById,
   updateFlightPlan,
   approveFlightPlan,
-} from "@/app/api/platform/flight/flight-plan-service";
+} from "@/app/api/flight/flight-plan-service";
 import Protected from "@/components/protected";
 import FlightPlanSteps from "@/app/platform/flight/components/flight-plan-steps";
 import { Command, CameraSettings, CaptureLocation } from "../components/commands/command";
 import { CommandBuilder } from "../components/commands/command-builder";
-import { FlightPlan } from "@/app/api/platform/flight/types";
+import { FlightPlan } from "@/app/api/flight/types";
 
 // We are going to make some key changes to the flight planning page.
 // Creating a new flight plan is now going to take multiple steps.

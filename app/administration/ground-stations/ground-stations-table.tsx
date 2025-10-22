@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/table";
 import { MapPin, Link as LinkIcon, Radio, Clock, ArrowUpDown } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import type { GroundStation } from "@/app/api/platform/ground-stations/types";
+import type { GroundStation } from "@/app/api/ground-stations/types";
 import { GroundStationActions } from "./actions";
 import Link from "next/link";
 import TablePagination from "@/components/ui/table-pagination";

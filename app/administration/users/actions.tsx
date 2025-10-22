@@ -11,7 +11,7 @@ import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import { EditUserModal } from "./edit-user-modal";
 import { DeleteUserModal } from "./delete-user-modal";
-import { User } from "./page";
+import type { User } from "@/app/api/users/types";
 
 interface ActionsProps {
   user: User;
@@ -28,7 +28,7 @@ export default function Actions({ user }: ActionsProps) {
     setEditDialogOpen(false);
   };
 
-  const handleDeleteUser = (userId: string) => {
+  const handleDeleteUser = (userId: number) => {
     // Handle deleting the user
     console.log("Deleting user with ID:", userId);
     // Implement your delete logic here

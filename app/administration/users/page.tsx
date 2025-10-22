@@ -1,9 +1,4 @@
-"use client";
-
-import { useState } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -12,96 +7,29 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import UsersTable from "./users-table";
 import { ApplicationsTable } from "./applications-table";
-import { RefreshButton } from "@/components/refresh-button";
+import { getUsers } from "@/app/api/users/users-service";
+import type { User } from "@/app/api/users/types";
+import SearchForm from "./search-form";
+import { ServerRefreshButton } from "./server-refresh-button";
 
-export type UserRole = "viewer" | "Operator" | "admin";
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  scopes?: string[];
-  avatarUrl: string;
-  needsSupport?: boolean;
-  supportReason?: string;
+// Re-export types from the API service
+export type { User, UserRole } from "@/app/api/users/types";
+
+interface PageProps {
+  searchParams?: Promise<{ query?: string }>;
 }
 
-// Sample data
-const users: User[] = [
-  {
-    id: "1",
-    name: "Alex Johnson",
-    email: "alex@example.com",
-    role: "admin",
-    scopes: [],
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
-  },
-  {
-    id: "2",
-    name: "Sam Wilson",
-    email: "sam@example.com",
-    role: "Operator",
-    scopes: ["fp.program", "fp.create"],
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sam",
-  },
-  {
-    id: "3",
-    name: "Taylor Smith",
-    email: "taylor@example.com",
-    role: "viewer",
-    scopes: ["fp.program"],
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Taylor",
-  },
-  {
-    id: "4",
-    name: "SDU Ground Station",
-    email: "gssdu@discosat.dk",
-    role: "Operator",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Morgan",
-  },
-  {
-    id: "5",
-    name: "AU Ground Station",
-    email: "gsau@discosat.dk",
-    role: "Operator",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Morgan",
-  },
-  {
-    id: "6",
-    name: "Casey Brown",
-    email: "casey@example.com",
-    role: "Operator",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Casey",
-    needsSupport: true,
-    supportReason:
-      "I wish to photograph the disko islands for thermal springs.",
-  },
-];
+export default async function UserManagement({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const query = params?.query || "";
+  
+  // Fetch users from the API service
+  const users = await getUsers();
 
-export default function UserManagement() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
-  const [searchQuery, setSearchQuery] = useState(searchParams.get("query") || "");
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-    
-    const params = new URLSearchParams(searchParams);
-    if (value) {
-      params.set("query", value);
-    } else {
-      params.delete("query");
-    }
-    router.replace(`${pathname}?${params.toString()}`);
-  };
-
-  const supportUsers = users.filter((user) => user.needsSupport);
+  // For now, applications tab shows empty until we have a separate endpoint
+  const supportUsers: User[] = [];
 
   return (
     <div className="p-6 space-y-6">
@@ -112,10 +40,6 @@ export default function UserManagement() {
             Manage user accounts and permissions
           </p>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Add User
-        </Button>
       </div>
 
       <div className="w-full">
@@ -145,16 +69,8 @@ export default function UserManagement() {
               </CardHeader>
               <CardContent>
                 <div className="flex justify-between mb-4">
-                  <div className="relative w-64">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search users..."
-                      className="pl-8"
-                      value={searchQuery}
-                      onChange={handleSearchChange}
-                    />
-                  </div>
-                  <RefreshButton onClick={() => {}} />
+                  <SearchForm initialQuery={query} />
+                  <ServerRefreshButton />
                 </div>
 
                 <UsersTable users={users} />
@@ -173,7 +89,7 @@ export default function UserManagement() {
               </CardHeader>
               <CardContent>
                 <div className="flex justify-end">
-                  <RefreshButton onClick={() => {}} />
+                  <ServerRefreshButton />
                 </div>
 
                 <ApplicationsTable supportUsers={supportUsers} />

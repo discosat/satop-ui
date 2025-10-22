@@ -9,8 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { GroundStation } from "@/app/api/platform/ground-stations/types";
-import { deleteGroundStation } from "@/app/api/platform/ground-stations/ground-station-service";
+import type { GroundStation } from "@/app/api/ground-stations/types";
+import { deleteGroundStation } from "@/app/api/ground-stations/ground-station-service";
 import { refreshGroundStations } from "@/app/actions/ground-stations";
 import { useState } from "react";
 

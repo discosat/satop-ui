@@ -19,7 +19,7 @@ import {
   Check,
 } from "lucide-react";
 import { useState } from "react";
-import { Satellite, SatelliteStatus } from "@/app/api/platform/satellites/types";
+import { Satellite, SatelliteStatus } from "@/app/api/satellites/types";
 
 interface SatelliteDetailsModalProps {
   satellite: Satellite;

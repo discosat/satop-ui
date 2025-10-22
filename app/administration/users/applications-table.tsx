@@ -33,8 +33,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { RoleBadge } from "./role-badge";
-import { User } from "./page";
-import { MoreHorizontal, ArrowUpDown, User as UserIcon, Mail, MessageSquare } from "lucide-react";
+import type { User } from "@/app/api/users/types";
+import { MoreHorizontal, ArrowUpDown, User as UserIcon, Mail } from "lucide-react";
 import TablePagination from "@/components/ui/table-pagination";
 import { useSearchParams } from "next/navigation";
 
@@ -138,32 +138,6 @@ export function ApplicationsTable({ supportUsers }: ApplicationsTableProps) {
       },
     },
     {
-      accessorKey: "supportReason",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="h-8 p-0 hover:bg-transparent"
-          >
-            Message
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
-      cell: ({ row }) => {
-        const supportReason = row.getValue("supportReason") as string;
-        return (
-          <div className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-muted-foreground" />
-            <span className="truncate max-w-[300px]">
-              {supportReason}
-            </span>
-          </div>
-        );
-      },
-    },
-    {
       id: "actions",
       header: "",
       cell: () => {
@@ -217,8 +191,7 @@ export function ApplicationsTable({ supportUsers }: ApplicationsTableProps) {
         user.name,
         user.email,
         user.role,
-        user.supportReason,
-        user.id,
+        user.id.toString(),
       ];
       
       return searchFields.some(field => 

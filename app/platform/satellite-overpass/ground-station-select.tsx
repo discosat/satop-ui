@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import type { GroundStation } from "@/app/api/platform/ground-stations/types";
+import type { GroundStation } from "@/app/api/ground-stations/types";
 
 interface GroundStationSelectProps {
   groundStations: GroundStation[];

@@ -11,8 +11,8 @@ import {
 import { MoreHorizontal, Activity } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import type { GroundStation } from "@/app/api/platform/ground-stations/types";
-import { checkGroundStationHealth } from "@/app/api/platform/ground-stations/ground-station-service";
+import type { GroundStation } from "@/app/api/ground-stations/types";
+import { checkGroundStationHealth } from "@/app/api/ground-stations/ground-station-service";
 import { EditGroundStationModal } from "./edit-ground-station-modal";
 import { DeleteGroundStationModal } from "./delete-ground-station-modal";
 

@@ -39,9 +39,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { FlightPlan, FlightPlanStatus } from "@/app/api/platform/flight/types";
-import type { Satellite } from "@/app/api/platform/satellites/types";
-import type { GroundStation } from "@/app/api/platform/ground-stations/types";
+import type { FlightPlan, FlightPlanStatus } from "@/app/api/flight/types";
+import type { Satellite } from "@/app/api/satellites/types";
+import type { GroundStation } from "@/app/api/ground-stations/types";
 import TablePagination from "@/components/ui/table-pagination";
 
 // Extended flight plan type with lookup data

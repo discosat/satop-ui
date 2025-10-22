@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import GroundStationsTable from "./ground-stations-table";
-import { getGroundStations } from "@/app/api/platform/ground-stations/ground-station-service";
+import { getGroundStations } from "@/app/api/ground-stations/ground-station-service";
 import { ServerRefreshButton } from "./server-refresh-button";
 import { SearchForm } from "./search-form";
 import { CreateGroundStationModal } from "./create-ground-station";

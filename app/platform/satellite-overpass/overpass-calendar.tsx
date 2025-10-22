@@ -58,12 +58,12 @@ import {
   CommandItem,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
-import type { GroundStation } from "@/app/api/platform/ground-stations/types";
-import { getOverpassWindows } from "@/app/api/platform/overpass/overpass-service";
+import type { GroundStation } from "@/app/api/ground-stations/types";
+import { getOverpassWindows } from "@/app/api/overpass/overpass-service";
 import type { 
   Overpass as APIOverpass, 
   OverpassQueryParams 
-} from "@/app/api/platform/overpass/types";
+} from "@/app/api/overpass/types";
 import type { TimePeriod } from "./time-period-select";
 import Link from "next/link";
 import {
@@ -75,8 +75,8 @@ import {
 import {
   getFlightPlans,
   associateOverpass,
-} from "@/app/api/platform/flight/flight-plan-service";
-import type { FlightPlan } from "@/app/api/platform/flight/types";
+} from "@/app/api/flight/flight-plan-service";
+import type { FlightPlan } from "@/app/api/flight/types";
 
 // Extended satellite interface that includes the original API ID
 interface SatelliteWithId extends Satellite {
