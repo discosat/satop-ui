@@ -1,20 +1,10 @@
 "use server";
 
-import { mockGroundStations, GroundStation } from "./mock";
-import { apiClient } from "@/lib/api-client";
+import { mockGroundStations } from "./mock";
+import { apiClient } from "@/app/api/api-client";
+import { CreateGroundStationPayload, GroundStation, GroundStationWithApiKey, UpdateGroundStationPayload } from "./types";
 
 const API_PATH = '/ground-stations';
-
-export type GroundStationWithApiKey = GroundStation & {
-  applicationId: string;
-  rawApiKey: string;
-};
-
-export type CreateGroundStationPayload = Omit<GroundStation, 'id' | 'createdAt' | 'isActive'> & {
-  isActive?: boolean;
-};
-
-export type UpdateGroundStationPayload = Partial<Omit<GroundStation, 'id' | 'createdAt' | 'isActive'>>;
 
 export async function getGroundStations(): Promise<GroundStation[]> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {

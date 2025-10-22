@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
+import type { GroundStation } from "@/app/api/platform/ground-stations/types";
 import { updateGroundStation } from "@/app/api/platform/ground-stations/ground-station-service";
 import { refreshGroundStations } from "@/app/actions/ground-stations";
 
@@ -72,8 +72,7 @@ export function EditGroundStationModal({
 
   const onSubmit = async (values: FormValues) => {
     setSaving(true);
-    await updateGroundStation({
-      id: station.id,
+    await updateGroundStation(station.id, {
       name: values.name,
       location: { 
         latitude: values.latitude, 
@@ -81,8 +80,6 @@ export function EditGroundStationModal({
         altitude: values.altitude 
       },
       httpUrl: values.httpUrl,
-      createdAt: station.createdAt,
-      isActive: station.isActive, // Keep existing status
     });
     await refreshGroundStations();
     setSaving(false);

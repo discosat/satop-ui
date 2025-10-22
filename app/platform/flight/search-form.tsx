@@ -27,12 +27,9 @@ import {
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
-import {
-  FlightPlan,
-  FlightPlanStatus,
-} from "@/app/api/platform/flight/flight-plan-service";
-import { Satellite } from "@/app/api/platform/satellites/types";
-import { GroundStation } from "@/app/api/platform/ground-stations/mock";
+import type { FlightPlan, FlightPlanStatus } from "@/app/api/platform/flight/types";
+import type { Satellite } from "@/app/api/platform/satellites/types";
+import type { GroundStation } from "@/app/api/platform/ground-stations/types";
 import { cn } from "@/lib/utils";
 
 interface SearchFormProps {
@@ -93,6 +90,8 @@ export function SearchForm({
       "APPROVED",
       "REJECTED",
       "TRANSMITTED",
+      "DRAFT",
+      "ASSIGNED_TO_OVERPASS",
     ] as FlightPlanStatus[];
     const counts = new Map<string, number>();
     statusOptions.forEach((status) => {
@@ -179,6 +178,10 @@ export function SearchForm({
         return "Rejected";
       case "TRANSMITTED":
         return "Transmitted";
+      case "DRAFT":
+        return "Draft";
+      case "ASSIGNED_TO_OVERPASS":
+        return "Assigned to Overpass";
       default:
         return status;
     }
@@ -387,6 +390,8 @@ export function SearchForm({
                     "APPROVED",
                     "REJECTED",
                     "TRANSMITTED",
+                    "DRAFT",
+                    "ASSIGNED_TO_OVERPASS",
                   ] as FlightPlanStatus[]
                 ).map((status) => (
                   <CommandItem

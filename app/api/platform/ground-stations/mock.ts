@@ -1,11 +1,6 @@
-export interface GroundStation {
-  id: number;
-  name: string;
-  location: { latitude: number; longitude: number; altitude: number };
-  httpUrl: string;
-  createdAt: string;
-  isActive: boolean;
-}
+import { GroundStation } from "./types";
+
+
 
 export const mockGroundStations: GroundStation[] = [
   {

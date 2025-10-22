@@ -1,32 +1,12 @@
-"use server";
+"use server"
 
 import { mockFlightPlans } from "./mock";
-import { apiClient } from "@/lib/api-client";
+import { apiClient } from "@/app/api/api-client";
+import type { FlightPlan, ApprovalResult } from "./types";
 
 const API_PATH = '/flight-plans';
 
-export interface ApprovalResult {
-  success: boolean;
-  message: string;
-}
 
-export type FlightPlanStatus = "DRAFT" | "APPROVED" | "REJECTED" | "ASSIGNED_TO_OVERPASS"| "SUPERSEDED" | "TRANSMITTED";
-export interface FlightPlan {
-  id: number;
-  previousPlanId?: string;
-  gsId: number;
-  satId: number;
-  overpassId?: number;
-  scheduledAt?: string;
-  flightPlanBody: {
-    name: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    body: any;
-  };
-  status: FlightPlanStatus;
-  approverId?: string;
-  approvalDate?: string;
-}
 
 export type CreateFlightPlanPayload = Omit<FlightPlan, 'id' | 'status' | 'approverId' | 'approvalDate'>;
 
@@ -73,17 +53,14 @@ export async function createFlightPlan(payload: CreateFlightPlanPayload): Promis
   }
 }
 
-export async function updateFlightPlan(id: number, payload: CreateFlightPlanPayload): Promise<FlightPlan | null> {
+export async function updateFlightPlan(payload: FlightPlan): Promise<FlightPlan | null> {
+  const id = payload.id;
+  
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
     const index = mockFlightPlans.findIndex((p) => p.id === id);
     if (index !== -1) {
       mockFlightPlans[index].status = 'SUPERSEDED';
-      const newVersion: FlightPlan = { 
-        ...payload, 
-        id: Math.floor(Math.random() * 10000), 
-        status: 'DRAFT', 
-        previousPlanId: id.toString() 
-      };
+      const newVersion: FlightPlan = { ...mockFlightPlans[index], id: Math.floor(Math.random() * 10000), status: 'DRAFT', previousPlanId: mockFlightPlans[index].id };
       mockFlightPlans.unshift(newVersion);
       return newVersion;
     }
@@ -91,7 +68,10 @@ export async function updateFlightPlan(id: number, payload: CreateFlightPlanPayl
   }
 
   try {
-    return await apiClient.put<CreateFlightPlanPayload, FlightPlan>(`${API_PATH}/${id}`, payload);
+    // Extract only the fields needed for the update payload, excluding read-only fields
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id: _id, status: _status, approverId: _approverId, approvalDate: _approvalDate, ...updatePayload } = payload;
+    return await apiClient.put<Partial<FlightPlan>, FlightPlan>(`${API_PATH}/${id}`, updatePayload);
   } catch (error) {
     console.error('Error updating flight plan:', error);
     throw error;
@@ -141,7 +121,7 @@ export async function associateOverpass(
       }
       const association = {
         id: plan.id,
-        name: plan.flightPlanBody?.name || `Plan ${plan.id}`,
+        name: plan.name || `Plan ${plan.id}`,
         scheduledAt: request.startTime,
         status: "ASSIGNED_TO_OVERPASS",
       } as const;

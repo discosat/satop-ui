@@ -30,20 +30,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import FlightPlanner from "../flight-planner";
-import type { FlightPlan } from "@/app/api/platform/flight/flight-plan-service";
+import type { FlightPlan } from "@/app/api/platform/flight/types";
 import { createFlightPlan } from "@/app/api/platform/flight/flight-plan-service";
 import { toast } from "sonner";
-import { useSession } from "@/app/context";
+import FlightPlanSteps from "@/app/platform/flight/components/flight-plan-steps";
+import { CommandBuilder } from "../components/commands/command-builder";
 import { getSatellites } from "@/app/api/platform/satellites/satellite-service";
-import { Satellite } from "@/app/api/platform/satellites/types";
+import type { Satellite } from "@/app/api/platform/satellites/types";
 import { getGroundStations } from "@/app/api/platform/ground-stations/ground-station-service";
-import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
-
-// A flight plan requires a name, a ground station id, a satellite name
-
-// Should the flight plan page still be generic and support sending all possible commands to the satelitte?
-// Or should we become more specific and only support the image command for now?
+import type { GroundStation } from "@/app/api/platform/ground-stations/types";
+import { Command } from "../components/commands/command";
 
 const formSchema = z.object({
   name: z
@@ -63,9 +59,11 @@ const formSchema = z.object({
     }),
 });
 
+// Command type is imported from local command builder
+
 export default function NewFlightPlanPage() {
   const router = useRouter();
-  const [bodyJson, setBodyJson] = useState<string>("[]");
+  const [commands, setCommands] = useState<Command[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [satellites, setSatellites] = useState<Satellite[]>([]);
   const [groundStations, setGroundStations] = useState<GroundStation[]>([]);
@@ -73,8 +71,6 @@ export default function NewFlightPlanPage() {
   const [groundStationsError, setGroundStationsError] = useState<string | null>(
     null
   );
-
-  const session = useSession();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -112,34 +108,43 @@ export default function NewFlightPlanPage() {
     fetchGroundStations();
   }, []);
 
-  const parsedBody = useMemo(() => {
-    try {
-      const parsed = JSON.parse(bodyJson);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }, [bodyJson]);
+  const commandBody = useMemo(() => {
+    return commands.map((cmd) => {
+      if (cmd.type === "TRIGGER_CAPTURE") {
+        // Remove the id field from the command as it's only for UI
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, ...commandData } = cmd;
+        return {
+          commandType: cmd.type,
+          captureLocation: commandData.captureLocation,
+          cameraSettings: commandData.cameraSettings,
+          maxOffNadirDegrees: commandData.maxOffNadirDegrees,
+          maxSearchDurationHours: commandData.maxSearchDurationHours,
+        };
+      } else {
+        // TRIGGER_PIPELINE
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, ...commandData } = cmd;
+        return {
+          commandType: cmd.type,
+          executionTime: commandData.executionTime,
+          mode: commandData.mode,
+        };
+      }
+    });
+  }, [commands]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!session) {
-      toast.error("Authentication session not found. Please log in again.");
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
       const payload: FlightPlan = {
         id: 0, // backend will assign this
-        flightPlanBody: {
-          name: values.name,
-          body: JSON.stringify(parsedBody),
-        },
-        scheduledAt: new Date().toISOString(),
+        name: values.name,
+        commands: commandBody,
         gsId: Number(values.gsId),
         satId: Number(values.satId),
-        status: "PENDING",
+        status: "DRAFT",
       };
 
       const created = await createFlightPlan(payload);
@@ -161,19 +166,20 @@ export default function NewFlightPlanPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 h-full">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">New flight plan</h1>
       </div>
+      <FlightPlanSteps status={"DRAFT"} />
 
-      <Card>
-        <CardHeader>
+      <Card className="flex-1 flex flex-col min-h-0">
+        <CardHeader className="flex-shrink-0">
           <CardTitle>Flight plan details</CardTitle>
           <CardDescription>
             Fill the required fields and author commands below.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 flex flex-col min-h-0">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -288,7 +294,10 @@ export default function NewFlightPlanPage() {
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold">Commands</h2>
                 </div>
-                <FlightPlanner onChange={(val: string) => setBodyJson(val)} />
+                <CommandBuilder
+                  commands={commands}
+                  onCommandsChange={setCommands}
+                />
               </div>
 
               <div className="flex justify-end gap-2">
@@ -306,16 +315,29 @@ export default function NewFlightPlanPage() {
                     !!satellitesError ||
                     !!groundStationsError ||
                     satellites.length === 0 ||
-                    groundStations.length === 0
+                    groundStations.length === 0 ||
+                    commands.length === 0
                   }
+                  title={
+                    commands.length === 0 
+                      ? "Add at least one command to create a flight plan" 
+                      : "Create flight plan"
+                  }
+                  className={commands.length === 0 ? "opacity-50" : ""}
                 >
-                  Create
+                  {isSubmitting ? "Creating..." : "Create Flight Plan"}
                 </Button>
               </div>
+              {commands.length === 0 && (
+                <div className="text-sm text-muted-foreground text-center mt-2 p-3 bg-muted/30 rounded-lg border border-dashed">
+                  💡 Add at least one command above to create your flight plan
+                </div>
+              )}
             </form>
           </Form>
         </CardContent>
       </Card>
+
     </div>
   );
 }

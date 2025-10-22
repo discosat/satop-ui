@@ -11,7 +11,7 @@ import { ServerRefreshButton } from "./server-refresh-button";
 import { SearchForm } from "./search-form";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { me } from "@/app/actions/me"; 
+import { me } from "@/app/actions/me";
 import { redirect } from "next/navigation";
 import { Plus } from "lucide-react";
 import { getSatellites } from "@/app/api/platform/satellites/satellite-service";
@@ -20,15 +20,15 @@ import { getGroundStations } from "@/app/api/platform/ground-stations/ground-sta
 export default async function Page({}) {
   const session = await me();
   if (!session) {
-    redirect('/login');
+    redirect("/login");
   }
-  
+
   const flightPlans = await getFlightPlans();
   const satellites = await getSatellites();
   const groundStations = await getGroundStations();
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="flex flex-col h-full p-6 gap-6">
       <div className="flex justify-between items-center">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold">Flight planning</h1>
@@ -39,10 +39,10 @@ export default async function Page({}) {
         </div>
         <div>
           <Link href="/platform/flight/new">
-          
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Create new plan</Button>
+              Create new plan
+            </Button>
           </Link>
         </div>
       </div>
@@ -59,7 +59,7 @@ export default async function Page({}) {
           <div className="space-y-4 mb-4 mt-2">
             <div className="flex justify-between items-start">
               <div className="flex-1 mr-4">
-                <SearchForm 
+                <SearchForm
                   flightPlans={flightPlans}
                   satellites={satellites}
                   groundStations={groundStations}
@@ -69,8 +69,8 @@ export default async function Page({}) {
             </div>
           </div>
 
-          <FlightPlansTable 
-            flightPlans={flightPlans} 
+          <FlightPlansTable
+            flightPlans={flightPlans}
             satellites={satellites}
             groundStations={groundStations}
           />

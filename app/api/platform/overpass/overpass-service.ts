@@ -1,10 +1,12 @@
 "use server";
 
-import { apiClient } from "@/lib/api-client";
-import type { Overpass, OverpassQueryParams } from "./types";
+import { apiClient } from "@/app/api/api-client";
 import { getMockOverpassWindows } from "./mock";
+import { Overpass, OverpassQueryParams } from "./types";
 
 const API_PATH = '/overpasses';
+
+
 
 export async function getOverpassWindows(
   satelliteId: number,

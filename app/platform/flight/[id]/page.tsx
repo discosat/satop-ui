@@ -2,11 +2,10 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, CheckCircle, XCircle, History } from "lucide-react";
+import { ArrowLeft, Save, CheckCircle, XCircle,  Activity } from "lucide-react";
 import { toast } from "sonner";
-import FlightPlanner from "../flight-planner";
 import {
   Card,
   CardContent,
@@ -14,7 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,10 +27,20 @@ import {
   getFlightPlanById,
   updateFlightPlan,
   approveFlightPlan,
-  FlightPlan,
 } from "@/app/api/platform/flight/flight-plan-service";
-import { useSession } from "@/app/context";
 import Protected from "@/components/protected";
+import FlightPlanSteps from "@/app/platform/flight/components/flight-plan-steps";
+import { Command, CameraSettings, CaptureLocation } from "../components/commands/command";
+import { CommandBuilder } from "../components/commands/command-builder";
+import { FlightPlan } from "@/app/api/platform/flight/types";
+
+// We are going to make some key changes to the flight planning page.
+// Creating a new flight plan is now going to take multiple steps.
+// We should attempt to show some sort of step progress of how far along we are in the process(based on the status of the flight plan), preferably I would like this to be seen horizontally with a key highlight of the current step.
+// First step is to create a new flight plan.  -- DRAFT
+// Second step is to approve the flight plan.  -- APPROVED/REJECTED (if rejected its not able to be assigned to an overpass)
+// Third step is to assign the flight plan to an overpass.  -- ASSIGNED_TO_OVERPASS
+// Fourth step is to transmit the flight plan, this will happen automatically when its scheduled for execution -- TRANSMITTED
 
 export default function FlightPlanDetailPage() {
   const params = useParams();
@@ -41,26 +49,70 @@ export default function FlightPlanDetailPage() {
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [updatedPlanData, setUpdatedPlanData] = useState<string | null>(null);
+  const [commands, setCommands] = useState<Command[]>([]);
+  const [hasChanges, setHasChanges] = useState(false);
 
-  const session = useSession();
 
   const id = typeof params.id === "string" ? params.id : "";
 
   useEffect(() => {
     let isCancelled = false;
     const load = async () => {
-      if (!id || !session) return;
+      if (!id) return;
       setIsLoading(true);
       try {
         const plan = await getFlightPlanById(Number(id));
         if (!isCancelled) {
           setFlightPlan(plan);
+          
+          // Parse commands from flight plan
+          if (plan?.commands && Array.isArray(plan.commands)) {
+            try {
+              // Convert API commands to UI Command format with IDs
+              const commandsWithIds: Command[] = [];
+              for (const apiCmd of plan.commands) {
+                const cmd = apiCmd as Record<string, unknown>;
+                if (cmd.commandType === "TRIGGER_CAPTURE") {
+                  commandsWithIds.push({
+                    type: "TRIGGER_CAPTURE",
+                    id: crypto.randomUUID(),
+                    captureLocation: (cmd.captureLocation as CaptureLocation) || { latitude: 0, longitude: 0 },
+                    cameraSettings: (cmd.cameraSettings as CameraSettings) || {
+                      cameraId: "",
+                      type: 0,
+                      exposureMicroseconds: 0,
+                      iso: 1,
+                      numImages: 1,
+                      intervalMicroseconds: 0,
+                      observationId: 1,
+                      pipelineId: 1,
+                    },
+                    maxOffNadirDegrees: (cmd.maxOffNadirDegrees as number) || 0,
+                    maxSearchDurationHours: (cmd.maxSearchDurationHours as number) || 0,
+                  });
+                } else if (cmd.commandType === "TRIGGER_PIPELINE") {
+                  commandsWithIds.push({
+                    type: "TRIGGER_PIPELINE",
+                    id: crypto.randomUUID(),
+                    executionTime: (cmd.executionTime as string) || new Date().toISOString(),
+                    mode: (cmd.mode as number) || 0,
+                  });
+                }
+              }
+              setCommands(commandsWithIds);
+            } catch (error) {
+              console.error("Failed to parse flight plan commands:", error);
+              setCommands([]);
+            }
+          } else {
+            setCommands([]);
+          }
         }
       } catch (error) {
         console.error("Failed to load flight plan", error);
         if (!isCancelled) {
           setFlightPlan(null);
+          setCommands([]);
         }
       } finally {
         if (!isCancelled) {
@@ -72,35 +124,46 @@ export default function FlightPlanDetailPage() {
     return () => {
       isCancelled = true;
     };
-  }, [id, session]);
+  }, [id]);
 
   const handleBack = () => {
     router.back();
   };
 
   const handleSave = async () => {
-    if (!flightPlan || !updatedPlanData || !session) return;
+    if (!flightPlan || !hasChanges) return;
     setIsLoading(true);
     try {
-      let parsedData;
-      try {
-        parsedData = JSON.parse(updatedPlanData);
-      } catch {
-        throw new Error("Invalid JSON format in flight plan data");
-      }
+      // Convert UI commands to API format
+      const commandBody = commands.map((cmd) => {
+        if (cmd.type === "TRIGGER_CAPTURE") {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { id, ...commandData } = cmd;
+          return {
+            commandType: cmd.type,
+            captureLocation: commandData.captureLocation,
+            cameraSettings: commandData.cameraSettings,
+            maxOffNadirDegrees: commandData.maxOffNadirDegrees,
+            maxSearchDurationHours: commandData.maxSearchDurationHours,
+          };
+        } else {
+          // TRIGGER_PIPELINE
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { id, ...commandData } = cmd;
+          return {
+            commandType: cmd.type,
+            executionTime: commandData.executionTime,
+            mode: commandData.mode,
+          };
+        }
+      });
 
       const updatedFlightPlanPayload: FlightPlan = {
         ...flightPlan,
-        flightPlanBody: {
-          ...flightPlan.flightPlanBody,
-          body: JSON.stringify(parsedData),
-        },
+        commands: commandBody,
       };
 
-      const newVersion = await updateFlightPlan(
-        updatedFlightPlanPayload,
-        session.accessToken
-      );
+      const newVersion = await updateFlightPlan(updatedFlightPlanPayload);
 
       if (newVersion?.id) {
         toast.success("New flight plan version created successfully!");
@@ -120,18 +183,18 @@ export default function FlightPlanDetailPage() {
     }
   };
 
-  const handleFlightPlannerSave = (data: string) => {
-    setUpdatedPlanData(data);
+  const handleCommandsChange = (newCommands: Command[]) => {
+    setCommands(newCommands);
+    setHasChanges(true);
   };
 
   const handleApprove = async () => {
-    if (!flightPlan || !session) return;
+    if (!flightPlan) return;
     setIsLoading(true);
     try {
       const result = await approveFlightPlan(
-        flightPlan.id.toString(),
-        true,
-        session.accessToken
+        flightPlan.id,
+        true
       );
 
       if (result.success) {
@@ -152,13 +215,12 @@ export default function FlightPlanDetailPage() {
   };
 
   const handleReject = async () => {
-    if (!flightPlan || !session) return;
+    if (!flightPlan) return;
     setIsLoading(true);
     try {
       const result = await approveFlightPlan(
-        flightPlan.id.toString(),
-        false,
-        session.accessToken
+        flightPlan.id,
+        false
       );
 
       if (result.success) {
@@ -200,28 +262,36 @@ export default function FlightPlanDetailPage() {
     );
   }
 
-  const isPending = flightPlan.status === "DRAFT";
+  // Flight plan editing is now always allowed, creating new versions when saved
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={handleBack}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
+      <div className="space-y-4">
+        <Button variant="ghost" onClick={handleBack} className="w-fit -ml-3">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        
+        <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">
-            {flightPlan.flightPlanBody.name || "Command Sequence"}
+            {flightPlan.name || "Command Sequence"}
           </h1>
-        </div>
 
         <div className="flex gap-2">
+          {hasChanges && (
+            <div className="flex items-center gap-2 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800">
+              <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
+              Unsaved changes
+            </div>
+          )}
+          
           <Protected scope="scheduling.flightplan.approve">
             <>
               <Button
                 variant="outline"
                 onClick={() => setShowRejectDialog(true)}
-                disabled={!isPending || isLoading}
+                disabled={flightPlan.status === "REJECTED" || isLoading || hasChanges}
+                title={hasChanges ? "Save changes before rejecting" : flightPlan.status === "REJECTED" ? "Already rejected" : ""}
               >
                 <XCircle className="mr-2 h-4 w-4" />
                 Reject
@@ -229,7 +299,8 @@ export default function FlightPlanDetailPage() {
               <Button
                 variant="outline"
                 onClick={() => setShowApproveDialog(true)}
-                disabled={!isPending || isLoading}
+                disabled={flightPlan.status === "APPROVED" || isLoading || hasChanges}
+                title={hasChanges ? "Save changes before approving" : flightPlan.status === "APPROVED" ? "Already approved" : ""}
               >
                 <CheckCircle className="mr-2 h-4 w-4" />
                 Approve
@@ -240,74 +311,92 @@ export default function FlightPlanDetailPage() {
           <Protected scope="scheduling.flightplan.update">
             <Button
               onClick={handleSave}
-              disabled={!isPending || isLoading || !updatedPlanData}
+              disabled={isLoading || !hasChanges}
+              variant={hasChanges ? "default" : "outline"}
             >
               <Save className="mr-2 h-4 w-4" />
-              Save Changes
+              {hasChanges ? "Save as New Version" : "No Changes"}
             </Button>
           </Protected>
+          </div>
         </div>
       </div>
 
+      <FlightPlanSteps status={flightPlan.status} />
+
+       
+          <Card className="border-2">
+            <CardHeader className="pb-4">
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="text-xl flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Activity className="h-5 w-5 text-primary" />
+                    </div>
+                    Mission Overview
+                  </CardTitle>
+                  <CardDescription>
+                    Configuration and metadata for this flight plan
+                  </CardDescription>
+                </div>
+                <div className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 ${
+                  flightPlan.status === 'APPROVED' ? 'bg-green-50 text-green-700 border-green-200' :
+                  flightPlan.status === 'REJECTED' ? 'bg-red-50 text-red-700 border-red-200' :
+                  flightPlan.status === 'TRANSMITTED' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                  flightPlan.status === 'ASSIGNED_TO_OVERPASS' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                  'bg-yellow-50 text-yellow-700 border-yellow-200'
+                }`}>
+                  <div className="flex items-center gap-1.5">
+                    <div className={`w-1.5 h-1.5 rounded-full ${
+                      flightPlan.status === 'APPROVED' ? 'bg-green-500' :
+                      flightPlan.status === 'REJECTED' ? 'bg-red-500' :
+                      flightPlan.status === 'TRANSMITTED' ? 'bg-blue-500' :
+                      flightPlan.status === 'ASSIGNED_TO_OVERPASS' ? 'bg-purple-500' :
+                      'bg-yellow-500'
+                    }`} />
+                    {flightPlan.status.toLowerCase().replace('_', ' ')}
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            {/*TODO We need to request more data to be able to display the flight plan details*/}
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Plan Name</p>
+                  <p className="font-medium">{flightPlan.name || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Satellite</p>
+                  <p className="font-medium">{flightPlan.name || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Ground Station</p>
+                  <p className="font-medium">{flightPlan.name || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Created By</p>
+                  <p className="font-medium">{flightPlan.name || "-"}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
       <Card>
         <CardHeader>
-          <CardTitle>Flight Plan Details</CardTitle>
+          <CardTitle>Commands</CardTitle>
           <CardDescription>
-            View and edit the command sequence for this flight plan
+            Edit the command sequence for this flight plan. Changes will create a new version.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <p className="text-sm font-medium">Satellite</p>
-              <p className="text-sm text-muted-foreground">
-                Satellite ID: {flightPlan.satId}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium">Ground Station</p>
-              <p className="text-sm text-muted-foreground">
-                GS ID: {flightPlan.gsId}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium">Scheduled Time</p>
-              <p className="text-sm text-muted-foreground">
-                {flightPlan.scheduledAt
-                  ? new Date(flightPlan.scheduledAt).toLocaleString()
-                  : "N/A"}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium">Status</p>
-              <p className="text-sm text-muted-foreground capitalize">
-                {flightPlan.status}
-              </p>
-            </div>
-            {flightPlan.previousPlanId && (
-              <div className="md:col-span-2">
-                <p className="text-sm font-medium">Version History</p>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <History className="w-4 h-4" />
-                  <span>This is a new version of plan:</span>
-                  <Link
-                    href={`/platform/flight/${flightPlan.previousPlanId}`}
-                    className="text-blue-500 hover:underline truncate"
-                  >
-                    {flightPlan.previousPlanId}
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
+          <CommandBuilder
+            commands={commands}
+            onCommandsChange={handleCommandsChange}
+            isReadOnly={false}
+          />
         </CardContent>
       </Card>
-
-      <FlightPlanner
-        initialData={flightPlan}
-        onSave={handleFlightPlannerSave}
-        isReadOnly={!isPending}
-      />
 
       {/* Approve Dialog */}
       <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
