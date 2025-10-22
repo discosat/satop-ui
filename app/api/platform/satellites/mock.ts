@@ -1,4 +1,4 @@
-import { type Satellite,   } from "./satellite-service";
+import { type Satellite   } from "./types";
 
 
 export const mockSatellites: Satellite[] = [

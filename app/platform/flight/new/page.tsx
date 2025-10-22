@@ -30,18 +30,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import type { FlightPlan } from "@/app/api/platform/flight/flight-plan-service";
+import type { FlightPlan } from "@/app/api/platform/flight/types";
 import { createFlightPlan } from "@/app/api/platform/flight/flight-plan-service";
 import { toast } from "sonner";
-import { useSession } from "@/app/context";
 import FlightPlanSteps from "@/app/platform/flight/components/flight-plan-steps";
 import { CommandBuilder } from "../components/commands/command-builder";
-import {
-  getSatellites,
-  Satellite,
-} from "@/app/api/platform/satellites/satellite-service";
+import { getSatellites } from "@/app/api/platform/satellites/satellite-service";
+import type { Satellite } from "@/app/api/platform/satellites/types";
 import { getGroundStations } from "@/app/api/platform/ground-stations/ground-station-service";
-import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
+import type { GroundStation } from "@/app/api/platform/ground-stations/types";
 import { Command } from "../components/commands/command";
 
 const formSchema = z.object({
@@ -74,8 +71,6 @@ export default function NewFlightPlanPage() {
   const [groundStationsError, setGroundStationsError] = useState<string | null>(
     null
   );
-
-  const session = useSession();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -140,11 +135,6 @@ export default function NewFlightPlanPage() {
   }, [commands]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!session) {
-      toast.error("Authentication session not found. Please log in again.");
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {

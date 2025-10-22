@@ -13,8 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,13 +27,12 @@ import {
   getFlightPlanById,
   updateFlightPlan,
   approveFlightPlan,
-  FlightPlan,
 } from "@/app/api/platform/flight/flight-plan-service";
-import { useSession } from "@/app/context";
 import Protected from "@/components/protected";
 import FlightPlanSteps from "@/app/platform/flight/components/flight-plan-steps";
 import { Command, CameraSettings, CaptureLocation } from "../components/commands/command";
 import { CommandBuilder } from "../components/commands/command-builder";
+import { FlightPlan } from "@/app/api/platform/flight/types";
 
 // We are going to make some key changes to the flight planning page.
 // Creating a new flight plan is now going to take multiple steps.
@@ -55,14 +52,13 @@ export default function FlightPlanDetailPage() {
   const [commands, setCommands] = useState<Command[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
 
-  const session = useSession();
 
   const id = typeof params.id === "string" ? params.id : "";
 
   useEffect(() => {
     let isCancelled = false;
     const load = async () => {
-      if (!id || !session) return;
+      if (!id) return;
       setIsLoading(true);
       try {
         const plan = await getFlightPlanById(Number(id));
@@ -128,14 +124,14 @@ export default function FlightPlanDetailPage() {
     return () => {
       isCancelled = true;
     };
-  }, [id, session]);
+  }, [id]);
 
   const handleBack = () => {
     router.back();
   };
 
   const handleSave = async () => {
-    if (!flightPlan || !hasChanges || !session) return;
+    if (!flightPlan || !hasChanges) return;
     setIsLoading(true);
     try {
       // Convert UI commands to API format
@@ -167,10 +163,7 @@ export default function FlightPlanDetailPage() {
         commands: commandBody,
       };
 
-      const newVersion = await updateFlightPlan(
-        updatedFlightPlanPayload,
-        session.accessToken
-      );
+      const newVersion = await updateFlightPlan(updatedFlightPlanPayload);
 
       if (newVersion?.id) {
         toast.success("New flight plan version created successfully!");
@@ -196,13 +189,12 @@ export default function FlightPlanDetailPage() {
   };
 
   const handleApprove = async () => {
-    if (!flightPlan || !session) return;
+    if (!flightPlan) return;
     setIsLoading(true);
     try {
       const result = await approveFlightPlan(
-        flightPlan.id.toString(),
-        true,
-        session.accessToken
+        flightPlan.id,
+        true
       );
 
       if (result.success) {
@@ -223,13 +215,12 @@ export default function FlightPlanDetailPage() {
   };
 
   const handleReject = async () => {
-    if (!flightPlan || !session) return;
+    if (!flightPlan) return;
     setIsLoading(true);
     try {
       const result = await approveFlightPlan(
-        flightPlan.id.toString(),
-        false,
-        session.accessToken
+        flightPlan.id,
+        false
       );
 
       if (result.success) {

@@ -1,8 +1,9 @@
 "use server";
 
 import { mockSatellites } from "./mock";
-import { apiClient } from "@/lib/api-client";
-import type { Satellite } from "./types";
+import { apiClient } from "@/app/api/api-client";
+import { Satellite } from "./types";
+
 const API_PATH = '/satellites';
 
 export async function getSatellites(): Promise<Satellite[]> {

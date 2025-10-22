@@ -9,7 +9,7 @@ import * as satellite from "satellite.js";
 import { SatelliteOrbit } from "./satellite-orbit";
 import Image from "next/image";
 import sat from "@/assets/sat.svg";
-import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
+import type { GroundStation } from "@/app/api/platform/ground-stations/types";
 import { useTheme } from "next-themes";
 
 type EciVec3 = {

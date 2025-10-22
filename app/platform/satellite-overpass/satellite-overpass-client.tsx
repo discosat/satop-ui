@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { Satellite } from "react-sat-map";
-import type { GroundStation } from "@/app/api/platform/ground-stations/mock";
+import type { GroundStation } from "@/app/api/platform/ground-stations/types";
 import { SatelliteSelect } from "./satellite-select";
 import { GroundStationSelect } from "./ground-station-select";
 import { TimePeriodSelect, TimePeriod } from "./time-period-select";

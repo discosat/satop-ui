@@ -1,4 +1,4 @@
-import { FlightPlan } from "./flight-plan-service";
+import { FlightPlan } from "./types";
 
 
 // Mock data for flight plans based on the Python backend model
