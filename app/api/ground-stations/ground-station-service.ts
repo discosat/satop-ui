@@ -2,7 +2,7 @@
 
 import { mockGroundStations } from "./mock";
 import { apiClient } from "@/app/api/api-client";
-import { CreateGroundStationPayload, GroundStation, GroundStationWithApiKey, UpdateGroundStationPayload } from "./types";
+import { CreateGroundStationPayload, GroundStation, GroundStationHealthResponse, GroundStationWithApiKey, UpdateGroundStationPayload } from "./types";
 
 const API_PATH = '/ground-stations';
 
@@ -25,7 +25,7 @@ export async function createGroundStation(
     const newStation: GroundStationWithApiKey = {
       id: mockGroundStations.length + 1,
       createdAt: new Date().toISOString(),
-      isActive: station.isActive ?? false,
+      connected: false,
       ...station,
       applicationId: `mock-app-id-${Date.now()}`,
       rawApiKey: `mock-api-key-${Date.now()}-you-wont-see-this-again`,
@@ -81,17 +81,6 @@ export async function deleteGroundStation(id: number): Promise<{ success: boolea
   }
 }
 
-// health check endpoint
-export interface GroundStationHealthResponse {
-  id: number;
-  name: string;
-  isActive: boolean;
-  lastUpdated: string;
-  status: string;
-  checkedAt: string;
-  checkType: string;
-}
-
 export async function checkGroundStationHealth(id: number): Promise<GroundStationHealthResponse | null> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
     const station = mockGroundStations.find((g) => g.id === id);
@@ -100,11 +89,9 @@ export async function checkGroundStationHealth(id: number): Promise<GroundStatio
     return {
       id: station.id,
       name: station.name,
-      isActive: station.isActive,
       lastUpdated: new Date().toISOString(),
-      status: station.isActive ? "Healthy" : "Unhealthy",
       checkedAt: new Date().toISOString(),
-      checkType: "Mock Health Check"
+      connected: station.connected,
     };
   }
   

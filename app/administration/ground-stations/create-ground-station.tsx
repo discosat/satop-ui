@@ -53,10 +53,10 @@ const formSchema = z.object({
     })
     .min(-1000, { message: "Altitude must be greater than -1000 meters" })
     .max(10000, { message: "Altitude must be less than 10000 meters" }),
-  httpUrl: z
+  webSocketUrl: z
     .string()
-    .min(1, { message: "HTTP URL is required" })
-    .url({ message: "Please enter a valid HTTP URL" }),
+    .min(1, { message: "WebSocket URL is required" })
+    .url({ message: "Please enter a valid WebSocket URL" }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -75,7 +75,7 @@ export const CreateGroundStationModal = () => {
       latitude: undefined,
       longitude: undefined,
       altitude: undefined,
-      httpUrl: "",
+      webSocketUrl: "",
     },
   });
 
@@ -89,7 +89,7 @@ export const CreateGroundStationModal = () => {
           longitude: values.longitude,
           altitude: values.altitude 
         },
-        httpUrl: values.httpUrl,
+        
       });
       
       setApiKeyInfo({
@@ -217,12 +217,12 @@ export const CreateGroundStationModal = () => {
 
               <FormField
                 control={form.control}
-                name="httpUrl"
+                name="webSocketUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>HTTP URL</FormLabel>
+                    <FormLabel>WebSocket URL</FormLabel>
                     <FormControl>
-                      <Input placeholder="http://example.com" {...field} />
+                      <Input placeholder="ws://example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

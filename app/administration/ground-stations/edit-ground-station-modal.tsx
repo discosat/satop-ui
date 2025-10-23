@@ -41,9 +41,6 @@ const formSchema = z.object({
     .number({ invalid_type_error: "Altitude must be a number" })
     .min(-1000, { message: "Altitude must be greater than -1000 meters" })
     .max(10000, { message: "Altitude must be less than 10000 meters" }),
-  httpUrl: z
-    .string()
-    .url({ message: "Please enter a valid HTTP URL" }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -66,7 +63,6 @@ export function EditGroundStationModal({
       latitude: station.location.latitude,
       longitude: station.location.longitude,
       altitude: station.location.altitude,
-      httpUrl: station.httpUrl,
     },
   });
 
@@ -79,7 +75,6 @@ export function EditGroundStationModal({
         longitude: values.longitude,
         altitude: values.altitude 
       },
-      httpUrl: values.httpUrl,
     });
     await refreshGroundStations();
     setSaving(false);
@@ -179,21 +174,7 @@ export function EditGroundStationModal({
                 )}
               />
             </div>
-
-            <FormField
-              control={form.control}
-              name="httpUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>HTTP URL</FormLabel>
-                  <FormControl>
-                    <Input placeholder="http://example.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+            
             <DialogFooter>
               <Button type="submit" disabled={saving}>
                 {saving ? "Saving..." : "Save"}

@@ -26,16 +26,17 @@ export function GroundStationActions({ station }: { station: GroundStation }) {
     try {
       const healthData = await checkGroundStationHealth(station.id);
       if (healthData) {
-        const isHealthy = healthData.status.toLowerCase() === 'healthy';
+        const isConnected = healthData.connected;
+        const statusLabel = isConnected ? "Connected" : "Disconnected";
         toast.success(
           `Health Check: ${healthData.name}`,
           {
-            description: `Status: ${healthData.status} (checked at ${new Date(healthData.checkedAt).toLocaleString()})`,
+            description: `Status: ${statusLabel} - (checked at ${new Date(healthData.checkedAt).toLocaleString()})`,
           }
         );
-        if (!isHealthy) {
-          toast.error("Ground station is not healthy", {
-            description: "Please investigate the issue.",
+        if (!isConnected) {
+          toast.error("Ground station is disconnected", {
+            description: "Please check the connection and investigate the issue.",
           });
         }
       } else {

@@ -24,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { MapPin, Link as LinkIcon, Radio, Clock, ArrowUpDown } from "lucide-react";
+import { MapPin, Wifi, Clock, ArrowUpDown } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import type { GroundStation } from "@/app/api/ground-stations/types";
 import { GroundStationActions } from "./actions";
@@ -77,7 +77,7 @@ export default function GroundStationsTable({
       cell: ({ row }) => {
         return (
           <div className="flex items-center gap-2">
-            <Radio className="w-4 h-4 text-green-600" />
+            <Wifi className="w-4 h-4 text-blue-600" />
             {row.getValue("name")}
           </div>
         );
@@ -117,31 +117,6 @@ export default function GroundStationsTable({
         const locA = rowA.getValue(columnId) as GroundStation["location"];
         const locB = rowB.getValue(columnId) as GroundStation["location"];
         return locA.latitude - locB.latitude;
-      },
-    },
-    {
-      accessorKey: "httpUrl",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="h-8 p-0 hover:bg-transparent"
-          >
-            HTTP URL
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
-      cell: ({ row }) => {
-        return (
-          <div className="flex items-center gap-2">
-            <LinkIcon className="w-4 h-4 text-muted-foreground" />
-            <span className="truncate max-w-[260px]">
-              {row.getValue("httpUrl")}
-            </span>
-          </div>
-        );
       },
     },
     {
@@ -190,11 +165,11 @@ export default function GroundStationsTable({
         const isActive = row.getValue("isActive") as boolean;
         return isActive ? (
           <Badge className="bg-green-200 text-green-800 hover:bg-green-200">
-            Active
+            Connected
           </Badge>
         ) : (
           <Badge className="bg-gray-200 text-gray-800 hover:bg-gray-200">
-            Inactive
+            Disconnected
           </Badge>
         );
       },
@@ -234,7 +209,6 @@ export default function GroundStationsTable({
       // Search across multiple fields
       const searchFields = [
         gs.name,
-        gs.httpUrl,
         `${gs.location.latitude.toFixed(4)}, ${gs.location.longitude.toFixed(4)}, ${gs.location.altitude}m`,
         gs.id.toString(),
       ];
