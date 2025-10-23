@@ -31,7 +31,6 @@ import {
   Clock,
   Calendar,
   Activity,
-  Orbit,
   RefreshCw,
   ArrowUpDown,
 } from "lucide-react";
@@ -45,16 +44,10 @@ interface SatellitesTableProps {
 
 const getStatusColor = (status: SatelliteStatus) => {
   switch (status) {
-    case SatelliteStatus.Active:
+    case "ACTIVE":
       return "bg-green-200 text-green-800 hover:bg-green-200";
-    case SatelliteStatus.Inactive:
+    case "INACTIVE":
       return "bg-gray-200 text-gray-800 hover:bg-gray-200";
-    case SatelliteStatus.UnderMaintenance:
-      return "bg-yellow-200 text-yellow-800 hover:bg-yellow-200";
-    case SatelliteStatus.Decommissioned:
-      return "bg-red-200 text-red-800 hover:bg-red-200";
-    case SatelliteStatus.Launching:
-      return "bg-blue-200 text-blue-800 hover:bg-blue-200";
     default:
       return "bg-gray-200 text-gray-800 hover:bg-gray-200";
   }
@@ -62,12 +55,10 @@ const getStatusColor = (status: SatelliteStatus) => {
 
 const getStatusIcon = (status: SatelliteStatus) => {
   switch (status) {
-    case SatelliteStatus.Active:
+    case "ACTIVE":
       return <Activity className="w-3 h-3" />;
-    case SatelliteStatus.UnderMaintenance:
+    case "INACTIVE":
       return <RefreshCw className="w-3 h-3" />;
-    case SatelliteStatus.Launching:
-      return <Orbit className="w-3 h-3" />;
     default:
       return <Activity className="w-3 h-3" />;
   }

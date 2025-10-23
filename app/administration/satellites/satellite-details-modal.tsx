@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Satellite as SatelliteIcon,
-  Calendar,
   Clock,
   Activity,
   Download,
@@ -29,16 +28,10 @@ interface SatelliteDetailsModalProps {
 
 const getStatusColor = (status: SatelliteStatus) => {
   switch (status) {
-    case SatelliteStatus.Active:
+    case "ACTIVE" :
       return "bg-green-200 text-green-800 hover:bg-green-200";
-    case SatelliteStatus.Inactive:
+    case "INACTIVE":
       return "bg-gray-200 text-gray-800 hover:bg-gray-200";
-    case SatelliteStatus.UnderMaintenance:
-      return "bg-yellow-200 text-yellow-800 hover:bg-yellow-200";
-    case SatelliteStatus.Decommissioned:
-      return "bg-red-200 text-red-800 hover:bg-red-200";
-    case SatelliteStatus.Launching:
-      return "bg-blue-200 text-blue-800 hover:bg-blue-200";
     default:
       return "bg-gray-200 text-gray-800 hover:bg-gray-200";
   }
@@ -218,31 +211,6 @@ export function SatelliteDetailsModal({
               )}
             </div>
           )}
-
-          {/* Metadata */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Metadata</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Created At
-                </label>
-                <div className="flex items-center gap-2 mt-1">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <p className="text-sm">{formatDate(satellite.createdAt)}</p>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Last Updated
-                </label>
-                <div className="flex items-center gap-2 mt-1">
-                  <Clock className="w-4 h-4 text-muted-foreground" />
-                  <p className="text-sm">{formatDate(satellite.lastUpdate)}</p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </DialogContent>
     </Dialog>
