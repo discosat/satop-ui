@@ -10,7 +10,6 @@ export async function login(email: string, password: string) {
     await createSession({
       userID: "mock-admin-id-123",
       name: "Mock Admin",
-      avatar: "/assets/default-avatar.png",
       role: "admin",
       email: email,
       scopes: ["*"],
@@ -40,7 +39,7 @@ export async function login(email: string, password: string) {
       userID: payload.sub,
       name: payload.name,
       avatar: "/assets/default-avatar.png",
-      role: ((Array.isArray(payload.role) ? payload.role[0] : payload.role)?.toLowerCase() as "admin" | "scientist" | "viewer" | "applicant") || "viewer",
+      role: ((Array.isArray(payload.role) ? payload.role[0] : payload.role)?.toLowerCase() as "admin" | "scientist" | "viewer") || "viewer",
       email: payload.email,
       scopes: Array.isArray(payload.scope) ? payload.scope : (payload.scope ? [payload.scope] : []),
       accessToken: accessToken,

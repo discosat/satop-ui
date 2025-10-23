@@ -69,7 +69,6 @@ const data = {
       url: "/administration/users",
       scope: "entities",
       icon: User,
-      badge: 1,
     },
   ],
 };

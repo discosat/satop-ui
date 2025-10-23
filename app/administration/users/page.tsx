@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -6,11 +5,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UsersTable from "./users-table";
-import { ApplicationsTable } from "./applications-table";
 import { getUsers } from "@/app/api/users/users-service";
-import type { User } from "@/app/api/users/types";
+
 import SearchForm from "./search-form";
 import { ServerRefreshButton } from "./server-refresh-button";
 
@@ -24,12 +21,8 @@ interface PageProps {
 export default async function UserManagement({ searchParams }: PageProps) {
   const params = await searchParams;
   const query = params?.query || "";
-  
-  // Fetch users from the API service
-  const users = await getUsers();
 
-  // For now, applications tab shows empty until we have a separate endpoint
-  const supportUsers: User[] = [];
+  const users = await getUsers();
 
   return (
     <div className="p-6 space-y-6">
@@ -43,23 +36,6 @@ export default async function UserManagement({ searchParams }: PageProps) {
       </div>
 
       <div className="w-full">
-        <Tabs defaultValue="all-users">
-          <TabsList className="grid w-full lg:w-80 grid-cols-2">
-            <TabsTrigger value="all-users">All Users</TabsTrigger>
-            <TabsTrigger value="support-users">
-              Applications
-              {supportUsers.length > 0 && (
-                <Badge
-                  variant="destructive"
-                  className="ml-2 bg-red-600 px-3 text-white"
-                >
-                  {supportUsers.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="all-users" className="mt-6">
             <Card>
               <CardHeader className="pb-1">
                 <CardTitle>Users</CardTitle>
@@ -68,7 +44,7 @@ export default async function UserManagement({ searchParams }: PageProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex justify-between mb-4">
+                <div className="flex justify-between mb-4 mt-2">
                   <SearchForm initialQuery={query} />
                   <ServerRefreshButton />
                 </div>
@@ -76,27 +52,6 @@ export default async function UserManagement({ searchParams }: PageProps) {
                 <UsersTable users={users} />
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="support-users" className="mt-6">
-            <Card>
-              <CardHeader className="pb-1">
-                <CardTitle>Platform access applications</CardTitle>
-                <CardDescription>
-                  Approve access for applicants wanting access to the Discosat
-                  platform.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-end">
-                  <ServerRefreshButton />
-                </div>
-
-                <ApplicationsTable supportUsers={supportUsers} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
       </div>
     </div>
   );

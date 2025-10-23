@@ -14,7 +14,7 @@ import {
   VisibilityState,
   PaginationState,
 } from "@tanstack/react-table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback} from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -70,10 +70,6 @@ export default function UsersTable({ users }: UsersTableProps) {
         return (
           <div className="flex items-center gap-3">
             <Avatar>
-              <AvatarImage
-                src={`/api/placeholder/32/32`}
-                alt={user.name}
-              />
               <AvatarFallback>
                 {user.name
                   .split(" ")

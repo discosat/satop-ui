@@ -15,7 +15,6 @@ import {
 import { useSession } from "@/app/context";
 import { hasScope } from "@/lib/user";
 import { SessionPayload } from "@/lib/session";
-import NavItemBadge from "./nav-item-badge";
 
 export function NavMain({
   items,
@@ -27,7 +26,6 @@ export function NavMain({
     icon: LucideIcon;
     isActive?: boolean;
     scope?: string;
-    badge?: number | (() => Promise<number>);
     items?: {
       title: string;
       url: string;
@@ -47,7 +45,6 @@ export function NavMain({
               <a href={item.url}>
                 <item.icon />
                 <span>{item.title}</span>
-                <NavItemBadge value={item.badge} />
               </a>
             </SidebarMenuButton>
             {item.items?.length ? (

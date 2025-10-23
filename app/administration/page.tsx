@@ -21,6 +21,8 @@ import { Satellite } from "@/app/api/satellites/types";
 import { getGroundStations } from "@/app/api/ground-stations/ground-station-service";
 import type { GroundStation } from "@/app/api/ground-stations/types";
 import { Satellite as SatelliteIcon, Radio, MapPin, Hash } from "lucide-react";
+import { getUsers } from "@/app/api/users/users-service";
+import { User } from "@/app/api/users/types";
 
 export const metadata: Metadata = {
   title: "Discosat: Administration Overview",
@@ -35,11 +37,12 @@ function formatDate(dateStr: string) {
 }
 
 export default async function Page() {
-  const [satellites, groundStations]: [Satellite[], GroundStation[]] =
-    await Promise.all([getSatellites(), getGroundStations()]);
+  const [satellites, groundStations, users]: [Satellite[], GroundStation[], User[]] =
+    await Promise.all([getSatellites(), getGroundStations(), getUsers()]);
 
   const totalSatellites = satellites.length;
   const totalGroundStations = groundStations.length;
+  const totalUsers = users.length;
 
   const recentSatellites = [...satellites]
     .sort(
@@ -107,7 +110,7 @@ export default async function Page() {
           </CardHeader>
           <CardContent>
             <div className="flex items-baseline justify-between">
-              <div className="text-4xl font-bold">—</div>
+              <div className="text-4xl font-bold">{totalUsers}</div>
               <Link href="/administration/users" className="text-sm underline">
                 Manage
               </Link>
@@ -213,7 +216,7 @@ export default async function Page() {
                         <div className="flex items-center gap-2">
                           <Radio className="w-4 h-4 text-green-600" />
                           <span className="font-medium">{gs.name}</span>
-                          {gs.isActive ? (
+                          {gs.connected ? (
                             <Badge className="bg-green-200 text-green-800 hover:bg-green-200">
                               Active
                             </Badge>
