@@ -26,6 +26,8 @@ export async function getOverpassWindows(
     };
 
     const query = new URLSearchParams(cleanParams(params)).toString();
+
+    console.log("Fetching overpass windows with query:", query);
     const pathWithQuery = `${API_PATH}/satellite/${satelliteId}/groundstation/${groundStationId}${query ? '?' + query : ''}`;
     
     return await apiClient.get<Overpass[]>(pathWithQuery);

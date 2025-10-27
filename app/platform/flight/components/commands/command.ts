@@ -22,8 +22,6 @@ export type Command =
       id: string;
       captureLocation: CaptureLocation;
       cameraSettings: CameraSettings;
-      maxOffNadirDegrees: number;
-      maxSearchDurationHours: number;
     }
   | {
       type: "TRIGGER_PIPELINE";

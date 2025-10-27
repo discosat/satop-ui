@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import React from "react";
+import { ArrowRight, CheckCircle2, Clock } from "lucide-react";
 
 type StepKey =
   | "DRAFT"
@@ -47,6 +48,26 @@ function getActiveIndex(status: StepKey): number {
   }
 }
 
+// Get next action text based on current status
+function getNextAction(status: StepKey): string | null {
+  switch (status) {
+    case "DRAFT":
+      return "Review and approve the flight plan to proceed";
+    case "APPROVED":
+      return "Assign to an overpass window to schedule execution";
+    case "ASSIGNED_TO_OVERPASS":
+      return "Flight plan will be transmitted automatically at scheduled time";
+    case "TRANSMITTED":
+      return "Flight plan has been transmitted to the satellite";
+    case "REJECTED":
+      return null;
+    case "SUPERSEDED":
+      return null;
+    default:
+      return null;
+  }
+}
+
 export default function FlightPlanSteps({
   status,
   className,
@@ -54,15 +75,17 @@ export default function FlightPlanSteps({
   const activeIndex = getActiveIndex(status);
   const isRejected = status === "REJECTED";
   const isSuperseded = status === "SUPERSEDED";
+  const nextAction = getNextAction(status);
 
   return (
-    <div className={cn("w-full", className)}>
+    <div className={cn("w-full space-y-4", className)}>
       <ol className="flex w-full items-center justify-between gap-2">
         {ORDERED_STEPS.map((step, index) => {
           const isCompleted =
             index < activeIndex ||
             (!isRejected && index === activeIndex && status !== "DRAFT");
           const isActive = index === activeIndex;
+          const isNext = index === activeIndex + 1;
 
           return (
             <li key={step.key} className="flex-1">
@@ -70,57 +93,111 @@ export default function FlightPlanSteps({
                 {/* Circle */}
                 <div
                   className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded-full border text-xs font-medium",
+                    "flex h-10 w-10 items-center justify-center rounded-full border-2 text-xs font-medium transition-all",
                     isActive &&
                       !isRejected &&
-                      "border-primary bg-primary text-primary-foreground",
+                      "border-primary bg-primary text-primary-foreground shadow-lg",
                     isCompleted &&
                       !isActive &&
                       "border-primary bg-primary/10 text-primary",
+                    isNext &&
+                      !isCompleted &&
+                      "border-primary/50 bg-primary/5 text-primary/70",
                     !isCompleted &&
                       !isActive &&
-                      "border-muted text-muted-foreground",
+                      !isNext &&
+                      "border-muted-foreground/30 text-muted-foreground",
                     isRejected &&
                       index === activeIndex &&
                       "border-destructive bg-destructive text-destructive-foreground"
                   )}
                   aria-current={isActive ? "step" : undefined}
                 >
-                  {index + 1}
+                  {isCompleted && !isActive ? (
+                    <CheckCircle2 className="h-5 w-5" />
+                  ) : isActive && !isRejected ? (
+                    <Clock className="h-5 w-5" />
+                  ) : (
+                    index + 1
+                  )}
                 </div>
 
                 {/* Connector */}
                 {index < ORDERED_STEPS.length - 1 && (
-                  <div
-                    className={cn(
-                      "mx-2 h-[2px] flex-1 rounded",
-                      index < activeIndex ? "bg-primary" : "bg-muted"
+                  <div className="mx-2 flex-1 flex items-center gap-1">
+                    <div
+                      className={cn(
+                        "h-[2px] flex-1 rounded transition-all",
+                        index < activeIndex ? "bg-primary" : "bg-muted"
+                      )}
+                    />
+                    {isActive && !isRejected && (
+                      <ArrowRight className="h-3 w-3 text-primary animate-pulse" />
                     )}
-                  />
+                  </div>
                 )}
               </div>
-              <div
-                className={cn(
-                  "mt-2 text-xs font-medium",
-                  isActive ? "text-foreground" : "text-muted-foreground"
-                )}
-              >
-                {step.label}
+              <div className="mt-2 space-y-0.5 min-h-[2.5rem]">
+                <div
+                  className={cn(
+                    "text-xs font-medium transition-all",
+                    isActive
+                      ? "text-foreground font-semibold"
+                      : isCompleted
+                      ? "text-primary"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  {step.label}
+                </div>
+                <div className="h-[14px] flex items-center">
+                  {isActive && !isRejected && (
+                    <div className="text-[10px] text-primary flex items-center gap-1">
+                      <div className="w-1 h-1 bg-primary rounded-full animate-pulse" />
+                      Current
+                    </div>
+                  )}
+                  {isNext && !isRejected && (
+                    <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      Next step
+                    </div>
+                  )}
+                </div>
               </div>
             </li>
           );
         })}
       </ol>
+      
+      {/* Next Action Banner */}
+      {nextAction && !isRejected && !isSuperseded && (
+        <div className="flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+          <div className="mt-0.5">
+            <ArrowRight className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex-1 space-y-1">
+            <div className="text-sm font-medium text-foreground">
+              Next Action
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {nextAction}
+            </div>
+          </div>
+        </div>
+      )}
+
       {(isRejected || isSuperseded) && (
         <div
           className={cn(
-            "mt-2 text-xs",
-            isRejected ? "text-destructive" : "text-muted-foreground"
+            "p-3 rounded-lg border text-sm",
+            isRejected
+              ? "bg-destructive/5 border-destructive/20 text-destructive"
+              : "bg-muted/50 border-muted text-muted-foreground"
           )}
         >
           {isRejected
-            ? "Flight plan was rejected"
-            : "Flight plan was superseded by a newer version"}
+            ? "⚠️ Flight plan was rejected and cannot proceed further"
+            : "ℹ️ Flight plan was superseded by a newer version"}
         </div>
       )}
     </div>

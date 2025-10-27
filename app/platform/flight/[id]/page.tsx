@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, CheckCircle, XCircle,  Activity } from "lucide-react";
+import { ArrowLeft, Save, CheckCircle, XCircle, Activity, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import {
   Card,
@@ -28,11 +28,14 @@ import {
   updateFlightPlan,
   approveFlightPlan,
 } from "@/app/api/flight/flight-plan-service";
-import Protected from "@/components/protected";
+import { getSatellites } from "@/app/api/satellites/satellite-service";
+import { getGroundStations } from "@/app/api/ground-stations/ground-station-service";
 import FlightPlanSteps from "@/app/platform/flight/components/flight-plan-steps";
 import { Command, CameraSettings, CaptureLocation } from "../components/commands/command";
 import { CommandBuilder } from "../components/commands/command-builder";
 import { FlightPlan } from "@/app/api/flight/types";
+import type { Satellite } from "@/app/api/satellites/types";
+import type { GroundStation } from "@/app/api/ground-stations/types";
 
 // We are going to make some key changes to the flight planning page.
 // Creating a new flight plan is now going to take multiple steps.
@@ -51,7 +54,8 @@ export default function FlightPlanDetailPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [commands, setCommands] = useState<Command[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
-
+  const [satellites, setSatellites] = useState<Satellite[]>([]);
+  const [groundStations, setGroundStations] = useState<GroundStation[]>([]);
 
   const id = typeof params.id === "string" ? params.id : "";
 
@@ -61,9 +65,17 @@ export default function FlightPlanDetailPage() {
       if (!id) return;
       setIsLoading(true);
       try {
-        const plan = await getFlightPlanById(Number(id));
+        // Fetch all data in parallel
+        const [plan, sats, stations] = await Promise.all([
+          getFlightPlanById(Number(id)),
+          getSatellites(),
+          getGroundStations(),
+        ]);
+
         if (!isCancelled) {
           setFlightPlan(plan);
+          setSatellites(sats);
+          setGroundStations(stations);
           
           // Parse commands from flight plan
           if (plan?.commands && Array.isArray(plan.commands)) {
@@ -87,8 +99,6 @@ export default function FlightPlanDetailPage() {
                       observationId: 1,
                       pipelineId: 1,
                     },
-                    maxOffNadirDegrees: (cmd.maxOffNadirDegrees as number) || 0,
-                    maxSearchDurationHours: (cmd.maxSearchDurationHours as number) || 0,
                   });
                 } else if (cmd.commandType === "TRIGGER_PIPELINE") {
                   commandsWithIds.push({
@@ -143,8 +153,6 @@ export default function FlightPlanDetailPage() {
             commandType: cmd.type,
             captureLocation: commandData.captureLocation,
             cameraSettings: commandData.cameraSettings,
-            maxOffNadirDegrees: commandData.maxOffNadirDegrees,
-            maxSearchDurationHours: commandData.maxSearchDurationHours,
           };
         } else {
           // TRIGGER_PIPELINE
@@ -285,7 +293,32 @@ export default function FlightPlanDetailPage() {
             </div>
           )}
           
-          <Protected scope="scheduling.flightplan.approve">
+          {/* Show Assign to Overpass button when status is APPROVED */}
+          {flightPlan.status === "APPROVED" && (
+            <Button
+              variant="default"
+              onClick={() => router.push(`/platform/flight/${id}/assign-overpass`)}
+              disabled={isLoading}
+            >
+              <CalendarClock className="mr-2 h-4 w-4" />
+              Assign to Overpass
+            </Button>
+          )}
+
+          {/* Show assigned overpass info when status is ASSIGNED_TO_OVERPASS */}
+          {flightPlan.status === "ASSIGNED_TO_OVERPASS" && flightPlan.scheduledAt && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-md text-sm text-purple-800">
+              <CalendarClock className="h-4 w-4" />
+              <span className="font-medium">
+                Scheduled: {new Date(flightPlan.scheduledAt).toLocaleString("da-DK", {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                })}
+              </span>
+            </div>
+          )}
+
+          {/* <Protected scope=""> */}
             <>
               <Button
                 variant="outline"
@@ -306,9 +339,9 @@ export default function FlightPlanDetailPage() {
                 Approve
               </Button>
             </>
-          </Protected>
+{/*           </Protected> */}
 
-          <Protected scope="scheduling.flightplan.update">
+          {/* <Protected scope=""> */}
             <Button
               onClick={handleSave}
               disabled={isLoading || !hasChanges}
@@ -317,14 +350,13 @@ export default function FlightPlanDetailPage() {
               <Save className="mr-2 h-4 w-4" />
               {hasChanges ? "Save as New Version" : "No Changes"}
             </Button>
-          </Protected>
+          {/* </Protected> */}
           </div>
         </div>
       </div>
 
       <FlightPlanSteps status={flightPlan.status} />
-
-       
+      
           <Card className="border-2">
             <CardHeader className="pb-4">
               <div className="flex items-start justify-between">
@@ -359,7 +391,6 @@ export default function FlightPlanDetailPage() {
                 </div>
               </div>
             </CardHeader>
-            {/*TODO We need to request more data to be able to display the flight plan details*/}
             <CardContent className="pt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
@@ -368,15 +399,19 @@ export default function FlightPlanDetailPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Satellite</p>
-                  <p className="font-medium">{flightPlan.name || "-"}</p>
+                  <p className="font-medium">
+                    {satellites.find(s => s.id === flightPlan.satId)?.name || `ID: ${flightPlan.satId}`}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Ground Station</p>
-                  <p className="font-medium">{flightPlan.name || "-"}</p>
+                  <p className="font-medium">
+                    {groundStations.find(gs => gs.id === flightPlan.gsId)?.name || `ID: ${flightPlan.gsId}`}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Created By</p>
-                  <p className="font-medium">{flightPlan.name || "-"}</p>
+                  <p className="font-medium">{"-"}</p>
                 </div>
               </div>
             </CardContent>

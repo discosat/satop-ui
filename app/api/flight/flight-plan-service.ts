@@ -140,7 +140,7 @@ export async function associateOverpass(
   }
 
   try {
-    return await apiClient.post<AssociateOverpassRequest, ApprovalResult>(`${API_PATH}/${flightPlanId}/associate-overpass`, request);
+    return await apiClient.post<AssociateOverpassRequest, ApprovalResult>(`${API_PATH}/${flightPlanId}/overpasses`, request);
   } catch (error) {
     console.error('Error associating overpass:', error);
     throw error;

@@ -42,8 +42,8 @@ export function SatelliteMap({
   const theme = useTheme();
   const [viewState, setViewState] = useState({
     longitude: 0,
-    latitude: 0,
-    zoom: 1,
+    latitude: 20,
+    zoom: 0.8,
   });
   const [satelliteInfo, setSatelliteInfo] = useState<SatelliteInfoType>({
     altitude: 0,

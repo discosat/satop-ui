@@ -12,10 +12,7 @@ export async function middleware(request: NextRequest) {
     return handleAPIRoutes(session, path);
   }
 
-  const redirectURL =
-    session?.role === "applicant"
-      ? `${request.nextUrl.origin}/apply`
-      : `${request.nextUrl.origin}/login`;
+  const redirectURL =`${request.nextUrl.origin}/login`;
   if (isRouteProtected(session, path))
     return NextResponse.redirect(redirectURL);
   return NextResponse.next();
@@ -34,9 +31,6 @@ function isRouteProtected(session: SessionPayload | null, path: string) {
     path.startsWith("/assets")
   ) {
     return false;
-  }
-  if (session?.role === "applicant" && path != "/apply") {
-    return true;
   }
   if (session) {
     return false;

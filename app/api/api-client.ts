@@ -1,4 +1,7 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7890/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || 'http://localhost:5111/api/v1';
+
+
+
 
 async function apiFetch(path: string, options: RequestInit = {}) {
     const { currentSession } = await import('@/lib/session');

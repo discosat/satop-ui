@@ -22,13 +22,7 @@ import { logout } from "@/app/actions/logout";
 import { useSession } from "@/app/context";
 import { useTheme } from "next-themes";
 
-export function NavUser({}: {
-  user: {
-    name: string;
-    email: string;
-    avatar: string;
-  };
-}) {
+export function NavUser() {
   const { isMobile } = useSidebar();
   const { setTheme, theme } = useTheme();
   const user = useSession();

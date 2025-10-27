@@ -19,8 +19,10 @@ export async function login(email: string, password: string) {
     redirect("/platform");
   }
 
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || 'http://localhost:5111/api/v1';
+  
   try {
-    const response = await fetch("http://localhost:7890/api/auth/user/login", {
+    const response = await fetch(`${API_BASE_URL}/auth/user/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),

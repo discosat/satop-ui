@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { House, Notebook, Satellite, SatelliteDish, User } from "lucide-react";
+import { House, Notebook, Satellite, SatelliteDish, User, Radio } from "lucide-react";
 
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavUser } from "@/components/sidebar/nav-user";
@@ -16,59 +16,57 @@ import { Navheader } from "./nav-header";
 
 // This is sample data.
 const data = {
-  user: {
-    name: "Martin Vad",
-    email: "202007814@post.au.dk",
-    avatar: "martin.jpeg",
-  },
   platform: [
     {
       title: "Home",
       url: "/platform",
       icon: House,
-      isActive: true,
+      isActive: false,
     },
     {
       title: "Flight planning",
       url: "/platform/flight",
-      scope: "scheduling.flightplan.read",
       icon: Notebook,
-      isActive: true,
+      isActive: false,
     },
     {
       title: "Overpass schedule",
       url: "/platform/satellite-overpass",
       icon: Satellite,
-      isActive: true,
+      isActive: false,
     },
-    /* {
-      title: "Terminal",
-      url: "/platform/terminal",
-      icon: SquareTerminal,
-      isActive: true,
-    }, */
+    {
+      title: "Satellite tracking",
+      url: "/platform/satellite-tracking",
+      icon: Radio,
+      isActive: false,
+    },
+    
   ],
   administration: [
     {
       title: "Overview",
       url: "/administration",
       icon: House,
+      isActive: false,
     },
     {
       title: "Ground stations",
       url: "/administration/ground-stations",
       icon: SatelliteDish,
+      isActive: false,
     },
     {
       title: "Satellites",
       url: "/administration/satellites",
       icon: Satellite,
+      isActive: false,
     },
     {
       title: "Users",
       url: "/administration/users",
-      scope: "entities",
       icon: User,
+      isActive: false,
     },
   ],
 };
@@ -86,7 +84,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
 
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
 
       <SidebarRail />

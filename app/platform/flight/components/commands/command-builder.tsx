@@ -53,8 +53,6 @@ export function CommandBuilder({
             id: crypto.randomUUID(),
             captureLocation: getDefaultCaptureLocation(),
             cameraSettings: getDefaultCameraSettings(),
-            maxOffNadirDegrees: 10,
-            maxSearchDurationHours: 48,
           }
         : {
             type: "TRIGGER_PIPELINE",

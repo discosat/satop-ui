@@ -36,22 +36,6 @@ export function TriggerCaptureCommand({
     );
   };
 
-  const updateMaxOffNadirDegrees = (value: number) => {
-    onUpdate((c) =>
-      c.type === "TRIGGER_CAPTURE"
-        ? { ...c, maxOffNadirDegrees: value }
-        : c
-    );
-  };
-
-  const updateMaxSearchDurationHours = (value: number) => {
-    onUpdate((c) =>
-      c.type === "TRIGGER_CAPTURE"
-        ? { ...c, maxSearchDurationHours: value }
-        : c
-    );
-  };
-
   const updateCameraSettings = (newSettings: CameraSettings) => {
     onUpdate((c) =>
       c.type === "TRIGGER_CAPTURE"
@@ -147,43 +131,6 @@ export function TriggerCaptureCommand({
               Select on Map
             </Button>
           )}
-        </div>
-
-        {/* Additional Parameters */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label htmlFor={`nadir-${command.id}`} className="text-xs">
-              Max Off-Nadir (degrees)
-            </Label>
-            <Input
-              id={`nadir-${command.id}`}
-              type="number"
-              min="0"
-              max="90"
-              value={command.maxOffNadirDegrees}
-              onChange={(e) =>
-                updateMaxOffNadirDegrees(parseFloat(e.target.value) || 0)
-              }
-              placeholder="10"
-              className="h-9"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor={`duration-${command.id}`} className="text-xs">
-              Max Search Duration (hours)
-            </Label>
-            <Input
-              id={`duration-${command.id}`}
-              type="number"
-              min="0"
-              value={command.maxSearchDurationHours}
-              onChange={(e) =>
-                updateMaxSearchDurationHours(parseFloat(e.target.value) || 0)
-              }
-              placeholder="48"
-              className="h-9"
-            />
-          </div>
         </div>
       </div>
 
