@@ -42,7 +42,7 @@ import type {
   Overpass as APIOverpass, 
   OverpassQueryParams 
 } from "@/app/api/overpass/types";
-import type { TimePeriod } from "@/app/platform/satellite-overpass/time-period-select";
+import type { TimePeriod } from "@/app/platform/overpass-schedule/time-period-select";
 
 interface SatelliteWithId extends Satellite {
   id?: number;

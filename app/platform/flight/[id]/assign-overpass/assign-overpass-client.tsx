@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { GroundStation } from "@/app/api/ground-stations/types";
-import { TimePeriodSelect, TimePeriod } from "@/app/platform/satellite-overpass/time-period-select";
+import { TimePeriodSelect, TimePeriod } from "@/app/platform/overpass-schedule/time-period-select";
 import { RefreshButton } from "@/components/refresh-button";
 import { Separator } from "@/components/ui/separator";
 import { Rocket } from "lucide-react";
