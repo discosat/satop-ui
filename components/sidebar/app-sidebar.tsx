@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { House, Notebook, Satellite, SatelliteDish, User, Radio } from "lucide-react";
+import { House, Notebook, Satellite, SatelliteDish, User, Radio, Calendar } from "lucide-react";
 
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavUser } from "@/components/sidebar/nav-user";
@@ -31,8 +31,8 @@ const data = {
     },
     {
       title: "Overpass schedule",
-      url: "/platform/satellite-overpass",
-      icon: Satellite,
+      url: "/platform/overpass-schedule",
+      icon: Calendar,
       isActive: false,
     },
     {
@@ -41,7 +41,6 @@ const data = {
       icon: Radio,
       isActive: false,
     },
-    
   ],
   administration: [
     {

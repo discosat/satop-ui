@@ -1,10 +1,3 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import SatellitesTable from "./satellites-table";
 import { getSatellites } from "@/app/api/satellites/satellite-service";
 import { ServerRefreshButton } from "./server-refresh-button";
@@ -19,28 +12,19 @@ export default async function Page() {
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold">Satellites</h1>
           <p className="text-muted-foreground">
-            Manage and onboard satellites.
+            View and manage satellite information including TLE data and orbital parameters.
           </p>
         </div>
       </div>
 
-      <Card>
-        <CardHeader className="pb-1">
-          <CardTitle>Registered Satellites</CardTitle>
-          <CardDescription>
-            View and manage satellite information including TLE data and orbital
-            parameters.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-between mb-4 mt-2">
-            <SearchForm />
-            <ServerRefreshButton />
-          </div>
+      <div className="space-y-4">
+        <div className="flex justify-between">
+          <SearchForm />
+          <ServerRefreshButton />
+        </div>
 
-          <SatellitesTable satellites={satellites} />
-        </CardContent>
-      </Card>
+        <SatellitesTable satellites={satellites} />
+      </div>
     </div>
   );
 }

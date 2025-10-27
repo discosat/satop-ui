@@ -9,7 +9,6 @@ import { TimePeriodSelect, TimePeriod } from "./time-period-select";
 import { OverpassCalendar } from "./overpass-calendar";
 import { RefreshButton } from "@/components/refresh-button";
 import { Separator } from "@/components/ui/separator";
-import { Rocket } from "lucide-react";
 
 interface SatelliteOverpassClientProps {
   satellites: (Satellite & { id: number })[];
@@ -52,7 +51,7 @@ export function SatelliteOverpassClient({
   };
 
   return (
-    <div className="flex flex-col h-full gap-6">
+    <div className="flex flex-col h-full min-h-0 gap-6">
       {/* Controls Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 flex-shrink-0">
         <SatelliteSelect
@@ -74,25 +73,16 @@ export function SatelliteOverpassClient({
         </div>
       </div>
 
-      <Separator />
+      <Separator className="flex-shrink-0" />
 
-      {/* Content Section */}
-      <div className="flex flex-col gap-6 flex-1 min-h-0">
-        {/* Overpass Calendar */}
-        <div className="flex flex-col min-h-0">
-          <h3 className="text-lg font-semibold flex items-center gap-2 mb-4 flex-shrink-0">
-            <Rocket className="h-5 w-5 text-blue-500" />
-            Overpass Schedule
-          </h3>
-          <div className="flex-1 min-h-0">
-            <OverpassCalendar 
-              key={`calendar-${refreshKey}`}
-              satellites={filteredSatellites}
-              groundStation={selectedGroundStationData}
-              timePeriod={selectedTimePeriod}
-            />
-          </div>
-        </div>
+      {/* Overpass Calendar */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <OverpassCalendar 
+          key={`calendar-${refreshKey}`}
+          satellites={filteredSatellites}
+          groundStation={selectedGroundStationData}
+          timePeriod={selectedTimePeriod}
+        />
       </div>
     </div>
   );

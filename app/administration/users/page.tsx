@@ -1,10 +1,3 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import UsersTable from "./users-table";
 import { getUsers } from "@/app/api/users/users-service";
 
@@ -30,28 +23,18 @@ export default async function UserManagement({ searchParams }: PageProps) {
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold">Users</h1>
           <p className="text-muted-foreground">
-            Manage user accounts and permissions
+            Manage user accounts and permissions.
           </p>
         </div>
       </div>
 
-      <div className="w-full">
-            <Card>
-              <CardHeader className="pb-1">
-                <CardTitle>Users</CardTitle>
-                <CardDescription>
-                  Manage user accounts and permissions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between mb-4 mt-2">
-                  <SearchForm initialQuery={query} />
-                  <ServerRefreshButton />
-                </div>
+      <div className="space-y-4">
+        <div className="flex justify-between">
+          <SearchForm initialQuery={query} />
+          <ServerRefreshButton />
+        </div>
 
-                <UsersTable users={users} />
-              </CardContent>
-            </Card>
+        <UsersTable users={users} />
       </div>
     </div>
   );

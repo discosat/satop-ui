@@ -1,10 +1,3 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import FlightPlansTable from "./flight-table";
 import { getFlightPlans } from "@/app/api/flight/flight-plan-service";
 import { ServerRefreshButton } from "./server-refresh-button";
@@ -31,10 +24,9 @@ export default async function Page({}) {
     <div className="flex flex-col h-full p-6 gap-6">
       <div className="flex justify-between items-center">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold">Flight planning</h1>
+          <h1 className="text-3xl font-bold">Flight Planning</h1>
           <p className="text-muted-foreground">
-            Create and manage satellite command sequences for upcoming
-            overpasses.
+            Create and manage satellite command sequences for upcoming overpasses.
           </p>
         </div>
         <div>
@@ -47,35 +39,24 @@ export default async function Page({}) {
         </div>
       </div>
 
-      <Card>
-        <CardHeader className="pb-1">
-          <CardTitle>Scheduled Flight Plans</CardTitle>
-          <CardDescription>
-            View, update and approve pending satellite command sequences
-            awaiting transmission.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4 mb-4 mt-2">
-            <div className="flex justify-between items-start">
-              <div className="flex-1 mr-4">
-                <SearchForm
-                  flightPlans={flightPlans}
-                  satellites={satellites}
-                  groundStations={groundStations}
-                />
-              </div>
-              <ServerRefreshButton />
-            </div>
+      <div className="space-y-4">
+        <div className="flex justify-between items-start">
+          <div className="flex-1 mr-4">
+            <SearchForm
+              flightPlans={flightPlans}
+              satellites={satellites}
+              groundStations={groundStations}
+            />
           </div>
+          <ServerRefreshButton />
+        </div>
 
-          <FlightPlansTable
-            flightPlans={flightPlans}
-            satellites={satellites}
-            groundStations={groundStations}
-          />
-        </CardContent>
-      </Card>
+        <FlightPlansTable
+          flightPlans={flightPlans}
+          satellites={satellites}
+          groundStations={groundStations}
+        />
+      </div>
     </div>
   );
 }
