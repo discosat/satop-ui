@@ -24,7 +24,6 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -560,37 +559,35 @@ export function OverpassAssignmentCalendar({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Overpass Assignment</AlertDialogTitle>
-            <AlertDialogDescription>
-              {selectedOverpass && (
-                <div className="space-y-2 mt-2">
-                  <p>
-                    Are you sure you want to assign this flight plan to the following overpass window?
-                  </p>
-                  <div className="bg-muted p-3 rounded-md space-y-1 text-sm">
-                    <div>
-                      <span className="font-medium">Time:</span>{" "}
-                      {formatTime(selectedOverpass.startTime)} - {formatTime(selectedOverpass.endTime)}
-                    </div>
-                    <div>
-                      <span className="font-medium">Duration:</span>{" "}
-                      {getDuration(selectedOverpass.startTime, selectedOverpass.endTime)} minutes
-                    </div>
-                    <div>
-                      <span className="font-medium">Max Elevation:</span>{" "}
-                      {selectedOverpass.maxElevation.toFixed(1)}°
-                    </div>
-                    <div>
-                      <span className="font-medium">Quality:</span>{" "}
-                      {getPassQuality(selectedOverpass.maxElevation).quality}
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    This will update the flight plan status to ASSIGNED_TO_OVERPASS and schedule it for execution during this window.
-                  </p>
-                </div>
-              )}
-            </AlertDialogDescription>
           </AlertDialogHeader>
+          {selectedOverpass && (
+            <div className="space-y-2">
+              <p>
+                Are you sure you want to assign this flight plan to the following overpass window?
+              </p>
+              <div className="bg-muted p-3 rounded-md space-y-1 text-sm">
+                <div>
+                  <span className="font-medium">Time:</span>{" "}
+                  {formatTime(selectedOverpass.startTime)} - {formatTime(selectedOverpass.endTime)}
+                </div>
+                <div>
+                  <span className="font-medium">Duration:</span>{" "}
+                  {getDuration(selectedOverpass.startTime, selectedOverpass.endTime)} minutes
+                </div>
+                <div>
+                  <span className="font-medium">Max Elevation:</span>{" "}
+                  {selectedOverpass.maxElevation.toFixed(1)}°
+                </div>
+                <div>
+                  <span className="font-medium">Quality:</span>{" "}
+                  {getPassQuality(selectedOverpass.maxElevation).quality}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                This will update the flight plan status to ASSIGNED_TO_OVERPASS and schedule it for execution during this window.
+              </p>
+            </div>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={associating}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmAssignment} disabled={associating}>

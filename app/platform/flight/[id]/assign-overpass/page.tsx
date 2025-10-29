@@ -18,6 +18,7 @@ import type { FlightPlan } from "@/app/api/flight/types";
 import type { Satellite } from "@/app/api/satellites/types";
 import type { GroundStation } from "@/app/api/ground-stations/types";
 import { AssignOverpassClient } from "./assign-overpass-client";
+import { AssignOverpassSkeleton } from "./assign-overpass-skeleton";
 import { Satellite as SatMapSatellite } from "react-sat-map";
 import FlightPlanSteps from "@/app/platform/flight/components/flight-plan-steps";
 
@@ -95,11 +96,7 @@ export default function AssignOverpassPage() {
   };
 
   if (isLoading && !flightPlan) {
-    return (
-      <div className="p-6 text-center text-muted-foreground">
-        Loading flight plan...
-      </div>
-    );
+    return <AssignOverpassSkeleton />;
   }
 
   if (!flightPlan) {

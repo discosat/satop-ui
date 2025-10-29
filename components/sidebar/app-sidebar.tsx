@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Navheader } from "./nav-header";
 
-// This is sample data.
 const data = {
   platform: [
     {

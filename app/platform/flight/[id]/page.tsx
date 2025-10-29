@@ -36,6 +36,7 @@ import { CommandBuilder } from "../components/commands/command-builder";
 import { FlightPlan } from "@/app/api/flight/types";
 import type { Satellite } from "@/app/api/satellites/types";
 import type { GroundStation } from "@/app/api/ground-stations/types";
+import { FlightPlanSkeleton } from "./flight-plan-skeleton";
 
 // We are going to make some key changes to the flight planning page.
 // Creating a new flight plan is now going to take multiple steps.
@@ -249,11 +250,7 @@ export default function FlightPlanDetailPage() {
   };
 
   if (isLoading && !flightPlan) {
-    return (
-      <div className="p-6 text-center text-muted-foreground">
-        Loading flight plan...
-      </div>
-    );
+    return <FlightPlanSkeleton />;
   }
 
   if (!flightPlan) {
