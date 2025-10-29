@@ -10,7 +10,8 @@ type StepKey =
   | "REJECTED"
   | "ASSIGNED_TO_OVERPASS"
   | "TRANSMITTED"
-  | "SUPERSEDED";
+  | "SUPERSEDED"
+  | "FAILED";
 
 export interface FlightPlanStepsProps {
   status: StepKey;
@@ -40,6 +41,9 @@ function getActiveIndex(status: StepKey): number {
     case "REJECTED":
       // Rejected branches off after draft approval phase
       return 1;
+    case "FAILED":
+      // Failed happens at the transmit stage
+      return 3;
     case "SUPERSEDED":
       // Consider superseded as terminal beyond transmit for visualization
       return ORDERED_STEPS.length - 1;
@@ -61,6 +65,8 @@ function getNextAction(status: StepKey): string | null {
       return "Flight plan has been transmitted to the satellite";
     case "REJECTED":
       return null;
+    case "FAILED":
+      return null;
     case "SUPERSEDED":
       return null;
     default:
@@ -74,6 +80,7 @@ export default function FlightPlanSteps({
 }: FlightPlanStepsProps) {
   const activeIndex = getActiveIndex(status);
   const isRejected = status === "REJECTED";
+  const isFailed = status === "FAILED";
   const isSuperseded = status === "SUPERSEDED";
   const nextAction = getNextAction(status);
 
@@ -96,6 +103,7 @@ export default function FlightPlanSteps({
                     "flex h-10 w-10 items-center justify-center rounded-full border-2 text-xs font-medium transition-all",
                     isActive &&
                       !isRejected &&
+                      !isFailed &&
                       "border-primary bg-primary text-primary-foreground shadow-lg",
                     isCompleted &&
                       !isActive &&
@@ -107,7 +115,7 @@ export default function FlightPlanSteps({
                       !isActive &&
                       !isNext &&
                       "border-muted-foreground/30 text-muted-foreground",
-                    isRejected &&
+                    (isRejected || isFailed) &&
                       index === activeIndex &&
                       "border-destructive bg-destructive text-destructive-foreground"
                   )}
@@ -115,7 +123,7 @@ export default function FlightPlanSteps({
                 >
                   {isCompleted && !isActive ? (
                     <CheckCircle2 className="h-5 w-5" />
-                  ) : isActive && !isRejected ? (
+                  ) : isActive && !isRejected && !isFailed ? (
                     <Clock className="h-5 w-5" />
                   ) : (
                     index + 1
@@ -131,7 +139,7 @@ export default function FlightPlanSteps({
                         index < activeIndex ? "bg-primary" : "bg-muted"
                       )}
                     />
-                    {isActive && !isRejected && (
+                    {isActive && !isRejected && !isFailed && (
                       <ArrowRight className="h-3 w-3 text-primary animate-pulse" />
                     )}
                   </div>
@@ -157,7 +165,7 @@ export default function FlightPlanSteps({
                       Current
                     </div>
                   )}
-                  {isNext && !isRejected && (
+                  {isNext && !isRejected && !isFailed && (
                     <div className="text-[10px] text-muted-foreground flex items-center gap-1">
                       Next step
                     </div>
@@ -170,7 +178,7 @@ export default function FlightPlanSteps({
       </ol>
       
       {/* Next Action Banner */}
-      {nextAction && !isRejected && !isSuperseded && (
+      {nextAction && !isRejected && !isSuperseded && !isFailed && (
         <div className="flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-lg">
           <div className="mt-0.5">
             <ArrowRight className="h-4 w-4 text-primary" />
@@ -186,16 +194,20 @@ export default function FlightPlanSteps({
         </div>
       )}
 
-      {(isRejected || isSuperseded) && (
+      {(isRejected || isSuperseded || isFailed) && (
         <div
           className={cn(
             "p-3 rounded-lg border text-sm",
-            isRejected
+            isFailed
+              ? "bg-destructive/5 border-destructive/20 text-destructive"
+              : isRejected
               ? "bg-destructive/5 border-destructive/20 text-destructive"
               : "bg-muted/50 border-muted text-muted-foreground"
           )}
         >
-          {isRejected
+          {isFailed
+            ? "❌ Flight plan execution failed and cannot proceed further"
+            : isRejected
             ? "⚠️ Flight plan was rejected and cannot proceed further"
             : "ℹ️ Flight plan was superseded by a newer version"}
         </div>

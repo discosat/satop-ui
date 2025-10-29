@@ -137,7 +137,7 @@ export default function FlightPlanDetailPage() {
   }, [id]);
 
   const handleBack = () => {
-    router.back();
+    router.push("/platform/flight");
   };
 
   const handleSave = async () => {
@@ -209,7 +209,7 @@ export default function FlightPlanDetailPage() {
         setFlightPlan({ ...flightPlan, status: "APPROVED" });
         setShowApproveDialog(false);
         toast.success(result.message);
-        setTimeout(() => router.back(), 1500);
+        // Stay on page and refresh - don't navigate back
       } else {
         throw new Error(result.message || "Failed to approve flight plan");
       }
@@ -293,15 +293,15 @@ export default function FlightPlanDetailPage() {
             </div>
           )}
           
-          {/* Show Assign to Overpass button when status is APPROVED */}
-          {flightPlan.status === "APPROVED" && (
+          {/* Show Assign to Overpass button when status is APPROVED or FAILED */}
+          {(flightPlan.status === "APPROVED" || flightPlan.status === "FAILED") && (
             <Button
               variant="default"
               onClick={() => router.push(`/platform/flight/${id}/assign-overpass`)}
               disabled={isLoading}
             >
               <CalendarClock className="mr-2 h-4 w-4" />
-              Assign to Overpass
+              {flightPlan.status === "FAILED" ? "Retry Transmission" : "Assign to Overpass"}
             </Button>
           )}
 
@@ -311,6 +311,19 @@ export default function FlightPlanDetailPage() {
               <CalendarClock className="h-4 w-4" />
               <span className="font-medium">
                 Scheduled: {new Date(flightPlan.scheduledAt).toLocaleString("da-DK", {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                })}
+              </span>
+            </div>
+          )}
+
+          {/* Show assigned overpass info or retry option when status is FAILED */}
+          {flightPlan.status === "FAILED" && flightPlan.scheduledAt && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 border border-red-200 rounded-md text-sm text-red-800">
+              <CalendarClock className="h-4 w-4" />
+              <span className="font-medium">
+                Failed at: {new Date(flightPlan.scheduledAt).toLocaleString("da-DK", {
                   dateStyle: "short",
                   timeStyle: "short",
                 })}
@@ -374,6 +387,7 @@ export default function FlightPlanDetailPage() {
                 <div className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 ${
                   flightPlan.status === 'APPROVED' ? 'bg-green-50 text-green-700 border-green-200' :
                   flightPlan.status === 'REJECTED' ? 'bg-red-50 text-red-700 border-red-200' :
+                  flightPlan.status === 'FAILED' ? 'bg-red-50 text-red-700 border-red-200' :
                   flightPlan.status === 'TRANSMITTED' ? 'bg-blue-50 text-blue-700 border-blue-200' :
                   flightPlan.status === 'ASSIGNED_TO_OVERPASS' ? 'bg-purple-50 text-purple-700 border-purple-200' :
                   'bg-yellow-50 text-yellow-700 border-yellow-200'
@@ -382,6 +396,7 @@ export default function FlightPlanDetailPage() {
                     <div className={`w-1.5 h-1.5 rounded-full ${
                       flightPlan.status === 'APPROVED' ? 'bg-green-500' :
                       flightPlan.status === 'REJECTED' ? 'bg-red-500' :
+                      flightPlan.status === 'FAILED' ? 'bg-red-500' :
                       flightPlan.status === 'TRANSMITTED' ? 'bg-blue-500' :
                       flightPlan.status === 'ASSIGNED_TO_OVERPASS' ? 'bg-purple-500' :
                       'bg-yellow-500'

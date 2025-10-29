@@ -53,10 +53,6 @@ const formSchema = z.object({
     })
     .min(-1000, { message: "Altitude must be greater than -1000 meters" })
     .max(10000, { message: "Altitude must be less than 10000 meters" }),
-  webSocketUrl: z
-    .string()
-    .min(1, { message: "WebSocket URL is required" })
-    .url({ message: "Please enter a valid WebSocket URL" }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -75,7 +71,6 @@ export const CreateGroundStationModal = () => {
       latitude: undefined,
       longitude: undefined,
       altitude: undefined,
-      webSocketUrl: "",
     },
   });
 
@@ -214,20 +209,6 @@ export const CreateGroundStationModal = () => {
                   )}
                 />
               </div>
-
-              <FormField
-                control={form.control}
-                name="webSocketUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>WebSocket URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="ws://example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <DialogFooter>
                 <Button type="submit" disabled={saving}>

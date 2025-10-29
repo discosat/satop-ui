@@ -1,5 +1,6 @@
 "use server"
 
+import { revalidateTag } from 'next/cache';
 import { mockFlightPlans } from "./mock";
 import { apiClient } from "@/app/api/api-client";
 import type { FlightPlan, ApprovalResult } from "./types";
@@ -42,11 +43,14 @@ export async function createFlightPlan(payload: CreateFlightPlanPayload): Promis
       status: "DRAFT",
     };
     mockFlightPlans.unshift(created);
+    revalidateTag('flight-plans');
     return created;
   }
 
   try {
-    return await apiClient.post<CreateFlightPlanPayload, FlightPlan>(API_PATH, payload);
+    const result = await apiClient.post<CreateFlightPlanPayload, FlightPlan>(API_PATH, payload);
+    revalidateTag('flight-plans');
+    return result;
   } catch (error) {
     console.error('Error creating flight plan:', error);
     throw error;
@@ -62,6 +66,8 @@ export async function updateFlightPlan(payload: FlightPlan): Promise<FlightPlan 
       mockFlightPlans[index].status = 'SUPERSEDED';
       const newVersion: FlightPlan = { ...mockFlightPlans[index], id: Math.floor(Math.random() * 10000), status: 'DRAFT', previousPlanId: mockFlightPlans[index].id };
       mockFlightPlans.unshift(newVersion);
+      revalidateTag('flight-plans');
+      revalidateTag(`flight-plans:${id}`);
       return newVersion;
     }
     return null;
@@ -71,7 +77,10 @@ export async function updateFlightPlan(payload: FlightPlan): Promise<FlightPlan 
     // Extract only the fields needed for the update payload, excluding read-only fields
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id: _id, status: _status, approverId: _approverId, approvalDate: _approvalDate, ...updatePayload } = payload;
-    return await apiClient.put<Partial<FlightPlan>, FlightPlan>(`${API_PATH}/${id}`, updatePayload);
+    const result = await apiClient.put<Partial<FlightPlan>, FlightPlan>(`${API_PATH}/${id}`, updatePayload);
+    revalidateTag('flight-plans');
+    revalidateTag(`flight-plans:${id}`);
+    return result;
   } catch (error) {
     console.error('Error updating flight plan:', error);
     throw error;
@@ -83,6 +92,8 @@ export async function approveFlightPlan(id: number, approved: boolean): Promise<
     const index = mockFlightPlans.findIndex((p) => p.id === id);
     if (index !== -1) {
       mockFlightPlans[index].status = approved ? 'APPROVED' : 'REJECTED';
+      revalidateTag('flight-plans');
+      revalidateTag(`flight-plans:${id}`);
       return { success: true, message: `Mock plan ${approved ? 'approved' : 'rejected'}` };
     }
     return { success: false, message: 'Mock plan not found' };
@@ -93,7 +104,10 @@ export async function approveFlightPlan(id: number, approved: boolean): Promise<
       status: approved ? 'APPROVED' : 'REJECTED',
     };
 
-    return await apiClient.patch<{ status: string }, ApprovalResult>(`${API_PATH}/${id}`, body);
+    const result = await apiClient.patch<{ status: string }, ApprovalResult>(`${API_PATH}/${id}`, body);
+    revalidateTag('flight-plans');
+    revalidateTag(`flight-plans:${id}`);
+    return result;
   } catch (error) {
     console.error('Error approving flight plan:', error);
     throw error;
@@ -133,6 +147,9 @@ export async function associateOverpass(
           associatedFlightPlan: association,
         });
       }
+      revalidateTag('flight-plans');
+      revalidateTag(`flight-plans:${flightPlanId}`);
+      revalidateTag('overpasses');
       return { success: true, message: "Mock association created" };
     } catch {
       return { success: false, message: "Failed to create mock association" };
@@ -140,7 +157,11 @@ export async function associateOverpass(
   }
 
   try {
-    return await apiClient.post<AssociateOverpassRequest, ApprovalResult>(`${API_PATH}/${flightPlanId}/overpasses`, request);
+    const result = await apiClient.post<AssociateOverpassRequest, ApprovalResult>(`${API_PATH}/${flightPlanId}/overpasses`, request);
+    revalidateTag('flight-plans');
+    revalidateTag(`flight-plans:${flightPlanId}`);
+    revalidateTag('overpasses');
+    return result;
   } catch (error) {
     console.error('Error associating overpass:', error);
     throw error;

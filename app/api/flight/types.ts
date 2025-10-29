@@ -4,7 +4,7 @@ export interface ApprovalResult {
   message: string;
 }
 
-export type FlightPlanStatus = "DRAFT" | "APPROVED" | "REJECTED" | "ASSIGNED_TO_OVERPASS"| "SUPERSEDED" | "TRANSMITTED";
+export type FlightPlanStatus = "DRAFT" | "APPROVED" | "REJECTED" | "ASSIGNED_TO_OVERPASS"| "SUPERSEDED" | "TRANSMITTED" | "FAILED";
 export interface FlightPlan {
   id: number;
   previousPlanId?: number;

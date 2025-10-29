@@ -89,6 +89,7 @@ export function SearchForm({
       "PENDING",
       "APPROVED",
       "REJECTED",
+      "FAILED",
       "TRANSMITTED",
       "DRAFT",
       "ASSIGNED_TO_OVERPASS",
@@ -176,6 +177,8 @@ export function SearchForm({
         return "Approved";
       case "REJECTED":
         return "Rejected";
+      case "FAILED":
+        return "Failed";
       case "TRANSMITTED":
         return "Transmitted";
       case "DRAFT":
@@ -389,6 +392,7 @@ export function SearchForm({
                     "PENDING",
                     "APPROVED",
                     "REJECTED",
+                    "FAILED",
                     "TRANSMITTED",
                     "DRAFT",
                     "ASSIGNED_TO_OVERPASS",

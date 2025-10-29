@@ -124,6 +124,12 @@ export default function FlightPlansTable({
             Rejected
           </Badge>
         );
+      case "FAILED":
+        return (
+          <Badge className="bg-red-200 text-red-800 hover:bg-red-200">
+            Failed
+          </Badge>
+        );
       case "SUPERSEDED":
         return <Badge variant="secondary">Superseded</Badge>;
       case "TRANSMITTED":
@@ -142,12 +148,6 @@ export default function FlightPlansTable({
         return (
           <Badge className="bg-purple-200 text-purple-800 hover:bg-purple-200">
             Assigned to Overpass
-          </Badge>
-        );
-      case "TRANSMITTED":
-        return (
-          <Badge className="bg-blue-200 text-blue-800 hover:bg-blue-200">
-            Transmitted
           </Badge>
         );
       default: // pending

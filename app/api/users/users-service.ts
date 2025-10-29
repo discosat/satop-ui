@@ -1,5 +1,6 @@
 "use server"
 
+import { revalidateTag } from 'next/cache';
 import { mockUsers } from "./mock";
 import { apiClient } from "@/app/api/api-client";
 import type { User, UpdateUserPayload, UpdateUserPermissionsPayload } from "./types";
@@ -39,13 +40,18 @@ export async function updateUser(id: number, payload: UpdateUserPayload): Promis
         ...payload,
         updatedAt: new Date().toISOString(),
       };
+      revalidateTag('users');
+      revalidateTag(`users:${id}`);
       return mockUsers[index];
     }
     return null;
   }
 
   try {
-    return await apiClient.put<UpdateUserPayload, User>(`${API_PATH}/${id}`, payload);
+    const result = await apiClient.put<UpdateUserPayload, User>(`${API_PATH}/${id}`, payload);
+    revalidateTag('users');
+    revalidateTag(`users:${id}`);
+    return result;
   } catch (error) {
     console.error(`Error updating user ${id}:`, error);
     throw error;
@@ -58,11 +64,15 @@ export async function deleteUser(id: number): Promise<void> {
     if (index !== -1) {
       mockUsers.splice(index, 1);
     }
+    revalidateTag('users');
+    revalidateTag(`users:${id}`);
     return;
   }
 
   try {
     await apiClient.delete(`${API_PATH}/${id}`);
+    revalidateTag('users');
+    revalidateTag(`users:${id}`);
   } catch (error) {
     console.error(`Error deleting user ${id}:`, error);
     throw error;
@@ -81,16 +91,21 @@ export async function updateUserPermissions(
         ...payload,
         updatedAt: new Date().toISOString(),
       };
+      revalidateTag('users');
+      revalidateTag(`users:${id}`);
       return mockUsers[index];
     }
     return null;
   }
 
   try {
-    return await apiClient.put<UpdateUserPermissionsPayload, User>(
+    const result = await apiClient.put<UpdateUserPermissionsPayload, User>(
       `${API_PATH}/${id}/permissions`,
       payload
     );
+    revalidateTag('users');
+    revalidateTag(`users:${id}`);
+    return result;
   } catch (error) {
     console.error(`Error updating permissions for user ${id}:`, error);
     throw error;

@@ -9,30 +9,43 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { EditUserModal } from "./edit-user-modal";
 import { DeleteUserModal } from "./delete-user-modal";
 import type { User } from "@/app/api/users/types";
+import { deleteUser, updateUserPermissions } from "@/app/api/users/users-service";
 
 interface ActionsProps {
   user: User;
 }
 
 export default function Actions({ user }: ActionsProps) {
+  const router = useRouter();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const handleSaveUser = (updatedUser: User) => {
-    // Handle saving the updated user data
-    console.log("Saving user:", updatedUser);
-    // Implement your save logic here
-    setEditDialogOpen(false);
+  const handleSaveUser = async (updatedUser: User) => {
+    try {
+      await updateUserPermissions(user.id, {
+        role: updatedUser.role,
+        additionalRoles: updatedUser.additionalRoles,
+        additionalScopes: updatedUser.additionalScopes,
+      });
+      setEditDialogOpen(false);
+      router.refresh();
+    } catch (error) {
+      console.error("Error saving user:", error);
+    }
   };
 
-  const handleDeleteUser = (userId: number) => {
-    // Handle deleting the user
-    console.log("Deleting user with ID:", userId);
-    // Implement your delete logic here
-    setDeleteDialogOpen(false);
+  const handleDeleteUser = async (userId: number) => {
+    try {
+      await deleteUser(userId);
+      setDeleteDialogOpen(false);
+      router.refresh();
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    }
   };
 
   const handleCancelEdit = () => {
