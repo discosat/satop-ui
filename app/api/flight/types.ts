@@ -4,6 +4,19 @@ export interface ApprovalResult {
   message: string;
 }
 
+export interface CompileToCshResult {
+  script: string[];
+}
+
+export interface ImagingOpportunity {
+  imagingTime: string;
+  offNadirDegrees: number;
+  satelliteAltitudeKm: number;
+  tleAgeWarning: boolean;
+  tleAgeHours: number;
+  message: string;
+}
+
 export type FlightPlanStatus = "DRAFT" | "APPROVED" | "REJECTED" | "ASSIGNED_TO_OVERPASS"| "SUPERSEDED" | "TRANSMITTED" | "FAILED";
 export interface FlightPlan {
   id: number;

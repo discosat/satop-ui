@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ArrowLeft, Save, CheckCircle, XCircle, Activity, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -27,6 +28,7 @@ import {
   getFlightPlanById,
   updateFlightPlan,
   approveFlightPlan,
+  compileFlightPlanToCsh,
 } from "@/app/api/flight/flight-plan-service";
 import { getSatellites } from "@/app/api/satellites/satellite-service";
 import { getGroundStations } from "@/app/api/ground-stations/ground-station-service";
@@ -57,6 +59,9 @@ export default function FlightPlanDetailPage() {
   const [hasChanges, setHasChanges] = useState(false);
   const [satellites, setSatellites] = useState<Satellite[]>([]);
   const [groundStations, setGroundStations] = useState<GroundStation[]>([]);
+  const [compiledScript, setCompiledScript] = useState<string[] | null>(null);
+  const [lgtmInput, setLgtmInput] = useState("");
+  const [isLoadingScript, setIsLoadingScript] = useState(false);
 
   const id = typeof params.id === "string" ? params.id : "";
 
@@ -199,6 +204,13 @@ export default function FlightPlanDetailPage() {
 
   const handleApprove = async () => {
     if (!flightPlan) return;
+    
+    // Check LGTM confirmation
+    if (lgtmInput.toUpperCase() !== "LGTM") {
+      toast.error("Please confirm with 'LGTM'");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const result = await approveFlightPlan(
@@ -209,6 +221,8 @@ export default function FlightPlanDetailPage() {
       if (result.success) {
         setFlightPlan({ ...flightPlan, status: "APPROVED" });
         setShowApproveDialog(false);
+        setLgtmInput("");
+        setCompiledScript(null);
         toast.success(result.message);
         // Stay on page and refresh - don't navigate back
       } else {
@@ -221,6 +235,28 @@ export default function FlightPlanDetailPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleOpenApproveDialog = async () => {
+    if (!flightPlan) return;
+    
+    setShowApproveDialog(true);
+    setIsLoadingScript(true);
+    
+    try {
+      // Load the compiled script
+      const cshResult = await compileFlightPlanToCsh(flightPlan.id);
+      if (cshResult?.script) {
+        setCompiledScript(cshResult.script);
+      }
+    } catch (error) {
+      console.error("Error loading compiled script:", error);
+      toast.error("Failed to load compiled script");
+    } finally {
+      setIsLoadingScript(false);
+    }
+    
+    setLgtmInput("");
   };
 
   const handleReject = async () => {
@@ -341,7 +377,7 @@ export default function FlightPlanDetailPage() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => setShowApproveDialog(true)}
+                onClick={handleOpenApproveDialog}
                 disabled={flightPlan.status === "APPROVED" || isLoading || hasChanges}
                 title={hasChanges ? "Save changes before approving" : flightPlan.status === "APPROVED" ? "Already approved" : ""}
               >
@@ -447,18 +483,72 @@ export default function FlightPlanDetailPage() {
 
       {/* Approve Dialog */}
       <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
           <AlertDialogHeader>
-            <AlertDialogTitle>Approve Flight Plan</AlertDialogTitle>
+            <AlertDialogTitle>Review & Approve Flight Plan</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to approve this flight plan? This action
-              will schedule the command sequence for execution.
+              Review the compiled command sequence below. Type &#34;LGTM&#34; to approve.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleApprove}>
-              {isLoading ? "Approving..." : "Approve"}
+          
+          <div className="flex-1 overflow-y-auto space-y-4">
+            {isLoadingScript ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center space-y-3">
+                  <div className="animate-spin inline-block w-6 h-6 border-2 border-slate-600 border-t-slate-200 rounded-full"></div>
+                  <p className="text-sm text-muted-foreground">Loading compiled script...</p>
+                </div>
+              </div>
+            ) : compiledScript && compiledScript.length > 0 ? (
+              <div className="space-y-3">
+                <div className="text-sm font-semibold">Compiled Command Script:</div>
+                <div className="bg-slate-950 rounded-lg p-4 font-mono text-xs text-green-400 overflow-x-auto border border-slate-700 shadow-lg">
+                  <div className="space-y-1">
+                    {compiledScript.map((line, idx) => (
+                      <div key={idx} className="flex hover:bg-slate-900 px-2 py-0.5 rounded transition-colors">
+                        <span className="mr-4 text-slate-600 select-none w-12 text-right">{idx + 1}</span>
+                        <span className="flex-1">{line}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-8">
+                <p className="text-sm text-muted-foreground">No compiled script available</p>
+              </div>
+            )}
+
+            <div className="space-y-3 pt-4 border-t px-1">
+              <label className="text-sm font-medium">Confirm approval by typing &#34;LGTM&#34;:</label>
+              <Input
+                placeholder="Type LGTM to confirm"
+                value={lgtmInput}
+                onChange={(e) => setLgtmInput(e.target.value)}
+                className="font-mono"
+                disabled={isLoading || isLoadingScript}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !isLoading && !isLoadingScript && lgtmInput.toUpperCase() === "LGTM") {
+                    handleApprove();
+                  }
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                {lgtmInput.length > 0 && lgtmInput.toUpperCase() !== "LGTM" 
+                  ? "Looks good to merge! (Type exactly: LGTM)"
+                  : "Looks good to merge! "}
+              </p>
+            </div>
+          </div>
+
+          <AlertDialogFooter className="mt-4">
+            <AlertDialogCancel disabled={isLoading || isLoadingScript}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleApprove}
+              disabled={isLoading || lgtmInput.toUpperCase() !== "LGTM"}
+              className={lgtmInput.toUpperCase() === "LGTM" ? "" : "opacity-50 cursor-not-allowed"}
+            >
+              {isLoading ? "Approving..." : "Approve (LGTM)"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

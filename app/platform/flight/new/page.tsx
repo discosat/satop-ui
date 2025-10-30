@@ -86,6 +86,11 @@ export default function NewFlightPlanPage() {
 
         setSatellites(satellitesData);
         setSatellitesError(null);
+
+        // Set first satellite as default if available
+        if (satellitesData.length > 0) {
+          form.setValue("satId", satellitesData[0].id.toString());
+        }
       } catch (error) {
         console.error("Error fetching satellites:", error);
         setSatellitesError("Failed to load satellites");
@@ -98,6 +103,11 @@ export default function NewFlightPlanPage() {
         // Filter out any ground stations with empty id or name
         setGroundStations(groundStationsData);
         setGroundStationsError(null);
+
+        // Set first ground station as default if available
+        if (groundStationsData.length > 0) {
+          form.setValue("gsId", groundStationsData[0].id.toString());
+        }
       } catch (error) {
         console.error("Error fetching ground stations:", error);
         setGroundStationsError("Failed to load ground stations");
@@ -106,6 +116,7 @@ export default function NewFlightPlanPage() {
 
     fetchSatellites();
     fetchGroundStations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const commandBody = useMemo(() => {
@@ -118,8 +129,6 @@ export default function NewFlightPlanPage() {
           commandType: cmd.type,
           captureLocation: commandData.captureLocation,
           cameraSettings: commandData.cameraSettings,
-          maxOffNadirDegrees: commandData.maxOffNadirDegrees,
-          maxSearchDurationHours: commandData.maxSearchDurationHours,
         };
       } else {
         // TRIGGER_PIPELINE

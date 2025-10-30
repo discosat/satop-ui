@@ -1,9 +1,9 @@
 "use server"
 
 import { revalidateTag } from 'next/cache';
-import { mockFlightPlans } from "./mock";
+import { mockFlightPlans, generateMockCshScript } from "./mock";
 import { apiClient } from "@/app/api/api-client";
-import type { FlightPlan, ApprovalResult } from "./types";
+import type { FlightPlan, ApprovalResult, CompileToCshResult, ImagingOpportunity } from "./types";
 
 const API_PATH = '/flight-plans';
 
@@ -165,5 +165,57 @@ export async function associateOverpass(
   } catch (error) {
     console.error('Error associating overpass:', error);
     throw error;
+  }
+}
+
+export async function compileFlightPlanToCsh(id: number): Promise<CompileToCshResult | null> {
+  if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
+    const plan = mockFlightPlans.find((p) => p.id === id);
+    if (!plan) {
+      return null;
+    }
+    return generateMockCshScript(id);
+  }
+
+  try {
+    return await apiClient.get<CompileToCshResult>(`${API_PATH}/${id}/csh`);
+  } catch (error) {
+    console.error(`Error compiling flight plan ${id} to CSH:`, error);
+    return null;
+  }
+}
+
+export interface ImagingOpportunitiesRequest {
+  satelliteId: number;
+  targetLatitude: number;
+  targetLongitude: number;
+}
+
+export async function getImagingOpportunities(
+  request: ImagingOpportunitiesRequest
+): Promise<ImagingOpportunity | null> {
+  if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
+    return {
+      imagingTime: new Date().toISOString(),
+      offNadirDegrees: 0,
+      satelliteAltitudeKm: 400,
+      tleAgeWarning: false,
+      tleAgeHours: 24,
+      message: "Mock imaging opportunity"
+    };
+  }
+
+  try {
+    const queryParams = new URLSearchParams({
+      SatelliteId: request.satelliteId.toString(),
+      TargetLatitude: request.targetLatitude.toString(),
+      TargetLongitude: request.targetLongitude.toString(),
+    });
+    return await apiClient.get<ImagingOpportunity>(
+      `${API_PATH}/imaging-opportunities?${queryParams.toString()}`
+    );
+  } catch (error) {
+    console.error('Error fetching imaging opportunities:', error);
+    return null;
   }
 }

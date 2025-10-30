@@ -1,4 +1,4 @@
-import { FlightPlan } from "./types";
+import { FlightPlan, CompileToCshResult } from "./types";
 
 
 // Mock data for flight plans based on the Python backend model
@@ -140,3 +140,24 @@ export const mockFlightPlans: FlightPlan[] = [
       status: "APPROVED"
     },
   ];
+
+// Mock CSH script compilation for flight plans
+export function generateMockCshScript(flightPlanId: number): CompileToCshResult {
+  // Example CSH script generation based on a sample TRIGGER_CAPTURE command
+  // This would normally be generated from the actual commands in the flight plan
+  const scripts = [
+    `set camera_id_param "CAM-${flightPlanId}" -n CameraController`,
+    `set camera_type_param 1 -n CameraController`,
+    `set exposure_param 1000 -n CameraController`,
+    `set iso_param 100 -n CameraController`,
+    `set num_images_param 5 -n CameraController`,
+    `set interval_param 500000 -n CameraController`,
+    `set obid_param 1 -n CameraController`,
+    `set pipeline_id_param ${flightPlanId} -n CameraController`,
+    `set capture_param 1 -n CameraController`,
+  ];
+
+  return {
+    script: scripts,
+  };
+}
