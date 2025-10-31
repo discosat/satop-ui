@@ -1,5 +1,5 @@
 "use client";
-import { SessionPayload } from "@/lib/session";
+import { SessionPayload } from "@/lib/types";
 import React, { useContext } from "react";
 
 const SessionContext = React.createContext<SessionPayload | null>(null);

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { me } from "./actions/me";
-import SessionProvider from "../providers/session-context-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { Toaster } from "sonner";
+import SessionProvider from "@/providers/session-context-provider";
+import { me } from "./actions/me";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,7 +26,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const user = await me();
+  // Fetch the current Auth0 session
+  const session = await me();
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -40,7 +41,7 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <div className="h-full">
-            <SessionProvider payload={user}>{children}</SessionProvider>
+            <SessionProvider payload={session}>{children}</SessionProvider>
             <Toaster position="top-right" />
           </div>
         </ThemeProvider>

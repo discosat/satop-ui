@@ -1,53 +1,38 @@
-import { currentSession, SessionPayload } from "@/lib/session";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { auth0 } from "./lib/auth0";
 
-const publicRoutes = ["/", "/login", "/apply", "/wayf/callback"];
-
-// Authentication middleware
 export async function middleware(request: NextRequest) {
-  const session = await currentSession();
   const path = request.nextUrl.pathname;
-
-  if (path.startsWith("/api")) {
-    return handleAPIRoutes(session, path);
+  
+  // Public routes that don't require authentication
+  const publicRoutes = ["/", "/login"];
+  const isPublicRoute = publicRoutes.includes(path);
+  
+  // Get the session
+  const session = await auth0.getSession(request);
+  
+  // If user is authenticated and trying to access login page, redirect to platform
+  if (session && path === "/login") {
+    return NextResponse.redirect(new URL("/platform", request.url));
   }
-
-  const redirectURL =`${request.nextUrl.origin}/login`;
-  if (isRouteProtected(session, path))
-    return NextResponse.redirect(redirectURL);
-  return NextResponse.next();
-}
-
-function handleAPIRoutes(session: SessionPayload | null, path: string) {
-  if (!session && path !== "/api/wayf")
-    return NextResponse.json({ message: "unauthorized" }, { status: 401 });
-  return NextResponse.next();
-}
-
-function isRouteProtected(session: SessionPayload | null, path: string) {
-  if (
-    publicRoutes.includes(path) ||
-    path.startsWith("/_next") ||
-    path.startsWith("/assets")
-  ) {
-    return false;
+  
+  // If user is not authenticated and trying to access protected route, redirect to login
+  if (!session && !isPublicRoute && !path.startsWith("/auth")) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
-  if (session) {
-    return false;
-  }
-  return true;
+  
+  // Let Auth0 middleware handle its routes and maintain session
+  return await auth0.middleware(request);
 }
 
 export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - assets (public assets)
+     * - favicon.ico, sitemap.xml, robots.txt (metadata files)
      */
-    '/((?!_next/static|_next/image|favicon.ico|assets).*)',
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
   ],
-}
+};

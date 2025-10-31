@@ -21,15 +21,24 @@ function getTagsFromPath(path: string): string[] {
 }
 
 async function apiFetch(path: string, options: RequestInit = {}) {
-    const { currentSession } = await import('@/lib/session');
-    const session = await currentSession();
+    const { auth0 } = await import('@/lib/auth0');
+    const session = await auth0.getSession();
+
+    
+
+    
 
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
     };
 
-    if (session?.accessToken) {
-        headers['Authorization'] = `Bearer ${session.accessToken}`;
+    // Access token is in tokenSet.accessToken (not access_token)
+    const accessToken = session && 'tokenSet' in session 
+        ? (session.tokenSet as { accessToken?: string }).accessToken 
+        : undefined;
+    
+    if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
     }
 
     // Build tags for caching

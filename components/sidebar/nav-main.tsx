@@ -15,8 +15,7 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { useSession } from "@/app/context";
-import { hasScope } from "@/lib/user";
-import { SessionPayload } from "@/lib/session";
+import { SessionPayload } from "@/lib/types";
 
 export function NavMain({
   items,
@@ -96,7 +95,6 @@ function allowedItems<T extends { scope?: string }>(
   session: SessionPayload | null,
   items: T[]
 ) {
-  return items.filter(({ scope }) => {
-    return !scope || hasScope(session, scope);
-  });
+  // No scope checking - all items allowed if user has session
+  return session ? items : [];
 }

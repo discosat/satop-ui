@@ -1,12 +1,15 @@
 import Starfield from "../../components/starfield";
 import ParticleBackground from "../../components/particle-background";
 import Image from "next/image";
-import { me } from "../actions/me";
 import LoginForm from "./login-form";
 import { redirect } from "next/navigation";
+import { auth0 } from "@/lib/auth0";
 
 export default async function LoginPage() {
-  const session = await me();
+  // Check if user is already authenticated
+  const session = await auth0.getSession();
+  
+  // If already authenticated, redirect to platform
   if (session) {
     redirect("/platform");
   }
@@ -45,7 +48,7 @@ export default async function LoginPage() {
             target="_blank"
             rel="noreferrer"
           >
-            support
+            Asger Nohns
           </a>
         </p>
       </div>

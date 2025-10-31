@@ -1,21 +1,18 @@
 "use client";
 import { useSession } from "@/app/context";
-import { hasScope } from "@/lib/user";
-import { PropsWithChildren } from "react";
+import { PropsWithChildren, ReactNode } from "react";
 
 interface ProtectedProps {
-  scope: string;
+  fallback?: ReactNode;
 }
 
 export default function Protected({
   children,
-  scope,
+  fallback = null,
 }: PropsWithChildren<ProtectedProps>) {
   const session = useSession();
 
-  // Check authorization state
-  if (!session) return;
-  if (!hasScope(session, scope)) return;
+  if (!session) return <>{fallback}</>;
 
-  return children;
+  return <>{children}</>;
 }
