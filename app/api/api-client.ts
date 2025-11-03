@@ -24,10 +24,6 @@ async function apiFetch(path: string, options: RequestInit = {}) {
     const { auth0 } = await import('@/lib/auth0');
     const session = await auth0.getSession();
 
-    
-
-    
-
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
     };
@@ -36,7 +32,7 @@ async function apiFetch(path: string, options: RequestInit = {}) {
     const accessToken = session && 'tokenSet' in session 
         ? (session.tokenSet as { accessToken?: string }).accessToken 
         : undefined;
-    
+
     if (accessToken) {
         headers['Authorization'] = `Bearer ${accessToken}`;
     }

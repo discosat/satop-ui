@@ -1,8 +1,6 @@
 import { Metadata } from "next";
-import { Satellite } from "react-sat-map";
 import { getGroundStations } from "@/app/api/ground-stations/ground-station-service";
 import { getSatellites } from "@/app/api/satellites/satellite-service";
-import type { Satellite as ApiSatellite } from "@/app/api/satellites/types";
 import { SatelliteOverpassClient } from "./satellite-overpass-client";
 
 
@@ -12,19 +10,7 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const groundStations = await getGroundStations();
-  const apiSatellites = await getSatellites();
-
-  // Transform API satellite data to react-sat-map format with ID preservation
-  const satellitesWithTLE: (Satellite & { id: number })[] = apiSatellites
-    .filter((sat: ApiSatellite) => sat.tle.line1 && sat.tle.line2)
-    .map((sat: ApiSatellite) => ({
-      id: sat.id,
-      name: sat.name,
-      tle: {
-        line1: sat.tle.line1,
-        line2: sat.tle.line2,
-      },
-    }));
+  const satellites = await getSatellites();
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -39,7 +25,7 @@ export default async function Page() {
 
       <div className="flex-1 min-h-0 px-6 pb-6">
         <SatelliteOverpassClient
-          satellites={satellitesWithTLE}
+          satellites={satellites}
           groundStations={groundStations}
         />
       </div>

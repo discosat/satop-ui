@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Card,
@@ -11,13 +11,8 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import {
-  Clock,
   Calendar,
   MapPin,
-  ArrowUpRight,
-  Satellite as SatelliteIcon,
-  Info,
-  Eye,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -28,10 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Satellite } from "react-sat-map";
 import { RefreshButton } from "@/components/refresh-button";
 import type { GroundStation } from "@/app/api/ground-stations/types";
@@ -42,6 +34,13 @@ import type {
   OverpassQueryParams 
 } from "@/app/api/overpass/types";
 import type { TimePeriod } from "@/app/platform/overpass-schedule/time-period-select";
+import { getDateRangeFromPeriod } from "@/components/overpass/overpass-utils";
+import {
+  formatTime,
+  getDuration,
+  getPassQuality,
+} from "@/components/overpass/overpass-utils";
+import { OverpassList } from "@/components/overpass/overpass-list";
 
 interface SatelliteWithId extends Satellite {
   id?: number;
@@ -70,40 +69,15 @@ export function OverpassAssignmentCalendar({
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
   const [associating, setAssociating] = useState<boolean>(false);
 
-  // Convert time period to date range
-  const getDateRangeFromPeriod = (
-    period: TimePeriod
-  ): { start: Date; end: Date } => {
-    const now = new Date();
-    const start = new Date(now);
-    const end = new Date(start);
+  // Store stable IDs to avoid dependency issues
+  const satelliteId = satellite.id || 1;
+  const groundStationId = groundStation.id;
 
-    switch (period) {
-      case "today":
-        end.setDate(start.getDate() + 1);
-        break;
-      case "tomorrow":
-        start.setDate(start.getDate() + 1);
-        end.setDate(start.getDate() + 1);
-        break;
-      case "next-3-days":
-        end.setDate(start.getDate() + 3);
-        break;
-      case "next-week":
-        end.setDate(start.getDate() + 7);
-        break;
-      case "next-2-weeks":
-        end.setDate(start.getDate() + 14);
-        break;
-      case "next-month":
-        end.setMonth(start.getMonth() + 1);
-        break;
-    }
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
-    return { start, end };
-  };
-
-  const fetchOverpasses = useCallback(async (): Promise<void> => {
+  const fetchOverpasses = async (): Promise<void> => {
     console.log("[OverpassAssignmentCalendar] fetchOverpasses called");
     
     if (!satellite || !groundStation) {
@@ -120,7 +94,6 @@ export function OverpassAssignmentCalendar({
       setLoading(true);
       setError(null);
 
-      const satelliteId = satellite.id || 1;
       const dateRange = getDateRangeFromPeriod(timePeriod);
 
       console.log("[OverpassAssignmentCalendar] Fetching overpasses with params:", {
@@ -185,13 +158,14 @@ export function OverpassAssignmentCalendar({
     } finally {
       setLoading(false);
     }
-  }, [satellite, groundStation, timePeriod]);
+  };
 
   useEffect(() => {
-    console.log("[OverpassAssignmentCalendar] Component mounted/updated");
-    setIsMounted(true);
+    console.log("[OverpassAssignmentCalendar] Component mounted/updated - fetching overpasses");
     fetchOverpasses();
-  }, [fetchOverpasses]);
+    // Only depend on primitive values to avoid infinite loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [satelliteId, groundStationId, timePeriod]);
 
   const handleSelectOverpass = (overpass: APIOverpass) => {
     console.log("[OverpassAssignmentCalendar] Overpass selected:", {
@@ -246,275 +220,7 @@ export function OverpassAssignmentCalendar({
     }
   };
 
-  // Format time only
-  const formatTime = (dateString: string): string => {
-    if (!isMounted) return "";
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("da-DK", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-  };
 
-  // Calculate duration in minutes
-  const getDuration = (startTime: string, endTime: string): number => {
-    const start = new Date(startTime).getTime();
-    const end = new Date(endTime).getTime();
-    return Math.round((end - start) / (60 * 1000));
-  };
-
-  // Check if overpass is happening now
-  const isHappeningNow = (startTime: string, endTime: string): boolean => {
-    const now = new Date();
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-    return now >= start && now <= end;
-  };
-
-  // Determine pass quality based on elevation
-  const getPassQuality = (
-    elevation: number
-  ): {
-    quality: string;
-    variant: "default" | "secondary" | "outline";
-    color: string;
-  } => {
-    if (elevation >= 60)
-      return {
-        quality: "Excellent",
-        variant: "default",
-        color: "text-green-700 bg-green-100 border-green-200",
-      };
-    if (elevation >= 40)
-      return {
-        quality: "Great",
-        variant: "default",
-        color: "text-blue-700 bg-blue-100 border-blue-200",
-      };
-    if (elevation >= 25)
-      return {
-        quality: "Good",
-        variant: "secondary",
-        color: "text-orange-700 bg-orange-100 border-orange-200",
-      };
-    if (elevation >= 15)
-      return {
-        quality: "Fair",
-        variant: "outline",
-        color: "text-yellow-700 bg-yellow-100 border-yellow-200",
-      };
-    return {
-      quality: "Poor",
-      variant: "outline",
-      color: "text-red-700 bg-red-100 border-red-200",
-    };
-  };
-
-  // Group overpasses by date
-  const groupOverpassesByDate = (passes: APIOverpass[]) => {
-    const groups: { [key: string]: APIOverpass[] } = {};
-
-    passes.forEach((pass) => {
-      const date = new Date(pass.startTime);
-      const dateKey = date.toDateString();
-
-      if (!groups[dateKey]) {
-        groups[dateKey] = [];
-      }
-      groups[dateKey].push(pass);
-    });
-
-    return groups;
-  };
-
-  // Format date for display
-  const formatDateHeader = (dateString: string): string => {
-    if (!isMounted) return "";
-
-    const date = new Date(dateString);
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return "Today";
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      return "Tomorrow";
-    } else {
-      return date.toLocaleDateString("da-DK", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-      });
-    }
-  };
-
-  const renderContent = () => {
-    console.log("[OverpassAssignmentCalendar] renderContent called:", {
-      loading,
-      error,
-      overpassesCount: overpasses.length,
-      isMounted,
-    });
-
-    if (loading) {
-      return (
-        <div className="space-y-4 p-1">
-          <Skeleton className="w-full h-28 rounded-md" />
-          <Skeleton className="w-full h-28 rounded-md" />
-          <Skeleton className="w-full h-28 rounded-md" />
-        </div>
-      );
-    }
-
-    if (error) {
-      console.error("[OverpassAssignmentCalendar] Displaying error state:", error);
-      return (
-        <div className="p-4 border border-destructive/50 bg-destructive/10 rounded-md text-destructive">
-          <p>Error: {error}</p>
-        </div>
-      );
-    }
-
-    if (overpasses.length === 0) {
-      console.warn("[OverpassAssignmentCalendar] No overpasses available to display");
-      return (
-        <Card className="border-dashed border-2 border-muted-foreground/20">
-          <CardContent className="p-6 text-center">
-            <div className="flex flex-col items-center space-y-3">
-              <div className="relative">
-                <SatelliteIcon className="h-12 w-12 text-muted-foreground/40" />
-                <Eye className="h-4 w-4 absolute -bottom-1 -right-1 text-muted-foreground/60 bg-background rounded-full p-0.5" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-medium text-sm text-muted-foreground">
-                  No available overpass windows
-                </h3>
-                <p className="text-xs text-muted-foreground/80 max-w-xs">
-                  No unassigned passes found for{" "}
-                  <span className="font-medium">
-                    {groundStation?.name}
-                  </span>{" "}
-                  in the selected time period.
-                </p>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60 bg-muted/30 px-2 py-1 rounded-full">
-                <Info className="h-3 w-3" />
-                <span>Try selecting a different time period</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    if (!isMounted) {
-      return (
-        <div className="space-y-4 p-1">
-          <Skeleton className="w-full h-28 rounded-md" />
-          <Skeleton className="w-full h-28 rounded-md" />
-          <Skeleton className="w-full h-28 rounded-md" />
-        </div>
-      );
-    }
-
-    console.log("[OverpassAssignmentCalendar] Rendering overpass list:", {
-      count: overpasses.length,
-    });
-
-    return (
-      <ScrollArea className="h-full w-full">
-        <div className="space-y-4 p-1">
-          {(() => {
-            const groupedPasses = groupOverpassesByDate(overpasses);
-            const sortedDates = Object.keys(groupedPasses).sort(
-              (a, b) => new Date(a).getTime() - new Date(b).getTime()
-            );
-
-            return sortedDates.map((dateKey) => (
-              <div key={dateKey} className="space-y-3">
-                {/* Date Header */}
-                <div className="sticky top-0 bg-background/95 backdrop-blur-sm border-b pb-2 mb-3">
-                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    {formatDateHeader(dateKey)}
-                  </h3>
-                </div>
-
-                {/* Passes for this date */}
-                <div className="space-y-3">
-                  {groupedPasses[dateKey].map((pass, passIndex) => {
-                    const isNow = isHappeningNow(pass.startTime, pass.endTime);
-                    const passQuality = getPassQuality(pass.maxElevation);
-                    const duration = getDuration(pass.startTime, pass.endTime);
-                    const globalIndex = overpasses.findIndex(p => p === pass);
-
-                    return (
-                      <Card
-                        key={`${dateKey}-${passIndex}`}
-                        className={`transition-all hover:shadow-md cursor-pointer hover:border-primary/50 ${
-                          isNow ? "ring-2 ring-primary ring-offset-2" : ""
-                        }`}
-                        onClick={() => handleSelectOverpass(pass)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            {/* Left side - Time window */}
-                            <div className="flex items-center gap-4">
-                              <div className="flex items-center gap-1">
-                                {isNow && (
-                                  <ArrowUpRight className="h-4 w-4 text-primary" />
-                                )}
-                                <div className="text-sm font-medium">
-                                  Pass #{globalIndex + 1}
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-3 text-sm">
-                                <div className="flex items-center gap-1.5">
-                                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                                  <span className="font-mono">
-                                    {formatTime(pass.startTime)} -{" "}
-                                    {formatTime(pass.endTime)}
-                                  </span>
-                                </div>
-                                <div className="text-muted-foreground">
-                                  ({duration} min)
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Right side - Elevation and quality */}
-                            <div className="flex items-center gap-3">
-                              <div className="text-right">
-                                <div className="text-sm font-medium">
-                                  {pass.maxElevation.toFixed(1)}° max
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  at {formatTime(pass.maxElevationTime)}
-                                </div>
-                              </div>
-                              <Badge
-                                variant="outline"
-                                className={`${passQuality.color} border font-medium`}
-                              >
-                                {passQuality.quality}
-                              </Badge>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </div>
-            ));
-          })()}
-        </div>
-      </ScrollArea>
-    );
-  };
 
   return (
     <>
@@ -547,7 +253,17 @@ export function OverpassAssignmentCalendar({
               )}
             </span>
           </div>
-          <div className="flex-1 min-h-0">{renderContent()}</div>
+          <div className="flex-1 min-h-0">
+            <OverpassList
+              overpasses={overpasses}
+              loading={loading}
+              error={error}
+              isMounted={isMounted}
+              emptyMessage="No available overpass windows"
+              emptyDescription={`No unassigned passes found for ${groundStation?.name} in the selected time period.`}
+              onOverpassClick={handleSelectOverpass}
+            />
+          </div>
         </CardContent>
         <CardFooter className="pt-0 text-xs text-muted-foreground flex-shrink-0">
           <p>Only showing unassigned overpass windows • Minimum elevation: 5°</p>
@@ -568,7 +284,7 @@ export function OverpassAssignmentCalendar({
               <div className="bg-muted p-3 rounded-md space-y-1 text-sm">
                 <div>
                   <span className="font-medium">Time:</span>{" "}
-                  {formatTime(selectedOverpass.startTime)} - {formatTime(selectedOverpass.endTime)}
+                  {formatTime(selectedOverpass.startTime, isMounted)} - {formatTime(selectedOverpass.endTime, isMounted)}
                 </div>
                 <div>
                   <span className="font-medium">Duration:</span>{" "}
