@@ -39,6 +39,7 @@ import { FlightPlan } from "@/app/api/flight/types";
 import type { Satellite } from "@/app/api/satellites/types";
 import type { GroundStation } from "@/app/api/ground-stations/types";
 import { FlightPlanSkeleton } from "./flight-plan-skeleton";
+import Protected from "@/components/protected";
 
 // We are going to make some key changes to the flight planning page.
 // Creating a new flight plan is now going to take multiple steps.
@@ -328,14 +329,16 @@ export default function FlightPlanDetailPage() {
           
           {/* Show Assign to Overpass button when status is APPROVED or FAILED */}
           {(flightPlan.status === "APPROVED" || flightPlan.status === "FAILED") && (
-            <Button
-              variant="default"
-              onClick={() => router.push(`/platform/flight/${id}/assign-overpass`)}
-              disabled={isLoading}
-            >
-              <CalendarClock className="mr-2 h-4 w-4" />
-              {flightPlan.status === "FAILED" ? "Retry Transmission" : "Assign to Overpass"}
-            </Button>
+            <Protected requireOperator>
+              <Button
+                variant="default"
+                onClick={() => router.push(`/platform/flight/${id}/assign-overpass`)}
+                disabled={isLoading}
+              >
+                <CalendarClock className="mr-2 h-4 w-4" />
+                {flightPlan.status === "FAILED" ? "Retry Transmission" : "Assign to Overpass"}
+              </Button>
+            </Protected>
           )}
 
           {/* Show assigned overpass info when status is ASSIGNED_TO_OVERPASS */}
@@ -364,7 +367,7 @@ export default function FlightPlanDetailPage() {
             </div>
           )}
 
-          {/* <Protected scope=""> */}
+          <Protected requireOperator>
             <>
               <Button
                 variant="outline"
@@ -385,9 +388,9 @@ export default function FlightPlanDetailPage() {
                 Approve
               </Button>
             </>
-{/*           </Protected> */}
+          </Protected>
 
-          {/* <Protected scope=""> */}
+          <Protected requireOperator>
             <Button
               onClick={handleSave}
               disabled={isLoading || !hasChanges}
@@ -396,7 +399,7 @@ export default function FlightPlanDetailPage() {
               <Save className="mr-2 h-4 w-4" />
               {hasChanges ? "Save as New Version" : "No Changes"}
             </Button>
-          {/* </Protected> */}
+          </Protected>
           </div>
         </div>
       </div>
@@ -473,11 +476,22 @@ export default function FlightPlanDetailPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <CommandBuilder
-            commands={commands}
-            onCommandsChange={handleCommandsChange}
-            isReadOnly={false}
-          />
+          <Protected
+            requireOperator
+            fallback={
+              <CommandBuilder
+                commands={commands}
+                onCommandsChange={handleCommandsChange}
+                isReadOnly={true}
+              />
+            }
+          >
+            <CommandBuilder
+              commands={commands}
+              onCommandsChange={handleCommandsChange}
+              isReadOnly={false}
+            />
+          </Protected>
         </CardContent>
       </Card>
 

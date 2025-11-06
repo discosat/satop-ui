@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { getSatellites } from "@/app/api/satellites/satellite-service";
 import { getGroundStations } from "@/app/api/ground-stations/ground-station-service";
+import Protected from "@/components/protected";
 
 export default async function Page({}) {
 
@@ -24,12 +25,14 @@ export default async function Page({}) {
           </p>
         </div>
         <div>
-          <Link href="/platform/flight/new">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create new plan
-            </Button>
-          </Link>
+          <Protected requireOperator>
+            <Link href="/platform/flight/new">
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Create new plan
+              </Button>
+            </Link>
+          </Protected>
         </div>
       </div>
 

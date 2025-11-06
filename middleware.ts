@@ -7,6 +7,12 @@ export async function middleware(request: NextRequest) {
   // Public routes that don't require authentication
   const publicRoutes = ["/", "/login"];
   const isPublicRoute = publicRoutes.includes(path);
+  const isAuthRoute = path.startsWith("/auth/");
+  
+  // Let Auth0 handle its own routes first
+  if (isAuthRoute) {
+    return await auth0.middleware(request);
+  }
   
   // Get the session
   const session = await auth0.getSession(request);
@@ -17,11 +23,16 @@ export async function middleware(request: NextRequest) {
   }
   
   // If user is not authenticated and trying to access protected route, redirect to login
-  if (!session && !isPublicRoute && !path.startsWith("/auth")) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  if (!session && !isPublicRoute) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("returnTo", path);
+    return NextResponse.redirect(loginUrl);
   }
   
-  // Let Auth0 middleware handle its routes and maintain session
+  // For authenticated users accessing protected routes, we'll check authorization in the page/layout
+  // This keeps middleware fast and moves role checking to the server components
+  
+  // Let Auth0 middleware maintain session
   return await auth0.middleware(request);
 }
 
@@ -33,6 +44,6 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico, sitemap.xml, robots.txt (metadata files)
      */
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\..*|api).*)",
   ],
 };

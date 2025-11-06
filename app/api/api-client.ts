@@ -28,11 +28,7 @@ async function apiFetch(path: string, options: RequestInit = {}) {
         'Content-Type': 'application/json',
     };
 
-    // Access token is in tokenSet.accessToken (not access_token)
-    const accessToken = session && 'tokenSet' in session 
-        ? (session.tokenSet as { accessToken?: string }).accessToken 
-        : undefined;
-
+    const accessToken = session?.tokenSet.accessToken;
     if (accessToken) {
         headers['Authorization'] = `Bearer ${accessToken}`;
     }

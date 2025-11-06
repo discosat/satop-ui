@@ -27,6 +27,7 @@ import { Separator } from "@/components/ui/separator";
 import { Satellite } from "react-sat-map";
 import { RefreshButton } from "@/components/refresh-button";
 import type { GroundStation } from "@/app/api/ground-stations/types";
+import Protected, { useIsOperator } from "@/components/protected";
 import { getOverpassWindows } from "@/app/api/overpass/overpass-service";
 import { associateOverpass } from "@/app/api/flight/flight-plan-service";
 import type { 
@@ -68,6 +69,7 @@ export function OverpassAssignmentCalendar({
   const [selectedOverpass, setSelectedOverpass] = useState<APIOverpass | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
   const [associating, setAssociating] = useState<boolean>(false);
+  const isOperator = useIsOperator();
 
   // Store stable IDs to avoid dependency issues
   const satelliteId = satellite.id || 1;
@@ -253,6 +255,11 @@ export function OverpassAssignmentCalendar({
               )}
             </span>
           </div>
+          {!isOperator && (
+            <div className="mb-3 p-3 bg-muted/30 border border-muted rounded-md text-sm text-muted-foreground flex-shrink-0">
+              <p>You need operator permissions to assign overpasses to flight plans.</p>
+            </div>
+          )}
           <div className="flex-1 min-h-0">
             <OverpassList
               overpasses={overpasses}
@@ -261,7 +268,7 @@ export function OverpassAssignmentCalendar({
               isMounted={isMounted}
               emptyMessage="No available overpass windows"
               emptyDescription={`No unassigned passes found for ${groundStation?.name} in the selected time period.`}
-              onOverpassClick={handleSelectOverpass}
+              onOverpassClick={isOperator ? handleSelectOverpass : undefined}
             />
           </div>
         </CardContent>
@@ -306,9 +313,11 @@ export function OverpassAssignmentCalendar({
           )}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={associating}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmAssignment} disabled={associating}>
-              {associating ? "Assigning..." : "Confirm Assignment"}
-            </AlertDialogAction>
+            <Protected requireOperator>
+              <AlertDialogAction onClick={handleConfirmAssignment} disabled={associating}>
+                {associating ? "Assigning..." : "Confirm Assignment"}
+              </AlertDialogAction>
+            </Protected>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

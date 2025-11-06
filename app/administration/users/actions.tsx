@@ -28,8 +28,6 @@ export default function Actions({ user }: ActionsProps) {
     try {
       await updateUserPermissions(user.id, {
         role: updatedUser.role,
-        additionalRoles: updatedUser.additionalRoles,
-        additionalScopes: updatedUser.additionalScopes,
       });
       setEditDialogOpen(false);
       router.refresh();

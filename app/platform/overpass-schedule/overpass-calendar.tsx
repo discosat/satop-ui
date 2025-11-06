@@ -77,6 +77,7 @@ import {
   getPassQuality,
 } from "@/components/overpass/overpass-utils";
 import { OverpassList } from "@/components/overpass/overpass-list";
+import Protected from "@/components/protected";
 
 interface OverpassCalendarProps {
   satelliteName: string;
@@ -293,16 +294,18 @@ export function OverpassCalendar({
         </TooltipProvider>
       )}
       {!pass.associatedFlightPlan?.id && (
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => {
-            setAssociateTarget(pass);
-            setAssociateOpen(true);
-          }}
-        >
-          Associate
-        </Button>
+        <Protected requireOperator fallback={<div ></div>}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setAssociateTarget(pass);
+              setAssociateOpen(true);
+            }}
+          >
+            Associate
+          </Button>
+        </Protected>
       )}
     </>
   );
@@ -564,38 +567,40 @@ export function OverpassCalendar({
             <Button variant="outline" onClick={() => setAssociateOpen(false)}>
               Cancel
             </Button>
-            <Button
-              disabled={
-                !associateTarget ||
-                !selectedFlightPlanId ||
-                associating ||
-                flightPlans.length === 0
-              }
-              onClick={async () => {
-                if (!associateTarget || !selectedFlightPlanId) return;
-                setAssociating(true);
-                try {
-                  await associateOverpass(Number(selectedFlightPlanId), {
-                    startTime: associateTarget.startTime,
-                    endTime: associateTarget.endTime,
-                  });
-                  toast.success("Overpass associated to flight plan");
-                  setAssociateOpen(false);
-                  setAssociateTarget(null);
-                  await fetchOverpasses();
-                } catch (err) {
-                  const msg =
-                    err instanceof Error
-                      ? err.message
-                      : "Failed to associate overpass";
-                  toast.error("Association failed", { description: msg });
-                } finally {
-                  setAssociating(false);
+            <Protected requireOperator>
+              <Button
+                disabled={
+                  !associateTarget ||
+                  !selectedFlightPlanId ||
+                  associating ||
+                  flightPlans.length === 0
                 }
-              }}
-            >
-              {associating ? "Associating..." : "Associate"}
-            </Button>
+                onClick={async () => {
+                  if (!associateTarget || !selectedFlightPlanId) return;
+                  setAssociating(true);
+                  try {
+                    await associateOverpass(Number(selectedFlightPlanId), {
+                      startTime: associateTarget.startTime,
+                      endTime: associateTarget.endTime,
+                    });
+                    toast.success("Overpass associated to flight plan");
+                    setAssociateOpen(false);
+                    setAssociateTarget(null);
+                    await fetchOverpasses();
+                  } catch (err) {
+                    const msg =
+                      err instanceof Error
+                        ? err.message
+                        : "Failed to associate overpass";
+                    toast.error("Association failed", { description: msg });
+                  } finally {
+                    setAssociating(false);
+                  }
+                }}
+              >
+                {associating ? "Associating..." : "Associate"}
+              </Button>
+            </Protected>
           </DialogFooter>
         </DialogContent>
       </Dialog>

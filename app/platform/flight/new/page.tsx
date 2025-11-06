@@ -40,6 +40,7 @@ import type { Satellite } from "@/app/api/satellites/types";
 import { getGroundStations } from "@/app/api/ground-stations/ground-station-service";
 import type { GroundStation } from "@/app/api/ground-stations/types";
 import { Command } from "../components/commands/command";
+import Protected from "@/components/protected";
 
 const formSchema = z.object({
   name: z
@@ -303,10 +304,19 @@ export default function NewFlightPlanPage() {
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold">Commands</h2>
                 </div>
-                <CommandBuilder
-                  commands={commands}
-                  onCommandsChange={setCommands}
-                />
+                <Protected
+                  requireOperator
+                  fallback={
+                    <div className="text-center py-8 text-muted-foreground">
+                      You need operator permissions to create flight plans.
+                    </div>
+                  }
+                >
+                  <CommandBuilder
+                    commands={commands}
+                    onCommandsChange={setCommands}
+                  />
+                </Protected>
               </div>
 
               <div className="flex justify-end gap-2">
@@ -317,25 +327,27 @@ export default function NewFlightPlanPage() {
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={
-                    isSubmitting ||
-                    !!satellitesError ||
-                    !!groundStationsError ||
-                    satellites.length === 0 ||
-                    groundStations.length === 0 ||
-                    commands.length === 0
-                  }
-                  title={
-                    commands.length === 0 
-                      ? "Add at least one command to create a flight plan" 
-                      : "Create flight plan"
-                  }
-                  className={commands.length === 0 ? "opacity-50" : ""}
-                >
-                  {isSubmitting ? "Creating..." : "Create Flight Plan"}
-                </Button>
+                <Protected requireOperator>
+                  <Button
+                    type="submit"
+                    disabled={
+                      isSubmitting ||
+                      !!satellitesError ||
+                      !!groundStationsError ||
+                      satellites.length === 0 ||
+                      groundStations.length === 0 ||
+                      commands.length === 0
+                    }
+                    title={
+                      commands.length === 0 
+                        ? "Add at least one command to create a flight plan" 
+                        : "Create flight plan"
+                    }
+                    className={commands.length === 0 ? "opacity-50" : ""}
+                  >
+                    {isSubmitting ? "Creating..." : "Create Flight Plan"}
+                  </Button>
+                </Protected>
               </div>
               {commands.length === 0 && (
                 <div className="text-sm text-muted-foreground text-center mt-2 p-3 bg-muted/30 rounded-lg border border-dashed">

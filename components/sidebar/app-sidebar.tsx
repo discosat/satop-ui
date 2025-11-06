@@ -21,24 +21,28 @@ const data = {
       url: "/platform",
       icon: House,
       isActive: false,
+      requiredRole: "VIEWER" as const,
     },
     {
       title: "Flight planning",
       url: "/platform/flight",
       icon: Notebook,
       isActive: false,
+      requiredRole: "VIEWER" as const,
     },
     {
       title: "Overpass schedule",
       url: "/platform/overpass-schedule",
       icon: Calendar,
       isActive: false,
+      requiredRole: "VIEWER" as const,
     },
     {
       title: "Satellite tracking",
       url: "/platform/satellite-tracking",
       icon: Radio,
       isActive: false,
+      requiredRole: "VIEWER" as const,
     },
   ],
   administration: [
@@ -47,24 +51,28 @@ const data = {
       url: "/administration",
       icon: House,
       isActive: false,
+      requiredRole: "ADMIN" as const,
     },
     {
       title: "Ground stations",
       url: "/administration/ground-stations",
       icon: SatelliteDish,
       isActive: false,
+      requiredRole: "ADMIN" as const,
     },
     {
       title: "Satellites",
       url: "/administration/satellites",
       icon: Satellite,
       isActive: false,
+      requiredRole: "ADMIN" as const,
     },
     {
       title: "Users",
       url: "/administration/users",
       icon: User,
       isActive: false,
+      requiredRole: "ADMIN" as const,
     },
   ],
 };
@@ -78,6 +86,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarContent>
         <NavMain items={data.platform} groupLabel="Platform" />
+        {/* Administration section will only show if user has ADMIN role */}
         <NavMain items={data.administration} groupLabel="Administration" />
       </SidebarContent>
 
