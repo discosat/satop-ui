@@ -3,7 +3,7 @@
 import { revalidateTag } from 'next/cache';
 import { mockUsers } from "./mock";
 import { apiClient } from "@/app/api/api-client";
-import type { User, UpdateUserPayload, UpdateUserPermissionsPayload } from "./types";
+import type { User, UpdateUserPermissionsPayload } from "./types";
 
 const API_PATH = '/users';
 
@@ -31,30 +31,15 @@ export async function getUserById(id: number): Promise<User | null> {
   }
 }
 
-export async function updateUser(id: number, payload: UpdateUserPayload): Promise<User | null> {
+export async function GetUserMe(): Promise<User | null> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
-    const index = mockUsers.findIndex((u) => u.id === id);
-    if (index !== -1) {
-      mockUsers[index] = {
-        ...mockUsers[index],
-        ...payload,
-        updatedAt: new Date().toISOString(),
-      };
-      revalidateTag('users');
-      revalidateTag(`users:${id}`);
-      return mockUsers[index];
-    }
-    return null;
+    return mockUsers[0] || null;
   }
-
   try {
-    const result = await apiClient.put<UpdateUserPayload, User>(`${API_PATH}/${id}`, payload);
-    revalidateTag('users');
-    revalidateTag(`users:${id}`);
-    return result;
+    return await apiClient.get<User>(`${API_PATH}/me`);
   } catch (error) {
-    console.error(`Error updating user ${id}:`, error);
-    throw error;
+    console.error("Error fetching current user:", error);
+    return null;
   }
 }
 

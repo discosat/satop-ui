@@ -1,65 +1,52 @@
-import "server-only";
-import { EncryptJWT, JWTPayload, jwtDecrypt, base64url } from "jose";
-import { cookies } from "next/headers";
+// lib/session.ts
+"use server";
 
-export interface SessionPayload extends JWTPayload {
-  userID: string;
-  name: string;
-  role: "admin" | "scientist" | "viewer" ;
-  email: string;
-  scopes: string[];
-  accessToken: string;
-  refreshToken: string;
-}
+import { auth0 } from "./auth0";
+import { GetUserMe } from "@/app/api/users/users-service";
+import type { SessionPayload } from "./types";
 
-const SESSION_KEY = "SESSION";
-const SECRET_KEY = process.env.SESSION_COOKIE_SECRET;
-const EXPIRES_IN = 7 * 24 * 60 * 60 * 1000;
-
-const encodedKey = base64url.decode(SECRET_KEY!);
-
-export async function encrypt(payload: SessionPayload) {
-  return new EncryptJWT(payload)
-    .setProtectedHeader({ alg: "dir", enc: "A128CBC-HS256" })
-    .setIssuedAt()
-    .setExpirationTime("7d")
-    .encrypt(encodedKey);
-}
-
-export async function decrypt(session: string | undefined = "") {
+/**
+ * Get the current session with user data from backend
+ * This combines Auth0 authentication with backend authorization
+ */
+export async function getSession(): Promise<SessionPayload | null> {
   try {
-    const { payload } = await jwtDecrypt<SessionPayload>(session, encodedKey);
-    return payload;
-  } catch (error: unknown) {
-    console.log("Failed to verify session", error);
+    // Get Auth0 session
+    const auth0Session = await auth0.getSession();
+    
+    if (!auth0Session) {
+      return null;
+    }
+
+    // Get user data from backend (includes role)
+    const user = await GetUserMe();
+    
+    if (!user) {
+      // User authenticated with Auth0 but not found in backend
+      console.warn("User authenticated with Auth0 but not found in backend");
+      return null;
+    }
+
+    return {
+      user,
+      isAuthenticated: true,
+      accessToken: auth0Session.tokenSet.accessToken,
+    };
+  } catch (error) {
+    console.error("Error getting session:", error);
+    return null;
   }
 }
 
-export async function createSession(payload: SessionPayload) {
-  const expiresAt = new Date(Date.now() + EXPIRES_IN);
-  const session = await encrypt(payload);
-  const cookieStore = await cookies();
-
-  cookieStore.set(SESSION_KEY, session, {
-    httpOnly: true,
-    secure: true,
-    expires: expiresAt,
-    sameSite: "lax",
-    path: "/",
-  });
-}
-
-export async function currentSession(): Promise<SessionPayload | null> {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get(SESSION_KEY);
-  if (!sessionCookie) return null;
-
-  const payload = await decrypt(sessionCookie.value);
-  if (!payload) return null;
-  return payload;
-}
-
-export async function destroySession() {
-  const cookieStore = await cookies();
-  cookieStore.delete(SESSION_KEY);
+/**
+ * Get access token for API calls
+ */
+export async function getAccessToken(): Promise<string | null> {
+  try {
+    const auth0Session = await auth0.getSession();
+    return auth0Session?.tokenSet.accessToken || null;
+  } catch (error) {
+    console.error("Error getting access token:", error);
+    return null;
+  }
 }

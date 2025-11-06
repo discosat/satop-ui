@@ -15,8 +15,8 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { useSession } from "@/app/context";
-import { hasScope } from "@/lib/user";
-import { SessionPayload } from "@/lib/session";
+import type { SessionPayload } from "@/lib/types";
+import type { UserRole } from "@/app/api/users/types";
 
 export function NavMain({
   items,
@@ -27,11 +27,11 @@ export function NavMain({
     url: string;
     icon: LucideIcon;
     isActive?: boolean;
-    scope?: string;
+    requiredRole?: UserRole;
     items?: {
       title: string;
       url: string;
-      scope?: string;
+      requiredRole?: UserRole;
     }[];
   }[];
   groupLabel?: string;
@@ -44,11 +44,18 @@ export function NavMain({
     setMounted(true);
   }, []);
 
+  const filteredItems = allowedItems(session, items);
+
+  // Don't render the group if there are no allowed items
+  if (filteredItems.length === 0) {
+    return null;
+  }
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{groupLabel}</SidebarGroupLabel>
       <SidebarMenu>
-        {allowedItems(session, items).map((item) => {
+        {filteredItems.map((item) => {
           // Only calculate active state after mount to avoid hydration errors
           const isActive = mounted && pathname === item.url;
           const hasActiveSubItem = mounted && item.items?.some(
@@ -92,11 +99,34 @@ export function NavMain({
   );
 }
 
-function allowedItems<T extends { scope?: string }>(
+/**
+ * Filter items based on user's role
+ */
+function allowedItems<T extends { requiredRole?: UserRole }>(
   session: SessionPayload | null,
   items: T[]
-) {
-  return items.filter(({ scope }) => {
-    return !scope || hasScope(session, scope);
+): T[] {
+  // No session means no access
+  if (!session) {
+    return [];
+  }
+
+  const roleHierarchy: Record<UserRole, number> = {
+    VIEWER: 1,
+    OPERATOR: 2,
+    ADMIN: 3,
+  };
+
+  const userRoleLevel = roleHierarchy[session.user.role];
+
+  return items.filter((item) => {
+    // If no role requirement, allow access
+    if (!item.requiredRole) {
+      return true;
+    }
+
+    // Check if user's role meets the requirement
+    const requiredRoleLevel = roleHierarchy[item.requiredRole];
+    return userRoleLevel >= requiredRoleLevel;
   });
 }

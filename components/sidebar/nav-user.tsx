@@ -18,18 +18,24 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { logout } from "@/app/actions/logout";
-import { useSession } from "@/app/context";
 import { useTheme } from "next-themes";
+import { useSession } from "@/app/context";
+
 
 export function NavUser() {
   const { isMobile } = useSidebar();
   const { setTheme, theme } = useTheme();
-  const user = useSession();
+  const session = useSession();
 
-  if (!user) {
+  const logout = async () => {
+    window.location.href = "/auth/logout";
+  };
+
+  if (!session?.user) {
     return <div>no user! 🫨</div>;
   }
+
+  const user = session.user;
 
   return (
     <SidebarMenu>
@@ -44,7 +50,7 @@ export function NavUser() {
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarFallback className="rounded-lg">{user.name
                   .split(" ")
-                  .map((n) => n[0])
+                  .map((n: string) => n[0])
                   .join("")}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -66,12 +72,13 @@ export function NavUser() {
                   
                   <AvatarFallback className="rounded-lg">{user.name
                   .split(" ")
-                  .map((n) => n[0])
+                  .map((n: string) => n[0])
                   .join("")}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">{user.name}</span>
                   <span className="truncate text-xs">{user.email}</span>
+                  <span className="truncate text-xs opacity-70">Role: {user.role}</span>
                 </div>
               </div>
             </DropdownMenuLabel>

@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { Satellite } from "react-sat-map";
+import { useState } from "react";
 import type { GroundStation } from "@/app/api/ground-stations/types";
 import { SatelliteSelect } from "../../../components/satellite-select";
 import { GroundStationSelect } from "../../../components/ground-station-select";
@@ -9,9 +8,10 @@ import { TimePeriodSelect, TimePeriod } from "./time-period-select";
 import { OverpassCalendar } from "./overpass-calendar";
 import { RefreshButton } from "@/components/refresh-button";
 import { Separator } from "@/components/ui/separator";
+import { Satellite } from "@/app/api/satellites/types";
 
 interface SatelliteOverpassClientProps {
-  satellites: (Satellite & { id: number })[];
+  satellites: Satellite[];
   groundStations: GroundStation[];
 }
 
@@ -19,32 +19,15 @@ export function SatelliteOverpassClient({
   satellites,
   groundStations,
 }: SatelliteOverpassClientProps) {
-  // State for selections - use empty string as default to prevent hydration mismatches
-  const [selectedSatellite, setSelectedSatellite] = useState<string>("");
-  const [selectedGroundStation, setSelectedGroundStation] = useState<string>("");
+  // State for selections - initialize with first items or empty string
+  const [selectedSatellite, setSelectedSatellite] = useState<string>(() => 
+    satellites.length > 0 ? satellites[0].name : ""
+  );
+  const [selectedGroundStationId, setSelectedGroundStationId] = useState<string>(() =>
+    groundStations.length > 0 ? groundStations[0].id.toString() : ""
+  );
   const [selectedTimePeriod, setSelectedTimePeriod] = useState<TimePeriod>("next-3-days");
   const [refreshKey, setRefreshKey] = useState(0);
-
-  // Initialize default selections on first render to prevent hydration issues
-  useEffect(() => {
-    if (selectedSatellite === "" && satellites.length > 0) {
-      setSelectedSatellite(satellites[0].name);
-    }
-    if (selectedGroundStation === "" && groundStations.length > 0) {
-      setSelectedGroundStation(groundStations[0].id.toString());
-    }
-  }, [satellites, groundStations, selectedSatellite, selectedGroundStation]);
-
-  // Get filtered data based on selections
-  const filteredSatellites = useMemo(() => {
-    if (!selectedSatellite) return satellites;
-    return satellites.filter(sat => sat.name === selectedSatellite);
-  }, [satellites, selectedSatellite]);
-
-  const selectedGroundStationData = useMemo(() => {
-    if (!selectedGroundStation) return null;
-    return groundStations.find(gs => gs.id.toString() === selectedGroundStation);
-  }, [groundStations, selectedGroundStation]);
 
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);
@@ -61,8 +44,8 @@ export function SatelliteOverpassClient({
         />
         <GroundStationSelect
           groundStations={groundStations}
-          selectedGroundStation={selectedGroundStation}
-          onGroundStationChange={setSelectedGroundStation}
+          selectedGroundStation={selectedGroundStationId}
+          onGroundStationChange={setSelectedGroundStationId}
         />
         <TimePeriodSelect
           selectedPeriod={selectedTimePeriod}
@@ -78,10 +61,12 @@ export function SatelliteOverpassClient({
       {/* Overpass Calendar */}
       <div className="flex-1 min-h-0 overflow-hidden">
         <OverpassCalendar 
-          key={`calendar-${refreshKey}`}
-          satellites={filteredSatellites}
-          groundStation={selectedGroundStationData}
+          key={refreshKey}
+          satelliteName={selectedSatellite}
+          groundStationId={selectedGroundStationId}
           timePeriod={selectedTimePeriod}
+          satellites={satellites}
+          groundStations={groundStations}
         />
       </div>
     </div>

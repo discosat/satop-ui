@@ -1,5 +1,7 @@
 "use client";
 import * as React from "react";
+import { useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import {
   Breadcrumb,
@@ -16,15 +18,36 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { useSession } from "@/app/context";
+import { canAccessPlatform } from "@/lib/authorization";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = useSession();
+  const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!session) {
+      router.push(`/login?returnTo=${encodeURIComponent(pathname || "/platform")}`);
+      return;
+    }
+
+    // Redirect to unauthorized if user doesn't have platform access
+    if (!canAccessPlatform(session.user.role)) {
+      router.push("/unauthorized");
+    }
+  }, [session, router, pathname]);
+
+  // Show loading or nothing while checking authentication
+  if (!session || !canAccessPlatform(session.user.role)) {
+    return null;
+  }
 
   // Generate breadcrumb items from pathname
   const getBreadcrumbs = () => {
