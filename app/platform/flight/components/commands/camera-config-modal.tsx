@@ -213,10 +213,10 @@ export function CameraConfigModal({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
+          <Button type="button" variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save Configuration</Button>
+          <Button type="button" onClick={handleSave}>Save Configuration</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

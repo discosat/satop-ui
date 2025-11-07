@@ -409,6 +409,7 @@ function CommandItem({
             transition={{ duration: 0.1 }}
           >
             <Button
+              type="button"
               variant="ghost"
               size="icon"
               className={`h-8 w-8 transition-colors ${
@@ -430,6 +431,7 @@ function CommandItem({
             transition={{ duration: 0.1 }}
           >
             <Button
+              type="button"
               variant="ghost"
               size="icon"
               className={`h-8 w-8 transition-colors ${
@@ -451,6 +453,7 @@ function CommandItem({
             transition={{ duration: 0.1 }}
           >
             <Button
+              type="button"
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors"

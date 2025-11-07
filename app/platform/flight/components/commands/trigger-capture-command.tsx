@@ -56,6 +56,7 @@ export function TriggerCaptureCommand({
             <h4 className="font-semibold">Trigger Capture</h4>
           </div>
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={() => setConfigModalOpen(true)}
@@ -122,6 +123,7 @@ export function TriggerCaptureCommand({
           </div>
           {onOpenMap && (
             <Button
+              type="button"
               variant="outline"
               size="sm"
               onClick={onOpenMap}
