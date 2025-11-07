@@ -28,12 +28,14 @@ interface CommandBuilderProps {
   commands: Command[];
   onCommandsChange: (commands: Command[]) => void;
   isReadOnly?: boolean;
+  satelliteId?: number;
 }
 
 export function CommandBuilder({
   commands,
   onCommandsChange,
   isReadOnly = false,
+  satelliteId,
 }: CommandBuilderProps) {
   const [selectedCommandType, setSelectedCommandType] = useState<
     CommandType | ""
@@ -247,7 +249,7 @@ export function CommandBuilder({
                     ease: [0.4, 0.0, 0.2, 1],
                     layout: { duration: 0.4, ease: [0.4, 0.0, 0.2, 1] }
                   }}
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.009 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <CommandItem
@@ -261,6 +263,7 @@ export function CommandBuilder({
                     isReadOnly={isReadOnly}
                     draggable={!isReadOnly}
                     isDragOver={dragOverId === command.id}
+                    satelliteId={satelliteId}
 
                     onDragStartItem={() => {
                       setDraggedId(command.id);
@@ -309,6 +312,7 @@ export function CommandBuilder({
             : undefined
         }
         onCoordinateSelect={handleCoordinateSelect}
+        satelliteId={satelliteId}
       />
     </div>
   );
@@ -330,6 +334,7 @@ interface CommandItemProps {
   onDragLeaveItem?: () => void;
   onDropOnItem?: () => void;
   openMapForCommand?: (commandId: string) => void;
+  satelliteId?: number;
 }
 
 function CommandItem({
@@ -348,6 +353,7 @@ function CommandItem({
   onDragLeaveItem,
   onDropOnItem,
   openMapForCommand,
+  satelliteId,
 }: CommandItemProps) {
   return (
     <div
@@ -391,6 +397,7 @@ function CommandItem({
             command={command}
             onUpdate={onUpdate}
             onOpenMap={openMapForCommand ? () => openMapForCommand(command.id) : undefined}
+            satelliteId={satelliteId}
           />
         ) : (
           <TriggerPipelineCommand

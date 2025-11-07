@@ -22,10 +22,10 @@ const ORDERED_STEPS: {
   key: Exclude<StepKey, "REJECTED" | "SUPERSEDED">;
   label: string;
 }[] = [
-  { key: "DRAFT", label: "Create" },
-  { key: "APPROVED", label: "Approve" },
+  { key: "DRAFT", label: "Create flight plan" },
+  { key: "APPROVED", label: "Review and Approve" },
   { key: "ASSIGNED_TO_OVERPASS", label: "Assign to overpass" },
-  { key: "TRANSMITTED", label: "Transmit" },
+  { key: "TRANSMITTED", label: "Transmit to ground station" },
 ];
 
 function getActiveIndex(status: StepKey): number {

@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Map, {
   Marker,
   NavigationControl,
@@ -15,8 +15,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { MapPin, X } from "lucide-react";
+import { MapPin, X, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
   Dialog,
@@ -25,6 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getImagingOpportunities } from "@/app/api/flight/flight-plan-service";
 
 interface Coordinate {
   x: number;
@@ -36,6 +38,7 @@ interface CoordinateMapProps {
   selectedCoordinate?: Coordinate;
   onClose?: () => void;
   dialogOpen?: boolean;
+  satelliteId?: number;
 }
 
 export function CoordinateMap({
@@ -43,6 +46,7 @@ export function CoordinateMap({
   selectedCoordinate,
   onClose,
   dialogOpen,
+  satelliteId,
 }: CoordinateMapProps) {
   const theme = useTheme();
   const [viewState, setViewState] = useState({
@@ -51,6 +55,112 @@ export function CoordinateMap({
     zoom: selectedCoordinate ? 4 : 1.5,
   });
   const [hoveredCoord, setHoveredCoord] = useState<Coordinate | null>(null);
+  const [validationState, setValidationState] = useState<{
+    isValidating: boolean;
+    isValid: boolean | null;
+    error: string | null;
+    imagingTime?: string;
+    offNadirDegrees?: number;
+  }>({
+    isValidating: false,
+    isValid: null,
+    error: null,
+  });
+  const validationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastValidatedRef = useRef<{ lat: number; lon: number; satId: number } | null>(null);
+
+  // Validation function
+  const validateCoordinates = useCallback(async (
+    latitude: number,
+    longitude: number,
+    satId: number
+  ) => {
+    // Check if we've already validated these exact coordinates
+    if (
+      lastValidatedRef.current &&
+      lastValidatedRef.current.lat === latitude &&
+      lastValidatedRef.current.lon === longitude &&
+      lastValidatedRef.current.satId === satId
+    ) {
+      return; // Skip validation if coordinates haven't changed
+    }
+
+    try {
+      setValidationState(prev => ({ ...prev, isValidating: true, error: null }));
+      
+      const result = await getImagingOpportunities({
+        satelliteId: satId,
+        targetLatitude: latitude,
+        targetLongitude: longitude,
+      });
+
+      // Update last validated coordinates
+      lastValidatedRef.current = { lat: latitude, lon: longitude, satId };
+
+      if (result) {
+        setValidationState({
+          isValidating: false,
+          isValid: true,
+          error: null,
+          imagingTime: result.imagingTime,
+          offNadirDegrees: result.offNadirDegrees,
+        });
+      } else {
+        setValidationState({
+          isValidating: false,
+          isValid: false,
+          error: "Unable to image these coordinates with the selected satellite.",
+        });
+      }
+    } catch (error) {
+      setValidationState({
+        isValidating: false,
+        isValid: false,
+        error: error instanceof Error ? error.message : "Failed to validate coordinates.",
+      });
+    }
+  }, []);
+
+  // Effect to trigger debounced validation when coordinates change
+  useEffect(() => {
+    if (validationTimeoutRef.current) {
+      clearTimeout(validationTimeoutRef.current);
+    }
+
+    if (!satelliteId || !selectedCoordinate) {
+      setValidationState({
+        isValidating: false,
+        isValid: null,
+        error: null,
+      });
+      lastValidatedRef.current = null;
+      return;
+    }
+
+    // Check if coordinates have actually changed
+    if (
+      lastValidatedRef.current &&
+      lastValidatedRef.current.lat === selectedCoordinate.y &&
+      lastValidatedRef.current.lon === selectedCoordinate.x &&
+      lastValidatedRef.current.satId === satelliteId
+    ) {
+      return; // Skip if coordinates haven't changed
+    }
+
+    validationTimeoutRef.current = setTimeout(() => {
+      validateCoordinates(
+        selectedCoordinate.y,
+        selectedCoordinate.x,
+        satelliteId
+      );
+    }, 800);
+
+    return () => {
+      if (validationTimeoutRef.current) {
+        clearTimeout(validationTimeoutRef.current);
+      }
+    };
+  }, [selectedCoordinate, satelliteId, validateCoordinates]);
 
   // Reset view to fully zoomed out when dialog opens
   useEffect(() => {
@@ -204,6 +314,52 @@ export function CoordinateMap({
               </div>
             )}
           </div>
+
+          {/* Validation Status */}
+          {satelliteId && selectedCoordinate && (
+            <div className="mt-3">
+              {validationState.isValidating && (
+                <Alert className="border-blue-500/50 bg-blue-500/10">
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                  <AlertDescription className="ml-2">
+                    Validating coordinates...
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {!validationState.isValidating && validationState.isValid === true && (
+                <Alert className="border-green-500/50 bg-green-500/10">
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  <AlertDescription className="ml-2">
+                    <div className="space-y-1">
+                      <div className="font-medium">Valid imaging opportunity</div>
+                      {validationState.imagingTime && (
+                        <div className="text-xs text-muted-foreground">
+                          Imaging time: {new Date(validationState.imagingTime).toLocaleString()}
+                        </div>
+                      )}
+                      {validationState.offNadirDegrees !== undefined && (
+                        <div className="text-xs text-muted-foreground">
+                          Off-nadir angle: {validationState.offNadirDegrees.toFixed(2)}°
+                        </div>
+                      )}
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {!validationState.isValidating && validationState.isValid === false && (
+                <Alert className="border-destructive/50 bg-destructive/10">
+                  <AlertCircle className="h-4 w-4 text-destructive" />
+                  <AlertDescription className="ml-2">
+                    <div className="font-medium text-destructive">
+                      {validationState.error || "Cannot image these coordinates"}
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -216,11 +372,13 @@ export function CoordinateMapDialog({
   onOpenChange,
   selectedCoordinate,
   onCoordinateSelect,
+  satelliteId,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedCoordinate?: Coordinate;
   onCoordinateSelect: (coordinate: Coordinate) => void;
+  satelliteId?: number;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -235,6 +393,7 @@ export function CoordinateMapDialog({
           dialogOpen={open}
           selectedCoordinate={selectedCoordinate}
           onCoordinateSelect={onCoordinateSelect}
+          satelliteId={satelliteId}
         />
       </DialogContent>
     </Dialog>

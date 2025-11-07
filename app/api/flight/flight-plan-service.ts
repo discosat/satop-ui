@@ -178,7 +178,24 @@ export async function compileFlightPlanToCsh(id: number): Promise<CompileToCshRe
   }
 
   try {
-    return await apiClient.get<CompileToCshResult>(`${API_PATH}/${id}/csh`);
+    const result = await apiClient.get<CompileToCshResult | string[]>(`${API_PATH}/${id}/csh`);
+    console.log(`CSH compilation response for flight plan ${id}:`, JSON.stringify(result, null, 2));
+    
+    // Handle different response formats
+    // Case 1: Response is already in the expected format { script: string[] }
+    if (result && typeof result === 'object' && 'script' in result && Array.isArray(result.script)) {
+      return result as CompileToCshResult;
+    }
+    
+    // Case 2: Response is a plain array of strings (backend returns array directly)
+    if (Array.isArray(result)) {
+      console.log('Backend returned script as array directly, wrapping in expected format');
+      return { script: result };
+    }
+    
+    // Case 3: Unexpected format
+    console.error('Unexpected CSH response format:', result);
+    return null;
   } catch (error) {
     console.error(`Error compiling flight plan ${id} to CSH:`, error);
     return null;

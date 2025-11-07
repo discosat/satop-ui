@@ -247,8 +247,13 @@ export default function FlightPlanDetailPage() {
     try {
       // Load the compiled script
       const cshResult = await compileFlightPlanToCsh(flightPlan.id);
+      console.log("CSH compilation result:", cshResult);
+      
       if (cshResult?.script) {
         setCompiledScript(cshResult.script);
+      } else {
+        console.warn("No script property in CSH result:", cshResult);
+        toast.error("Compiled script format is invalid");
       }
     } catch (error) {
       console.error("Error loading compiled script:", error);
@@ -483,6 +488,7 @@ export default function FlightPlanDetailPage() {
                 commands={commands}
                 onCommandsChange={handleCommandsChange}
                 isReadOnly={true}
+                satelliteId={flightPlan?.satId}
               />
             }
           >
@@ -490,13 +496,14 @@ export default function FlightPlanDetailPage() {
               commands={commands}
               onCommandsChange={handleCommandsChange}
               isReadOnly={false}
+              satelliteId={flightPlan?.satId}
             />
           </Protected>
         </CardContent>
       </Card>
 
       {/* Approve Dialog */}
-      <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
+      <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog} >
         <AlertDialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
           <AlertDialogHeader>
             <AlertDialogTitle>Review & Approve Flight Plan</AlertDialogTitle>
@@ -516,11 +523,11 @@ export default function FlightPlanDetailPage() {
             ) : compiledScript && compiledScript.length > 0 ? (
               <div className="space-y-3">
                 <div className="text-sm font-semibold">Compiled Command Script:</div>
-                <div className="bg-slate-950 rounded-lg p-4 font-mono text-xs text-green-400 overflow-x-auto border border-slate-700 shadow-lg">
+                <div className="bg-card rounded-lg p-4 font-mono text-xs text-green-400 overflow-x-auto border border-primary-foreground">
                   <div className="space-y-1">
                     {compiledScript.map((line, idx) => (
-                      <div key={idx} className="flex hover:bg-slate-900 px-2 py-0.5 rounded transition-colors">
-                        <span className="mr-4 text-slate-600 select-none w-12 text-right">{idx + 1}</span>
+                      <div key={idx} className="flex hover:bg-primary/10 px-2 py-0.5 rounded transition-colors">
+                        <span className="mr-4 text-muted-foreground select-none w-12 text-right">{idx + 1}</span>
                         <span className="flex-1">{line}</span>
                       </div>
                     ))}

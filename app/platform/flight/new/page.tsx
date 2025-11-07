@@ -315,6 +315,7 @@ export default function NewFlightPlanPage() {
                   <CommandBuilder
                     commands={commands}
                     onCommandsChange={setCommands}
+                    satelliteId={form.watch("satId") ? parseInt(form.watch("satId")) : undefined}
                   />
                 </Protected>
               </div>
