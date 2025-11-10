@@ -17,6 +17,19 @@ export interface ImagingOpportunity {
   message: string;
 }
 
+export interface FlightPlanImage {
+  imageId: number;
+  flightPlanId: number;
+  fileName: string;
+  captureTime: string;
+  url: string;
+  expiresAt: string;
+  contentType: string;
+  fileSize: number;
+  latitude: number;
+  longitude: number;
+}
+
 export type FlightPlanStatus = "DRAFT" | "APPROVED" | "REJECTED" | "ASSIGNED_TO_OVERPASS"| "SUPERSEDED" | "TRANSMITTED" | "FAILED";
 export interface FlightPlan {
   id: number;
@@ -28,6 +41,9 @@ export interface FlightPlan {
   scheduledAt?: string;
   commands: object[];
   status: FlightPlanStatus;
-  approverId?: string;
+  createdById?: number;
+  approvedById?: number;
   approvalDate?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }

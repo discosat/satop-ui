@@ -1,4 +1,4 @@
-import { FlightPlan, CompileToCshResult } from "./types";
+import { FlightPlan, CompileToCshResult, FlightPlanImage } from "./types";
 
 
 // Mock data for flight plans based on the Python backend model
@@ -16,8 +16,13 @@ export const mockFlightPlans: FlightPlan[] = [
       scheduledAt: "2025-05-22T13:45:00+01:00",
       gsId: 1,
       satId: 1,
-      status: "DRAFT",
+      status: "TRANSMITTED",
       previousPlanId: 2,
+      createdById: 1,
+      approvedById: 2,
+      approvalDate: "2025-05-21T10:00:00Z",
+      createdAt: "2025-05-20T08:30:00Z",
+      updatedAt: "2025-05-21T10:00:00Z",
     },
     {
       id: 2,
@@ -33,6 +38,9 @@ export const mockFlightPlans: FlightPlan[] = [
       gsId: 1,
       satId: 1,
       status: "SUPERSEDED",
+      createdById: 1,
+      createdAt: "2025-05-19T14:00:00Z",
+      updatedAt: "2025-05-20T08:30:00Z",
     },
     {
       id: 3,
@@ -53,6 +61,9 @@ export const mockFlightPlans: FlightPlan[] = [
       gsId: 2,
       satId: 2,
       status: "DRAFT",
+      createdById: 3,
+      createdAt: "2025-05-11T09:00:00Z",
+      updatedAt: "2025-05-11T09:00:00Z",
     },
     {
       id: 4,
@@ -65,9 +76,12 @@ export const mockFlightPlans: FlightPlan[] = [
       scheduledAt: "2025-05-15T09:15:00+01:00",
       gsId: 3,
       satId: 3,
-      status: "APPROVED",
-      approverId: "user-abc-123",
+      status: "TRANSMITTED",
+      createdById: 1,
+      approvedById: 2,
       approvalDate: "2025-05-14T10:00:00Z",
+      createdAt: "2025-05-13T11:30:00Z",
+      updatedAt: "2025-05-14T10:00:00Z",
     },
     {
       id: 5,
@@ -81,8 +95,11 @@ export const mockFlightPlans: FlightPlan[] = [
       gsId: 4,
       satId: 4,
       status: "REJECTED",
-      approverId: "user-xyz-789",
+      createdById: 3,
+      approvedById: 1,
       approvalDate: "2025-05-07T12:00:00Z",
+      createdAt: "2025-05-06T15:00:00Z",
+      updatedAt: "2025-05-07T12:00:00Z",
     },
     {
       id: 6,
@@ -114,7 +131,10 @@ export const mockFlightPlans: FlightPlan[] = [
       scheduledAt: "2025-05-20T16:00:00+01:00",
       gsId: 5,
       satId: 5,
-      status: "DRAFT"
+      status: "DRAFT",
+      createdById: 2,
+      createdAt: "2025-05-19T10:00:00Z",
+      updatedAt: "2025-05-19T10:00:00Z",
     },
     {
       id: 7,
@@ -137,9 +157,82 @@ export const mockFlightPlans: FlightPlan[] = [
       scheduledAt: "2025-05-07T08:30:00+01:00",
       gsId: 6,
       satId: 6,
-      status: "APPROVED"
+      status: "APPROVED",
+      createdById: 1,
+      approvedById: 2,
+      approvalDate: "2025-05-06T16:00:00Z",
+      createdAt: "2025-05-05T13:00:00Z",
+      updatedAt: "2025-05-06T16:00:00Z",
     },
   ];
+
+// Mock images for flight plans
+export const mockFlightPlanImages: Record<number, FlightPlanImage[]> = {
+  1: [
+    {
+      imageId: 123,
+      flightPlanId: 1,
+      fileName: "image_25544_20251110_143022_capture.jpg",
+      captureTime: "2025-11-10T14:30:22Z",
+      url: "https://picsum.photos/seed/sat1-img1/1920/1080",
+      expiresAt: "2025-11-10T15:30:22Z",
+      contentType: "image/jpeg",
+      fileSize: 2048576,
+      latitude: 56.172,
+      longitude: 10.191
+    },
+    {
+      imageId: 124,
+      flightPlanId: 1,
+      fileName: "image_25544_20251110_143523_capture.jpg",
+      captureTime: "2025-11-10T14:35:23Z",
+      url: "https://picsum.photos/seed/sat1-img2/1920/1080",
+      expiresAt: "2025-11-10T15:35:23Z",
+      contentType: "image/jpeg",
+      fileSize: 1987432,
+      latitude: 56.180,
+      longitude: 10.195
+    },
+    {
+      imageId: 125,
+      flightPlanId: 1,
+      fileName: "image_25544_20251110_144012_capture.jpg",
+      captureTime: "2025-11-10T14:40:12Z",
+      url: "https://picsum.photos/seed/sat1-img3/1920/1080",
+      expiresAt: "2025-11-10T15:40:12Z",
+      contentType: "image/jpeg",
+      fileSize: 2134567,
+      latitude: 56.188,
+      longitude: 10.199
+    }
+  ],
+  4: [
+    {
+      imageId: 201,
+      flightPlanId: 4,
+      fileName: "image_25544_20251108_091522_capture.jpg",
+      captureTime: "2025-11-08T09:15:22Z",
+      url: "https://picsum.photos/seed/sat3-img1/1920/1080",
+      expiresAt: "2025-11-08T10:15:22Z",
+      contentType: "image/jpeg",
+      fileSize: 1845321,
+      latitude: 55.676,
+      longitude: 12.568
+    },
+    {
+      imageId: 202,
+      flightPlanId: 4,
+      fileName: "image_25544_20251108_091845_capture.jpg",
+      captureTime: "2025-11-08T09:18:45Z",
+      url: "https://picsum.photos/seed/sat3-img2/1920/1080",
+      expiresAt: "2025-11-08T10:18:45Z",
+      contentType: "image/jpeg",
+      fileSize: 1923456,
+      latitude: 55.685,
+      longitude: 12.575
+    }
+  ]
+};
 
 // Mock CSH script compilation for flight plans
 export function generateMockCshScript(flightPlanId: number): CompileToCshResult {

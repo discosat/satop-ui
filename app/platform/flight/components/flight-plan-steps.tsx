@@ -16,6 +16,7 @@ type StepKey =
 export interface FlightPlanStepsProps {
   status: StepKey;
   className?: string;
+  hasImages?: boolean;
 }
 
 const ORDERED_STEPS: {
@@ -53,7 +54,7 @@ function getActiveIndex(status: StepKey): number {
 }
 
 // Get next action text based on current status
-function getNextAction(status: StepKey): string | null {
+function getNextAction(status: StepKey, hasImages: boolean = false): string | null {
   switch (status) {
     case "DRAFT":
       return "Review and approve the flight plan to proceed";
@@ -62,7 +63,9 @@ function getNextAction(status: StepKey): string | null {
     case "ASSIGNED_TO_OVERPASS":
       return "Flight plan will be transmitted automatically at scheduled time";
     case "TRANSMITTED":
-      return "Flight plan has been transmitted to the satellite";
+      return hasImages 
+        ? "Images have been received from the satellite. View them in the Images tab."
+        : "Awaiting response from the satellite. Images will appear once received.";
     case "REJECTED":
       return null;
     case "FAILED":
@@ -77,12 +80,13 @@ function getNextAction(status: StepKey): string | null {
 export default function FlightPlanSteps({
   status,
   className,
+  hasImages = false,
 }: FlightPlanStepsProps) {
   const activeIndex = getActiveIndex(status);
   const isRejected = status === "REJECTED";
   const isFailed = status === "FAILED";
   const isSuperseded = status === "SUPERSEDED";
-  const nextAction = getNextAction(status);
+  const nextAction = getNextAction(status, hasImages);
 
   return (
     <div className={cn("w-full space-y-4", className)}>

@@ -1,13 +1,11 @@
 "use server"
 
 import { revalidateTag } from 'next/cache';
-import { mockFlightPlans, generateMockCshScript } from "./mock";
+import { mockFlightPlans, generateMockCshScript, mockFlightPlanImages } from "./mock";
 import { apiClient } from "@/app/api/api-client";
-import type { FlightPlan, ApprovalResult, CompileToCshResult, ImagingOpportunity } from "./types";
+import type { FlightPlan, ApprovalResult, CompileToCshResult, ImagingOpportunity, FlightPlanImage } from "./types";
 
 const API_PATH = '/flight-plans';
-
-
 
 export type CreateFlightPlanPayload = Omit<FlightPlan, 'id' | 'status' | 'approverId' | 'approvalDate'>;
 
@@ -76,7 +74,7 @@ export async function updateFlightPlan(payload: FlightPlan): Promise<FlightPlan 
   try {
     // Extract only the fields needed for the update payload, excluding read-only fields
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { id: _id, status: _status, approverId: _approverId, approvalDate: _approvalDate, ...updatePayload } = payload;
+    const { id: _id, status: _status, approvalDate: _approvalDate, ...updatePayload } = payload;
     const result = await apiClient.put<Partial<FlightPlan>, FlightPlan>(`${API_PATH}/${id}`, updatePayload);
     revalidateTag('flight-plans');
     revalidateTag(`flight-plans:${id}`);
@@ -234,5 +232,18 @@ export async function getImagingOpportunities(
   } catch (error) {
     console.error('Error fetching imaging opportunities:', error);
     return null;
+  }
+}
+
+export async function getFlightPlanImages(flightPlanId: number): Promise<FlightPlanImage[]> {
+  if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
+    return mockFlightPlanImages[flightPlanId] || [];
+  }
+
+  try {
+    return await apiClient.get<FlightPlanImage[]>(`${API_PATH}/${flightPlanId}/images`);
+  } catch (error) {
+    console.error(`Error fetching images for flight plan ${flightPlanId}:`, error);
+    return [];
   }
 }

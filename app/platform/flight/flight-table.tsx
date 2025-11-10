@@ -42,24 +42,29 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { FlightPlan, FlightPlanStatus } from "@/app/api/flight/types";
 import type { Satellite } from "@/app/api/satellites/types";
 import type { GroundStation } from "@/app/api/ground-stations/types";
+import type { User } from "@/app/api/users/types";
 import TablePagination from "@/components/ui/table-pagination";
 
 // Extended flight plan type with lookup data
 type FlightPlanWithLookup = FlightPlan & {
   satelliteName: string;
   groundStationName: string;
+  approverName?: string;
+  approverRole?: string;
 };
 
 interface FlightPlansTableProps {
   flightPlans: FlightPlan[];
   satellites: Satellite[];
   groundStations: GroundStation[];
+  users: User[];
 }
 
 export default function FlightPlansTable({
   flightPlans,
   satellites,
   groundStations,
+  users,
 }: FlightPlansTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -86,19 +91,28 @@ export default function FlightPlansTable({
     () => new Map(groundStations.map((gs) => [gs.id, gs.name])),
     [groundStations]
   );
+  const userMap = useMemo(
+    () => new Map(users.map((user) => [user.id, user])),
+    [users]
+  );
 
   // Prepare data with lookup fields
   const data = useMemo(() => {
     const activePlans = flightPlans.filter(
       (plan) => plan.status !== "SUPERSEDED"
     );
-    return activePlans.map((plan) => ({
-      ...plan,
-      satelliteName: satelliteMap.get(plan.satId) || `Satellite ${plan.satId}`,
-      groundStationName:
-        groundStationMap.get(plan.gsId) || `Ground Station ${plan.gsId}`,
-    }));
-  }, [flightPlans, satelliteMap, groundStationMap]);
+    return activePlans.map((plan) => {
+      const approver = plan.approvedById ? userMap.get(plan.approvedById) : undefined;
+      return {
+        ...plan,
+        satelliteName: satelliteMap.get(plan.satId) || `Satellite ${plan.satId}`,
+        groundStationName:
+          groundStationMap.get(plan.gsId) || `Ground Station ${plan.gsId}`,
+        approverName: approver?.name,
+        approverRole: approver?.role,
+      };
+    });
+  }, [flightPlans, satelliteMap, groundStationMap, userMap]);
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "N/A";
@@ -327,7 +341,7 @@ export default function FlightPlansTable({
           return (
             <div className="flex items-center gap-2">
               {getStatusBadge(plan.status as FlightPlanStatus)}
-              {plan.approverId &&
+              {plan.approverName &&
                 (plan.status === "APPROVED" || plan.status === "REJECTED") && (
                   <Tooltip>
                     <TooltipTrigger>
@@ -336,8 +350,13 @@ export default function FlightPlansTable({
                     <TooltipContent>
                       <p>
                         {plan.status === "APPROVED" ? "Approved" : "Rejected"}{" "}
-                        by {plan.approverId}
+                        by {plan.approverName}
                       </p>
+                      {plan.approverRole && (
+                        <p className="text-xs text-muted-foreground">
+                          {plan.approverRole}
+                        </p>
+                      )}
                       {plan.approvalDate && (
                         <p>on {formatDate(plan.approvalDate)}</p>
                       )}

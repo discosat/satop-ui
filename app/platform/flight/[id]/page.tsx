@@ -4,8 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ArrowLeft, Save, CheckCircle, XCircle, Activity, CalendarClock } from "lucide-react";
+import { ArrowLeft, Save, CheckCircle, XCircle, CalendarClock, Images } from "lucide-react";
 import { toast } from "sonner";
 import {
   Card,
@@ -15,31 +14,26 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
   getFlightPlanById,
   updateFlightPlan,
-  approveFlightPlan,
-  compileFlightPlanToCsh,
+  getFlightPlanImages,
 } from "@/app/api/flight/flight-plan-service";
 import { getSatellites } from "@/app/api/satellites/satellite-service";
 import { getGroundStations } from "@/app/api/ground-stations/ground-station-service";
+import { getUsers } from "@/app/api/users/users-service";
 import FlightPlanSteps from "@/app/platform/flight/components/flight-plan-steps";
 import { Command, CameraSettings, CaptureLocation } from "../components/commands/command";
 import { CommandBuilder } from "../components/commands/command-builder";
 import { FlightPlan } from "@/app/api/flight/types";
 import type { Satellite } from "@/app/api/satellites/types";
 import type { GroundStation } from "@/app/api/ground-stations/types";
+import type { User } from "@/app/api/users/types";
 import { FlightPlanSkeleton } from "./flight-plan-skeleton";
 import Protected from "@/components/protected";
+import { ApproveDialog } from "../components/dialogs/approve-dialog";
+import { RejectDialog } from "../components/dialogs/reject-dialog";
+import { MetadataModal } from "../components/dialogs/metadata-modal";
+import { MissionOverview } from "./mission-overview";
 
 // We are going to make some key changes to the flight planning page.
 // Creating a new flight plan is now going to take multiple steps.
@@ -60,9 +54,9 @@ export default function FlightPlanDetailPage() {
   const [hasChanges, setHasChanges] = useState(false);
   const [satellites, setSatellites] = useState<Satellite[]>([]);
   const [groundStations, setGroundStations] = useState<GroundStation[]>([]);
-  const [compiledScript, setCompiledScript] = useState<string[] | null>(null);
-  const [lgtmInput, setLgtmInput] = useState("");
-  const [isLoadingScript, setIsLoadingScript] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [showMetadataModal, setShowMetadataModal] = useState(false);
+  const [imageCount, setImageCount] = useState<number>(0);
 
   const id = typeof params.id === "string" ? params.id : "";
 
@@ -73,16 +67,26 @@ export default function FlightPlanDetailPage() {
       setIsLoading(true);
       try {
         // Fetch all data in parallel
-        const [plan, sats, stations] = await Promise.all([
+        const [plan, sats, stations, usersList] = await Promise.all([
           getFlightPlanById(Number(id)),
           getSatellites(),
           getGroundStations(),
+          getUsers(),
         ]);
 
         if (!isCancelled) {
           setFlightPlan(plan);
           setSatellites(sats);
           setGroundStations(stations);
+          setUsers(usersList);
+          
+          // Fetch images if plan is TRANSMITTED
+          if (plan?.status === "TRANSMITTED") {
+            const images = await getFlightPlanImages(Number(id));
+            setImageCount(images.length);
+          } else {
+            setImageCount(0);
+          }
           
           // Parse commands from flight plan
           if (plan?.commands && Array.isArray(plan.commands)) {
@@ -203,92 +207,15 @@ export default function FlightPlanDetailPage() {
     setHasChanges(true);
   };
 
-  const handleApprove = async () => {
+  const handleApprovalSuccess = () => {
     if (!flightPlan) return;
-    
-    // Check LGTM confirmation
-    if (lgtmInput.toUpperCase() !== "LGTM") {
-      toast.error("Please confirm with 'LGTM'");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const result = await approveFlightPlan(
-        flightPlan.id,
-        true
-      );
-
-      if (result.success) {
-        setFlightPlan({ ...flightPlan, status: "APPROVED" });
-        setShowApproveDialog(false);
-        setLgtmInput("");
-        setCompiledScript(null);
-        toast.success(result.message);
-        // Stay on page and refresh - don't navigate back
-      } else {
-        throw new Error(result.message || "Failed to approve flight plan");
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Approval failed";
-      toast.error(message);
-      setShowApproveDialog(false);
-    } finally {
-      setIsLoading(false);
-    }
+    setFlightPlan({ ...flightPlan, status: "APPROVED" });
   };
 
-  const handleOpenApproveDialog = async () => {
+  const handleRejectionSuccess = () => {
     if (!flightPlan) return;
-    
-    setShowApproveDialog(true);
-    setIsLoadingScript(true);
-    
-    try {
-      // Load the compiled script
-      const cshResult = await compileFlightPlanToCsh(flightPlan.id);
-      console.log("CSH compilation result:", cshResult);
-      
-      if (cshResult?.script) {
-        setCompiledScript(cshResult.script);
-      } else {
-        console.warn("No script property in CSH result:", cshResult);
-        toast.error("Compiled script format is invalid");
-      }
-    } catch (error) {
-      console.error("Error loading compiled script:", error);
-      toast.error("Failed to load compiled script");
-    } finally {
-      setIsLoadingScript(false);
-    }
-    
-    setLgtmInput("");
-  };
-
-  const handleReject = async () => {
-    if (!flightPlan) return;
-    setIsLoading(true);
-    try {
-      const result = await approveFlightPlan(
-        flightPlan.id,
-        false
-      );
-
-      if (result.success) {
-        setFlightPlan({ ...flightPlan, status: "REJECTED" });
-        setShowRejectDialog(false);
-        toast.success(result.message);
-        setTimeout(() => router.back(), 1500);
-      } else {
-        throw new Error(result.message || "Failed to reject flight plan");
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Rejection failed";
-      toast.error(message);
-      setShowRejectDialog(false);
-    } finally {
-      setIsLoading(false);
-    }
+    setFlightPlan({ ...flightPlan, status: "REJECTED" });
+    setTimeout(() => router.back(), 1500);
   };
 
   if (isLoading && !flightPlan) {
@@ -325,13 +252,25 @@ export default function FlightPlanDetailPage() {
           </h1>
 
         <div className="flex gap-2">
-          {hasChanges && (
+          {/* Hide unsaved changes indicator when in TRANSMITTED state */}
+          {hasChanges && flightPlan.status !== "TRANSMITTED" && (
             <div className="flex items-center gap-2 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800">
               <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
               Unsaved changes
             </div>
           )}
           
+          {/* Show View Images button when status is TRANSMITTED */}
+          {flightPlan.status === "TRANSMITTED" && (
+            <Button
+              variant="default"
+              onClick={() => router.push(`/platform/flight/${id}/images`)}
+            >
+              <Images className="mr-2 h-4 w-4" />
+              View Images
+            </Button>
+          )}
+
           {/* Show Assign to Overpass button when status is APPROVED or FAILED */}
           {(flightPlan.status === "APPROVED" || flightPlan.status === "FAILED") && (
             <Protected requireOperator>
@@ -346,54 +285,31 @@ export default function FlightPlanDetailPage() {
             </Protected>
           )}
 
-          {/* Show assigned overpass info when status is ASSIGNED_TO_OVERPASS */}
-          {flightPlan.status === "ASSIGNED_TO_OVERPASS" && flightPlan.scheduledAt && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-md text-sm text-purple-800">
-              <CalendarClock className="h-4 w-4" />
-              <span className="font-medium">
-                Scheduled: {new Date(flightPlan.scheduledAt).toLocaleString("da-DK", {
-                  dateStyle: "short",
-                  timeStyle: "short",
-                })}
-              </span>
-            </div>
+          {/* Hide approve/reject buttons when in TRANSMITTED state */}
+          {flightPlan.status !== "TRANSMITTED" && (
+            <Protected requireOperator>
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowRejectDialog(true)}
+                  disabled={flightPlan.status === "REJECTED" || isLoading || hasChanges}
+                  title={hasChanges ? "Save changes before rejecting" : flightPlan.status === "REJECTED" ? "Already rejected" : ""}
+                >
+                  <XCircle className="mr-2 h-4 w-4" />
+                  Reject
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowApproveDialog(true)}
+                  disabled={flightPlan.status === "APPROVED" || isLoading || hasChanges}
+                  title={hasChanges ? "Save changes before approving" : flightPlan.status === "APPROVED" ? "Already approved" : ""}
+                >
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Approve
+                </Button>
+              </>
+            </Protected>
           )}
-
-          {/* Show assigned overpass info or retry option when status is FAILED */}
-          {flightPlan.status === "FAILED" && flightPlan.scheduledAt && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 border border-red-200 rounded-md text-sm text-red-800">
-              <CalendarClock className="h-4 w-4" />
-              <span className="font-medium">
-                Failed at: {new Date(flightPlan.scheduledAt).toLocaleString("da-DK", {
-                  dateStyle: "short",
-                  timeStyle: "short",
-                })}
-              </span>
-            </div>
-          )}
-
-          <Protected requireOperator>
-            <>
-              <Button
-                variant="outline"
-                onClick={() => setShowRejectDialog(true)}
-                disabled={flightPlan.status === "REJECTED" || isLoading || hasChanges}
-                title={hasChanges ? "Save changes before rejecting" : flightPlan.status === "REJECTED" ? "Already rejected" : ""}
-              >
-                <XCircle className="mr-2 h-4 w-4" />
-                Reject
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleOpenApproveDialog}
-                disabled={flightPlan.status === "APPROVED" || isLoading || hasChanges}
-                title={hasChanges ? "Save changes before approving" : flightPlan.status === "APPROVED" ? "Already approved" : ""}
-              >
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Approve
-              </Button>
-            </>
-          </Protected>
 
           <Protected requireOperator>
             <Button
@@ -409,69 +325,15 @@ export default function FlightPlanDetailPage() {
         </div>
       </div>
 
-      <FlightPlanSteps status={flightPlan.status} />
+      <FlightPlanSteps status={flightPlan.status} hasImages={imageCount > 0} />
       
-          <Card className="border-2">
-            <CardHeader className="pb-4">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="text-xl flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <Activity className="h-5 w-5 text-primary" />
-                    </div>
-                    Mission Overview
-                  </CardTitle>
-                  <CardDescription>
-                    Configuration and metadata for this flight plan
-                  </CardDescription>
-                </div>
-                <div className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 ${
-                  flightPlan.status === 'APPROVED' ? 'bg-green-50 text-green-700 border-green-200' :
-                  flightPlan.status === 'REJECTED' ? 'bg-red-50 text-red-700 border-red-200' :
-                  flightPlan.status === 'FAILED' ? 'bg-red-50 text-red-700 border-red-200' :
-                  flightPlan.status === 'TRANSMITTED' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                  flightPlan.status === 'ASSIGNED_TO_OVERPASS' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                  'bg-yellow-50 text-yellow-700 border-yellow-200'
-                }`}>
-                  <div className="flex items-center gap-1.5">
-                    <div className={`w-1.5 h-1.5 rounded-full ${
-                      flightPlan.status === 'APPROVED' ? 'bg-green-500' :
-                      flightPlan.status === 'REJECTED' ? 'bg-red-500' :
-                      flightPlan.status === 'FAILED' ? 'bg-red-500' :
-                      flightPlan.status === 'TRANSMITTED' ? 'bg-blue-500' :
-                      flightPlan.status === 'ASSIGNED_TO_OVERPASS' ? 'bg-purple-500' :
-                      'bg-yellow-500'
-                    }`} />
-                    {flightPlan.status.toLowerCase().replace('_', ' ')}
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Plan Name</p>
-                  <p className="font-medium">{flightPlan.name || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Satellite</p>
-                  <p className="font-medium">
-                    {satellites.find(s => s.id === flightPlan.satId)?.name || `ID: ${flightPlan.satId}`}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Ground Station</p>
-                  <p className="font-medium">
-                    {groundStations.find(gs => gs.id === flightPlan.gsId)?.name || `ID: ${flightPlan.gsId}`}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Created By</p>
-                  <p className="font-medium">{"-"}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <MissionOverview
+            flightPlan={flightPlan}
+            satellites={satellites}
+            groundStations={groundStations}
+            users={users}
+            onViewMetadata={() => setShowMetadataModal(true)}
+          />
 
       <Card>
         <CardHeader>
@@ -502,100 +364,30 @@ export default function FlightPlanDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Approve Dialog */}
-      <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog} >
-        <AlertDialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Review & Approve Flight Plan</AlertDialogTitle>
-            <AlertDialogDescription>
-              Review the compiled command sequence below. Type &#34;LGTM&#34; to approve.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          
-          <div className="flex-1 overflow-y-auto space-y-4">
-            {isLoadingScript ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center space-y-3">
-                  <div className="animate-spin inline-block w-6 h-6 border-2 border-slate-600 border-t-slate-200 rounded-full"></div>
-                  <p className="text-sm text-muted-foreground">Loading compiled script...</p>
-                </div>
-              </div>
-            ) : compiledScript && compiledScript.length > 0 ? (
-              <div className="space-y-3">
-                <div className="text-sm font-semibold">Compiled Command Script:</div>
-                <div className="bg-card rounded-lg p-4 font-mono text-xs text-green-400 overflow-x-auto border border-primary-foreground">
-                  <div className="space-y-1">
-                    {compiledScript.map((line, idx) => (
-                      <div key={idx} className="flex hover:bg-primary/10 px-2 py-0.5 rounded transition-colors">
-                        <span className="mr-4 text-muted-foreground select-none w-12 text-right">{idx + 1}</span>
-                        <span className="flex-1">{line}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center py-8">
-                <p className="text-sm text-muted-foreground">No compiled script available</p>
-              </div>
-            )}
+      {/* Dialogs */}
+      <ApproveDialog
+        open={showApproveDialog}
+        onOpenChange={setShowApproveDialog}
+        flightPlanId={flightPlan.id}
+        onApprovalSuccess={handleApprovalSuccess}
+      />
 
-            <div className="space-y-3 pt-4 border-t px-1">
-              <label className="text-sm font-medium">Confirm approval by typing &#34;LGTM&#34;:</label>
-              <Input
-                placeholder="Type LGTM to confirm"
-                value={lgtmInput}
-                onChange={(e) => setLgtmInput(e.target.value)}
-                className="font-mono"
-                disabled={isLoading || isLoadingScript}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !isLoading && !isLoadingScript && lgtmInput.toUpperCase() === "LGTM") {
-                    handleApprove();
-                  }
-                }}
-              />
-              <p className="text-xs text-muted-foreground">
-                {lgtmInput.length > 0 && lgtmInput.toUpperCase() !== "LGTM" 
-                  ? "Looks good to merge! (Type exactly: LGTM)"
-                  : "Looks good to merge! "}
-              </p>
-            </div>
-          </div>
+      <RejectDialog
+        open={showRejectDialog}
+        onOpenChange={setShowRejectDialog}
+        flightPlanId={flightPlan.id}
+        flightPlanName={flightPlan.name}
+        onRejectionSuccess={handleRejectionSuccess}
+      />
 
-          <AlertDialogFooter className="mt-4">
-            <AlertDialogCancel disabled={isLoading || isLoadingScript}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleApprove}
-              disabled={isLoading || lgtmInput.toUpperCase() !== "LGTM"}
-              className={lgtmInput.toUpperCase() === "LGTM" ? "" : "opacity-50 cursor-not-allowed"}
-            >
-              {isLoading ? "Approving..." : "Approve (LGTM)"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Reject Dialog */}
-      <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Reject Flight Plan</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to reject this flight plan? This action will
-              cancel the scheduled command sequence.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleReject}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              {isLoading ? "Rejecting..." : "Reject"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <MetadataModal
+        open={showMetadataModal}
+        onOpenChange={setShowMetadataModal}
+        flightPlan={flightPlan}
+        satellites={satellites}
+        groundStations={groundStations}
+        users={users}
+      />
     </div>
   );
 }

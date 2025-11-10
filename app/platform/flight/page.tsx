@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { getSatellites } from "@/app/api/satellites/satellite-service";
 import { getGroundStations } from "@/app/api/ground-stations/ground-station-service";
+import { getUsers } from "@/app/api/users/users-service";
 import Protected from "@/components/protected";
 
 export default async function Page({}) {
@@ -14,6 +15,7 @@ export default async function Page({}) {
   const flightPlans = await getFlightPlans();
   const satellites = await getSatellites();
   const groundStations = await getGroundStations();
+  const users = await getUsers();
 
   return (
     <div className="flex flex-col h-full p-6 gap-6">
@@ -52,6 +54,7 @@ export default async function Page({}) {
           flightPlans={flightPlans}
           satellites={satellites}
           groundStations={groundStations}
+          users={users}
         />
       </div>
     </div>
