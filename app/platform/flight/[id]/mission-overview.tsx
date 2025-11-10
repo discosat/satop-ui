@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Activity, Info, CheckCircle2, AlertCircle, Clock } from "lucide-react";
-import type { FlightPlan } from "@/app/api/flight/types";
+import { FlightStatusBadge } from "@/components/FlightStatusBadge";
+import type { FlightPlan, FlightPlanStatus } from "@/app/api/flight/types";
 import type { Satellite } from "@/app/api/satellites/types";
 import type { GroundStation } from "@/app/api/ground-stations/types";
 import type { User } from "@/app/api/users/types";
@@ -50,26 +51,7 @@ export function MissionOverview({
               Configuration and metadata for this flight plan
             </CardDescription>
           </div>
-          <div className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 ${
-            flightPlan.status === 'APPROVED' ? 'bg-green-50 text-green-700 border-green-200' :
-            flightPlan.status === 'REJECTED' ? 'bg-red-50 text-red-700 border-red-200' :
-            flightPlan.status === 'FAILED' ? 'bg-red-50 text-red-700 border-red-200' :
-            flightPlan.status === 'TRANSMITTED' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-            flightPlan.status === 'ASSIGNED_TO_OVERPASS' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-            'bg-yellow-50 text-yellow-700 border-yellow-200'
-          }`}>
-            <div className="flex items-center gap-1.5">
-              <div className={`w-1.5 h-1.5 rounded-full ${
-                flightPlan.status === 'APPROVED' ? 'bg-green-500' :
-                flightPlan.status === 'REJECTED' ? 'bg-red-500' :
-                flightPlan.status === 'FAILED' ? 'bg-red-500' :
-                flightPlan.status === 'TRANSMITTED' ? 'bg-blue-500' :
-                flightPlan.status === 'ASSIGNED_TO_OVERPASS' ? 'bg-purple-500' :
-                'bg-yellow-500'
-              }`} />
-              {flightPlan.status.toLowerCase().replace('_', ' ')}
-            </div>
-          </div>
+          <FlightStatusBadge status={flightPlan.status as FlightPlanStatus} />
         </div>
       </CardHeader>
       <CardContent className="pt-0">

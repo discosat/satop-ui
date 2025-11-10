@@ -12,7 +12,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { FlightStatusBadge } from "@/components/FlightStatusBadge";
 import { notFound } from "next/navigation";
+import type { FlightPlanStatus } from "@/app/api/flight/types";
 
 interface PageProps {
   params: Promise<{
@@ -94,8 +96,8 @@ export default async function FlightPlanImagesPage({ params }: PageProps) {
               <p className="font-medium">{groundStation?.name || `ID: ${flightPlan.gsId}`}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Status</p>
-              <p className="font-medium capitalize">{flightPlan.status.toLowerCase().replace('_', ' ')}</p>
+              <p className="text-sm text-muted-foreground mb-2">Status</p>
+              <FlightStatusBadge status={flightPlan.status as FlightPlanStatus} />
             </div>
           </div>
         </CardContent>

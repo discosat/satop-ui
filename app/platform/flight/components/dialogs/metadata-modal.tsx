@@ -9,7 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { FlightPlan } from "@/app/api/flight/types";
+import { FlightStatusBadge } from "@/components/FlightStatusBadge";
+import type { FlightPlan, FlightPlanStatus } from "@/app/api/flight/types";
 import type { Satellite } from "@/app/api/satellites/types";
 import type { GroundStation } from "@/app/api/ground-stations/types";
 import type { User } from "@/app/api/users/types";
@@ -70,17 +71,8 @@ export function MetadataModal({
                 </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Status</p>
-                <div className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
-                  flightPlan.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
-                  flightPlan.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
-                  flightPlan.status === 'FAILED' ? 'bg-red-100 text-red-800' :
-                  flightPlan.status === 'TRANSMITTED' ? 'bg-blue-100 text-blue-800' :
-                  flightPlan.status === 'ASSIGNED_TO_OVERPASS' ? 'bg-purple-100 text-purple-800' :
-                  'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {flightPlan.status.toLowerCase().replace('_', ' ')}
-                </div>
+                <p className="text-xs text-muted-foreground mb-1">Status</p>
+                <FlightStatusBadge status={flightPlan.status as FlightPlanStatus} />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Number of Commands</p>

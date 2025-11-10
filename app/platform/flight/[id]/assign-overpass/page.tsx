@@ -14,7 +14,8 @@ import {
 import { getFlightPlanById } from "@/app/api/flight/flight-plan-service";
 import { getSatellites } from "@/app/api/satellites/satellite-service";
 import { getGroundStations } from "@/app/api/ground-stations/ground-station-service";
-import type { FlightPlan } from "@/app/api/flight/types";
+import { FlightStatusBadge } from "@/components/FlightStatusBadge";
+import type { FlightPlan, FlightPlanStatus } from "@/app/api/flight/types";
 import type { Satellite } from "@/app/api/satellites/types";
 import type { GroundStation } from "@/app/api/ground-stations/types";
 import { AssignOverpassClient } from "./assign-overpass-client";
@@ -126,9 +127,9 @@ export default function AssignOverpassPage() {
             <p className="text-muted-foreground">
               Flight plan must be approved before assigning to an overpass
             </p>
-            <p className="text-sm text-muted-foreground">
-              Current status: <span className="font-medium">{flightPlan.status}</span>
-            </p>
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              Current status: <FlightStatusBadge status={flightPlan.status as FlightPlanStatus} />
+            </div>
           </div>
         </div>
       </div>
