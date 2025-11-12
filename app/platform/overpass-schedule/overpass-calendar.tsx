@@ -3,16 +3,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
-import {
-  Calendar,
-  MapPin,
   CheckCircle2,
   Filter,
   Check,
@@ -20,8 +10,6 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { RefreshButton } from "@/components/refresh-button";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -51,13 +39,10 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import type { GroundStation } from "@/app/api/ground-stations/types";
-import { getOverpassWindows } from "@/app/api/overpass/overpass-service";
 import type { 
   Overpass as APIOverpass, 
-  OverpassQueryParams 
 } from "@/app/api/overpass/types";
 import type { TimePeriod } from "./time-period-select";
-import { getDateRangeFromPeriod } from "./time-period-select";
 import Link from "next/link";
 import {
   Tooltip,
@@ -76,7 +61,8 @@ import {
   getDuration,
   getPassQuality,
 } from "@/components/overpass/overpass-utils";
-import { OverpassList } from "@/components/overpass/overpass-list";
+import { OverpassCalendarBase } from "@/components/overpass/overpass-calendar-base";
+import type { OverpassCalendarBaseHandle } from "@/components/overpass/overpass-calendar-base";
 import Protected from "@/components/protected";
 
 interface OverpassCalendarProps {
@@ -94,9 +80,6 @@ export function OverpassCalendar({
   satellites,
   groundStations,
 }: OverpassCalendarProps) {
-  const [overpasses, setOverpasses] = useState<APIOverpass[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState<boolean>(false);
   // Associate dialog state
   const [associateOpen, setAssociateOpen] = useState<boolean>(false);
@@ -107,6 +90,10 @@ export function OverpassCalendar({
   // Client-side filters
   const [selectedQualities, setSelectedQualities] = useState<string[]>([]);
   const [associationFilter, setAssociationFilter] = useState<"any" | "associated" | "unassociated">("any");
+  // Store overpasses for filtering
+  const [allOverpasses, setAllOverpasses] = useState<APIOverpass[]>([]);
+  // Ref to refresh the calendar
+  const calendarRef = React.useRef<OverpassCalendarBaseHandle>(null);
 
   // Get the selected satellite and ground station objects
   const selectedSatellite = useMemo(() => 
@@ -123,49 +110,6 @@ export function OverpassCalendar({
   useEffect(() => {
     setIsMounted(true);
   }, []);
-
-  // Fetch overpasses function
-  const fetchOverpasses = async (): Promise<void> => {
-    if (!selectedSatellite || !groundStation) {
-      setOverpasses([]);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const satelliteId = selectedSatellite.id || 1;
-      const dateRange = getDateRangeFromPeriod(timePeriod);
-
-      const queryParams: OverpassQueryParams = {
-        startTime: dateRange.start.toISOString(),
-        endTime: dateRange.end.toISOString(),
-        minimumElevation: 5,
-        maxResults: 50,
-        minimumDuration: 60,
-      };
-
-      const data = await getOverpassWindows(
-        satelliteId,
-        groundStation.id,
-        queryParams
-      );
-
-      setOverpasses(data);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch overpasses when dependencies change
-  useEffect(() => {
-    fetchOverpasses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [satelliteName, groundStationId, timePeriod]);
 
   useEffect(() => {
     if (!associateOpen) {
@@ -215,8 +159,8 @@ export function OverpassCalendar({
 
 
 
-  // Derived: apply filters client-side
-  const filteredOverpasses = React.useMemo(() => {
+  // Custom filter to apply quality and association filters client-side
+  const applyClientFilters = (overpasses: APIOverpass[]) => {
     const matchesQuality = (op: APIOverpass) => {
       if (selectedQualities.length === 0) return true;
       const q = getPassQuality(op.maxElevation).quality;
@@ -230,28 +174,28 @@ export function OverpassCalendar({
     return overpasses.filter(
       (op) => matchesQuality(op) && matchesAssociation(op)
     );
-  }, [overpasses, selectedQualities, associationFilter]);
+  };
 
   // Counts for badges
   const qualityCounts = React.useMemo(() => {
     const counts = new Map<string, number>();
-    ["Excellent", "Great"].forEach((label) => counts.set(label, 0));
-    overpasses.forEach((op) => {
+    ["Excellent", "Great", "Good", "Poor"].forEach((label) => counts.set(label, 0));
+    allOverpasses.forEach((op) => {
       const q = getPassQuality(op.maxElevation).quality;
-      if (counts.has(q)) counts.set(q, (counts.get(q) || 0) + 1);
+      counts.set(q, (counts.get(q) || 0) + 1);
     });
     return counts;
-  }, [overpasses]);
+  }, [allOverpasses]);
 
   const associationCounts = React.useMemo(() => {
     let associated = 0;
     let unassociated = 0;
-    overpasses.forEach((op) => {
+    allOverpasses.forEach((op) => {
       if (op.associatedFlightPlan?.id) associated += 1;
       else unassociated += 1;
     });
     return { associated, unassociated };
-  }, [overpasses]);
+  }, [allOverpasses]);
 
   const hasActiveFilters =
     selectedQualities.length > 0 || associationFilter !== "any";
@@ -265,6 +209,19 @@ export function OverpassCalendar({
   const clearFilters = () => {
     setSelectedQualities([]);
     setAssociationFilter("any");
+  };
+
+  // Get time period description
+  const getTimePeriodDescription = () => {
+    switch (timePeriod) {
+      case "today": return "Today";
+      case "tomorrow": return "Tomorrow";
+      case "next-3-days": return "Next 3 days";
+      case "next-week": return "Next week";
+      case "next-2-weeks": return "Next 2 weeks";
+      case "next-month": return "Next month";
+      default: return "Selected period";
+    }
   };
 
   // Render custom actions for each overpass
@@ -310,189 +267,158 @@ export function OverpassCalendar({
     </>
   );
 
+  // Render header actions (filters)
+  const renderHeaderActions = () => (
+    <>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className="justify-between text-muted-foreground"
+          >
+            <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
+            Quality
+            {selectedQualities.length > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {selectedQualities.length}
+              </Badge>
+            )}
+            <ChevronDown className="ml-2 h-4 w-4 text-muted-foreground" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[260px] p-0">
+          <Command>
+            <CommandInput placeholder="Search quality..." />
+            <CommandEmpty>No options.</CommandEmpty>
+            <CommandGroup>
+              {["Excellent", "Great", "Good", "Fair", "Poor"].map((label) => (
+                <CommandItem
+                  key={label}
+                  onSelect={() => toggleQuality(label)}
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex items-center">
+                    <div
+                      className={cn(
+                        "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                        selectedQualities.includes(label)
+                          ? "bg-primary text-primary-foreground"
+                          : "opacity-50 [&_svg]:invisible"
+                      )}
+                    >
+                      <Check className="h-4 w-4" />
+                    </div>
+                    <span>{label}</span>
+                  </div>
+                  <Badge variant="secondary" className="ml-2">
+                    {qualityCounts.get(label) || 0}
+                  </Badge>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className="justify-between text-muted-foreground"
+          >
+            <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
+            Association
+            {associationFilter !== "any" && (
+              <Badge variant="secondary" className="ml-2">
+                1
+              </Badge>
+            )}
+            <ChevronDown className="ml-2 h-4 w-4 text-muted-foreground" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[280px] p-0">
+          <Command>
+            <CommandEmpty>No options.</CommandEmpty>
+            <CommandGroup>
+              {[
+                {
+                  value: "associated",
+                  label: "With flight plan",
+                  count: associationCounts.associated,
+                },
+                {
+                  value: "unassociated",
+                  label: "Without flight plan",
+                  count: associationCounts.unassociated,
+                },
+              ].map((item) => (
+                <CommandItem
+                  key={item.value}
+                  onSelect={() =>
+                    setAssociationFilter((prev) =>
+                      prev === item.value
+                        ? "any"
+                        : (item.value as "associated" | "unassociated")
+                    )
+                  }
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex items-center">
+                    <div
+                      className={cn(
+                        "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                        associationFilter === item.value
+                          ? "bg-primary text-primary-foreground"
+                          : "opacity-50 [&_svg]:invisible"
+                      )}
+                    >
+                      <Check className="h-4 w-4" />
+                    </div>
+                    <span>{item.label}</span>
+                  </div>
+                  <Badge variant="secondary" className="ml-2">
+                    {item.count}
+                  </Badge>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      {hasActiveFilters && (
+        <Button variant="outline" size="sm" onClick={clearFilters}>
+          Clear
+        </Button>
+      )}
+    </>
+  );
+
+  if (!selectedSatellite || !groundStation) {
+    return null;
+  }
+
   return (
-    <Card className="w-full h-full shadow-md flex flex-col">
-      <CardHeader className="pb-2 flex-shrink-0">
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Calendar className="h-5 w-5" />
-              {selectedSatellite?.name || "Satellite"} Overpasses
-            </CardTitle>
-            <CardDescription>
-              {timePeriod === "today"
-                ? "Today"
-                : timePeriod === "tomorrow"
-                ? "Tomorrow"
-                : timePeriod === "next-3-days"
-                ? "Next 3 days"
-                : timePeriod === "next-week"
-                ? "Next week"
-                : timePeriod === "next-2-weeks"
-                ? "Next 2 weeks"
-                : "Next month"}
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="justify-between text-muted-foreground"
-                >
-                  <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
-                  Quality
-                  {selectedQualities.length > 0 && (
-                    <Badge variant="secondary" className="ml-2">
-                      {selectedQualities.length}
-                    </Badge>
-                  )}
-                  <ChevronDown className="ml-2 h-4 w-4 text-muted-foreground" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[260px] p-0">
-                <Command>
-                  <CommandInput placeholder="Search quality..." />
-                  <CommandEmpty>No options.</CommandEmpty>
-                  <CommandGroup>
-                    {["Excellent", "Great", "Good", "Poor"].map((label) => (
-                      <CommandItem
-                        key={label}
-                        onSelect={() => toggleQuality(label)}
-                        className="flex items-center justify-between"
-                      >
-                        <div className="flex items-center">
-                          <div
-                            className={cn(
-                              "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                              selectedQualities.includes(label)
-                                ? "bg-primary text-primary-foreground"
-                                : "opacity-50 [&_svg]:invisible"
-                            )}
-                          >
-                            <Check className="h-4 w-4" />
-                          </div>
-                          <span>{label}</span>
-                        </div>
-                        <Badge variant="secondary" className="ml-2">
-                          {qualityCounts.get(label) || 0}
-                        </Badge>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </Command>
-              </PopoverContent>
-            </Popover>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="justify-between text-muted-foreground"
-                >
-                  <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
-                  Association
-                  {associationFilter !== "any" && (
-                    <Badge variant="secondary" className="ml-2">
-                      1
-                    </Badge>
-                  )}
-                  <ChevronDown className="ml-2 h-4 w-4 text-muted-foreground" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[280px] p-0">
-                <Command>
-                  <CommandEmpty>No options.</CommandEmpty>
-                  <CommandGroup>
-                    {[
-                      {
-                        value: "associated",
-                        label: "With flight plan",
-                        count: associationCounts.associated,
-                      },
-                      {
-                        value: "unassociated",
-                        label: "Without flight plan",
-                        count: associationCounts.unassociated,
-                      },
-                    ].map((item) => (
-                      <CommandItem
-                        key={item.value}
-                        onSelect={() =>
-                          setAssociationFilter((prev) =>
-                            prev === item.value
-                              ? "any"
-                              : (item.value as "associated" | "unassociated")
-                          )
-                        }
-                        className="flex items-center justify-between"
-                      >
-                        <div className="flex items-center">
-                          <div
-                            className={cn(
-                              "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                              associationFilter === item.value
-                                ? "bg-primary text-primary-foreground"
-                                : "opacity-50 [&_svg]:invisible"
-                            )}
-                          >
-                            <Check className="h-4 w-4" />
-                          </div>
-                          <span>{item.label}</span>
-                        </div>
-                        <Badge variant="secondary" className="ml-2">
-                          {item.count}
-                        </Badge>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </Command>
-              </PopoverContent>
-            </Popover>
-
-            {hasActiveFilters && (
-              <Button variant="outline" size="sm" onClick={clearFilters}>
-                Clear
-              </Button>
-            )}
-
-            <RefreshButton
-              onClick={() => {
-                fetchOverpasses();
-              }}
-            />
-          </div>
-        </div>
-      </CardHeader>
-      <Separator />
-      <CardContent className="p-3 pt-3 flex-1 flex flex-col min-h-0">
-        <div className="flex items-center gap-1.5 mb-3 text-sm text-muted-foreground flex-shrink-0">
-          <MapPin className="h-3.5 w-3.5" />
-          <span>
-            {groundStation?.name || "No ground station selected"}
-            {groundStation && (
-              <>
-                ({groundStation.location.latitude.toFixed(2)}°N,{" "}
-                {groundStation.location.longitude.toFixed(2)}°E)
-              </>
-            )}
-          </span>
-        </div>
-        <div className="flex-1 min-h-0">
-          <OverpassList
-            overpasses={filteredOverpasses}
-            loading={loading}
-            error={error}
-            isMounted={isMounted}
-            emptyMessage="No passes match the current selection"
-            emptyDescription={`Try broadening your filters for more results from ${groundStation?.name || "your ground station"} in the selected time period.`}
-            renderOverpassActions={renderOverpassActions}
-          />
-        </div>
-      </CardContent>
-      <CardFooter className="pt-0 text-xs text-muted-foreground flex-shrink-0">
-        <p>Minimum elevation: 5° above horizon</p>
-      </CardFooter>
+    <>
+      <OverpassCalendarBase
+        ref={calendarRef}
+        satelliteId={selectedSatellite.id || 1}
+        satelliteName={selectedSatellite.name}
+        groundStation={groundStation}
+        timePeriod={timePeriod}
+        description={getTimePeriodDescription()}
+        emptyMessage="No passes match the current selection"
+        emptyDescription={`Try broadening your filters for more results from ${groundStation?.name || "your ground station"} in the selected time period.`}
+        renderActions={renderOverpassActions}
+        filterOverpasses={applyClientFilters}
+        headerActions={renderHeaderActions()}
+        footerContent={
+          <p className="text-xs text-muted-foreground">
+            Minimum elevation: 5° above horizon
+          </p>
+        }
+        onDataFetched={(overpasses) => setAllOverpasses(overpasses)}
+      />
       <Dialog open={associateOpen} onOpenChange={setAssociateOpen}>
         <DialogContent>
           <DialogHeader>
@@ -586,7 +512,8 @@ export function OverpassCalendar({
                     toast.success("Overpass associated to flight plan");
                     setAssociateOpen(false);
                     setAssociateTarget(null);
-                    await fetchOverpasses();
+                    // Refresh the calendar to show updated association status
+                    await calendarRef.current?.refresh();
                   } catch (err) {
                     const msg =
                       err instanceof Error
@@ -604,6 +531,6 @@ export function OverpassCalendar({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Card>
+    </>
   );
 }

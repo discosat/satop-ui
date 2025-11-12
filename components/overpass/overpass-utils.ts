@@ -9,27 +9,29 @@ export function getDateRangeFromPeriod(
 ): { start: Date; end: Date } {
   const now = new Date();
   const start = new Date(now);
-  const end = new Date(start);
+  const end = new Date(now);
 
   switch (period) {
     case "today":
+      start.setHours(0, 0, 0, 0);
       end.setDate(start.getDate() + 1);
       break;
     case "tomorrow":
       start.setDate(start.getDate() + 1);
+      start.setHours(0, 0, 0, 0);
       end.setDate(start.getDate() + 1);
       break;
     case "next-3-days":
-      end.setDate(start.getDate() + 3);
+      end.setDate(end.getDate() + 3);
       break;
     case "next-week":
-      end.setDate(start.getDate() + 7);
+      end.setDate(end.getDate() + 7);
       break;
     case "next-2-weeks":
-      end.setDate(start.getDate() + 14);
+      end.setDate(end.getDate() + 14);
       break;
     case "next-month":
-      end.setMonth(start.getMonth() + 1);
+      end.setMonth(end.getMonth() + 1);
       break;
   }
 
