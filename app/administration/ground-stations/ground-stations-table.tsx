@@ -148,7 +148,7 @@ export default function GroundStationsTable({
       },
     },
     {
-      accessorKey: "isActive",
+      accessorKey: "connected",
       header: ({ column }) => {
         return (
           <Button
@@ -162,7 +162,7 @@ export default function GroundStationsTable({
         );
       },
       cell: ({ row }) => {
-        const isActive = row.getValue("isActive") as boolean;
+        const isActive = row.getValue("connected") as boolean;
         return isActive ? (
           <Badge className="bg-green-200 text-green-800 hover:bg-green-200">
             Connected
