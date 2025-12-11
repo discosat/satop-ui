@@ -71,7 +71,7 @@ export function MissionOverview({
             <div>
               <p className="text-sm text-muted-foreground">Ground Station</p>
               <p className="font-medium">
-                {groundStations.find(gs => gs.id === flightPlan.gsId)?.name || `ID: ${flightPlan.gsId}`}
+                {flightPlan.gsId == null ? "Deleted" : (groundStations.find(gs => gs.id === flightPlan.gsId)?.name || `ID: ${flightPlan.gsId}`)}
               </p>
             </div>
             <div>

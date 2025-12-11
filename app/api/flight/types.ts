@@ -9,6 +9,7 @@ export interface CompileToCshResult {
 }
 
 export interface ImagingOpportunity {
+  possible: boolean;
   imagingTime: string;
   offNadirDegrees: number;
   satelliteAltitudeKm: number;
@@ -34,7 +35,7 @@ export type FlightPlanStatus = "DRAFT" | "APPROVED" | "REJECTED" | "ASSIGNED_TO_
 export interface FlightPlan {
   id: number;
   previousPlanId?: number;
-  gsId: number;
+  gsId?: number;
   satId: number;
   overpassId?: number;
   name: string;

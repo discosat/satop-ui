@@ -97,7 +97,9 @@ export function CoordinateMap({
       // Update last validated coordinates
       lastValidatedRef.current = { lat: latitude, lon: longitude, satId };
 
-      if (result) {
+      console.log("Why no log here??",result);
+
+      if (result?.possible) {
         setValidationState({
           isValidating: false,
           isValid: true,
@@ -105,11 +107,18 @@ export function CoordinateMap({
           imagingTime: result.imagingTime,
           offNadirDegrees: result.offNadirDegrees,
         });
+      } else if (result) {
+        // Result exists but not possible
+        setValidationState({
+          isValidating: false,
+          isValid: false,
+          error: result.message || "Unable to image these coordinates with the selected satellite.",
+        });
       } else {
         setValidationState({
           isValidating: false,
           isValid: false,
-          error: "Unable to image these coordinates with the selected satellite.",
+          error: "Unable to validate coordinates. Please try again.",
         });
       }
     } catch (error) {

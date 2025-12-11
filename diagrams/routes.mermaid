@@ -1,0 +1,81 @@
+flowchart TB
+    subgraph Public["🌐 Public Routes"]
+        direction TB
+        root["/"]
+        login["/login"]
+        unauthorized["/unauthorized"]
+    end
+
+    subgraph Auth["🔐 Auth0 Routes"]
+        direction TB
+        authLogin["/auth/login"]
+        authLogout["/auth/logout"]
+        authCallback["/auth/callback"]
+    end
+
+    subgraph Protected["🔒 Protected Routes"]
+        direction TB
+        
+        subgraph Platform["Platform Routes (VIEWER / OPERATOR)"]
+            direction TB
+            platform["/platform"]
+            
+            subgraph SatelliteTracking["Satellite Tracking"]
+                tracking["/platform/satellite-tracking"]
+            end
+            
+            subgraph OverpassSchedule["Overpass Schedule"]
+                overpass["/platform/overpass-schedule"]
+            end
+            
+            subgraph Flight["Flight Plans"]
+                flight["/platform/flight"]
+                flightNew["/platform/flight/new"]
+                flightDetail["/platform/flight/[id]"]
+                flightAssign["/platform/flight/[id]/assign-overpass"]
+            end
+        end
+
+        subgraph Admin["Administration Routes (ADMIN ONLY)"]
+            direction TB
+            admin["/administration"]
+            
+            subgraph Users["Users"]
+                users["/administration/users"]
+            end
+            
+            subgraph GroundStations["Ground Stations"]
+                groundStations["/administration/ground-stations"]
+            end
+            
+            subgraph Satellites["Satellites"]
+                satellites["/administration/satellites"]
+            end
+        end
+    end
+
+    Public --> Auth
+    Auth --> Protected
+    
+    platform --> tracking
+    platform --> overpass
+    platform --> flight
+    
+    flight --> flightNew
+    flight --> flightDetail
+    flightDetail --> flightAssign
+    
+    admin --> users
+    admin --> groundStations
+    admin --> satellites
+
+    classDef default fill:#e1f5fe,stroke:#0288d1,color:#01579b
+    classDef publicStyle fill:#b3e5fc,stroke:#0288d1,color:#01579b
+    classDef authStyle fill:#81d4fa,stroke:#0277bd,color:#01579b
+    classDef platformStyle fill:#4fc3f7,stroke:#0277bd,color:#01579b
+    classDef adminStyle fill:#29b6f6,stroke:#01579b,color:#fff
+
+    class root,login,unauthorized publicStyle
+    class authLogin,authLogout,authCallback authStyle
+    class platform,tracking,overpass,flight,flightNew,flightDetail,flightAssign platformStyle
+    class admin,users,groundStations,satellites adminStyle

@@ -107,7 +107,7 @@ export default function FlightPlansTable({
         ...plan,
         satelliteName: satelliteMap.get(plan.satId) || `Satellite ${plan.satId}`,
         groundStationName:
-          groundStationMap.get(plan.gsId) || `Ground Station ${plan.gsId}`,
+          plan.gsId == null ? "Deleted" : (groundStationMap.get(plan.gsId) || `Ground Station ${plan.gsId}`),
         approverName: approver?.name,
         approverRole: approver?.role,
       };
@@ -344,7 +344,7 @@ export default function FlightPlansTable({
     // Apply ground station filter
     if (selectedGroundStations.length > 0) {
       filtered = filtered.filter((plan) =>
-        selectedGroundStations.includes(plan.gsId.toString())
+        plan.gsId != null && selectedGroundStations.includes(plan.gsId.toString())
       );
     }
 
@@ -455,7 +455,7 @@ export default function FlightPlansTable({
         plan.satelliteName,
         plan.groundStationName,
         plan.satId.toString(),
-        plan.gsId.toString(),
+        plan.gsId?.toString(),
       ];
 
       return searchFields.some((field) =>

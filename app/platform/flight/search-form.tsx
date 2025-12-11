@@ -76,6 +76,7 @@ export function SearchForm({
     groundStations.forEach((gs) => {
       const count = flightPlans.filter(
         (plan) =>
+          plan.gsId != null &&
           plan.gsId.toString() === gs.id.toString() &&
           plan.status !== "SUPERSEDED"
       ).length;

@@ -1,0 +1,52 @@
+---
+title: Authorization Flow - Middleware & Server Components
+---
+sequenceDiagram
+    participant User
+    participant Middleware as Next.js Middleware
+    participant Auth0 as Auth0 SDK
+    participant ServerLayout as Server Layout Component
+    participant Session as getSession()
+    participant Backend as Backend API
+    participant AuthLib as authorization.ts
+
+    User->>Middleware: Request /platform or /administration
+
+    rect rgb(256, 256, 256)
+        Note over Middleware: Layer 1: Middleware (Fast Auth Check)
+        Middleware->>Auth0: auth0.getSession()
+        Auth0-->>Middleware: Session or null
+        
+        alt No Session
+            Middleware-->>User: Redirect to /login
+        else Has Session
+            Note over Middleware: Pass through - role check deferred
+            Middleware->>Auth0: auth0.middleware(request)
+            Auth0-->>Middleware: Response (maintains session)
+        end
+    end
+
+    Middleware->>ServerLayout: Forward request
+
+    rect rgb(256, 256, 256)
+        Note over ServerLayout: Layer 2: Server Component (Role Authorization)
+        ServerLayout->>Session: getSession()
+        Session->>Auth0: auth0.getSession()
+        Auth0-->>Session: Auth0 session + tokens
+        Session->>Backend: GetUserMe() with accessToken
+        Backend-->>Session: User data (includes role)
+        Session-->>ServerLayout: SessionPayload {user, role, token}
+
+        alt No Session
+            ServerLayout-->>User: Redirect to /login
+        else Has Session
+            ServerLayout->>AuthLib: canAccessPlatform(role) or canAccessAdministration(role)
+            AuthLib-->>ServerLayout: boolean
+            
+            alt Authorized
+                ServerLayout-->>User: Render protected content
+            else Unauthorized
+                ServerLayout-->>User: Redirect to /unauthorized
+            end
+        end
+    end

@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, CheckCircle, XCircle, CalendarClock, Images } from "lucide-react";
@@ -57,8 +57,30 @@ export default function FlightPlanDetailPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [showMetadataModal, setShowMetadataModal] = useState(false);
   const [imageCount, setImageCount] = useState<number>(0);
+  const [validationStates, setValidationStates] = useState<Record<string, boolean | null>>({});
 
   const id = typeof params.id === "string" ? params.id : "";
+
+  // Check if any commands have invalid validation OR if any TRIGGER_CAPTURE commands are pending validation
+  const hasInvalidCommands = useMemo(() => {
+    return Object.values(validationStates).some(state => state === false);
+  }, [validationStates]);
+
+  // Check if all TRIGGER_CAPTURE commands have been validated successfully
+  const allCommandsValid = useMemo(() => {
+    // Get all TRIGGER_CAPTURE command IDs
+    const triggerCaptureIds = commands
+      .filter(cmd => cmd.type === "TRIGGER_CAPTURE")
+      .map(cmd => cmd.id);
+    
+    // If no TRIGGER_CAPTURE commands, we're valid
+    if (triggerCaptureIds.length === 0) {
+      return true;
+    }
+    
+    // All TRIGGER_CAPTURE commands must have validation state === true
+    return triggerCaptureIds.every(id => validationStates[id] === true);
+  }, [commands, validationStates]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -285,8 +307,8 @@ export default function FlightPlanDetailPage() {
             </Protected>
           )}
 
-          {/* Hide approve/reject buttons when in TRANSMITTED state */}
-          {flightPlan.status !== "TRANSMITTED" && (
+          {/* Hide approve/reject buttons when in TRANSMITTED or ASSIGNED_TO_OVERPASS state */}
+          {flightPlan.status !== "TRANSMITTED"  && (
             <Protected requireOperator>
               <>
                 <Button
@@ -298,6 +320,7 @@ export default function FlightPlanDetailPage() {
                   <XCircle className="mr-2 h-4 w-4" />
                   Reject
                 </Button>
+                {flightPlan.status !== "ASSIGNED_TO_OVERPASS" && (
                 <Button
                   variant="outline"
                   onClick={() => setShowApproveDialog(true)}
@@ -307,6 +330,7 @@ export default function FlightPlanDetailPage() {
                   <CheckCircle className="mr-2 h-4 w-4" />
                   Approve
                 </Button>
+                )}
               </>
             </Protected>
           )}
@@ -314,8 +338,15 @@ export default function FlightPlanDetailPage() {
           <Protected requireOperator>
             <Button
               onClick={handleSave}
-              disabled={isLoading || !hasChanges}
+              disabled={isLoading || !hasChanges || !allCommandsValid}
               variant={hasChanges ? "default" : "outline"}
+              title={
+                !allCommandsValid
+                  ? "All imaging coordinates must be validated before saving"
+                  : !hasChanges
+                    ? "No changes to save"
+                    : "Save changes as a new version"
+              }
             >
               <Save className="mr-2 h-4 w-4" />
               {hasChanges ? "Save as New Version" : "No Changes"}
@@ -351,6 +382,8 @@ export default function FlightPlanDetailPage() {
                 onCommandsChange={handleCommandsChange}
                 isReadOnly={true}
                 satelliteId={flightPlan?.satId}
+                validationStates={validationStates}
+                onValidationStatesChange={setValidationStates}
               />
             }
           >
@@ -359,8 +392,22 @@ export default function FlightPlanDetailPage() {
               onCommandsChange={handleCommandsChange}
               isReadOnly={false}
               satelliteId={flightPlan?.satId}
+              validationStates={validationStates}
+              onValidationStatesChange={setValidationStates}
             />
           </Protected>
+          
+          {/* Validation status messages */}
+          {hasChanges && hasInvalidCommands && (
+            <div className="text-sm text-destructive text-center mt-4 p-3 bg-destructive/10 rounded-lg border border-destructive/20">
+              ⚠️ Some commands have invalid imaging coordinates. Please fix them before saving.
+            </div>
+          )}
+          {hasChanges && !allCommandsValid && !hasInvalidCommands && (
+            <div className="text-sm text-muted-foreground text-center mt-4 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+              ⏳ Validating imaging coordinates...
+            </div>
+          )}
         </CardContent>
       </Card>
 

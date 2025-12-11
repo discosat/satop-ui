@@ -201,7 +201,7 @@ export default function AssignOverpassPage() {
               <div>
                 <p className="text-sm text-muted-foreground">Ground Station</p>
                 <p className="font-medium">
-                  {groundStation?.name || `ID: ${flightPlan.gsId}`}
+                  {flightPlan.gsId == null ? "Deleted" : (groundStation?.name || `ID: ${flightPlan.gsId}`)}
                 </p>
               </div>
             </div>

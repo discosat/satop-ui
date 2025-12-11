@@ -91,7 +91,7 @@ export const OverpassCalendarBase = forwardRef<OverpassCalendarBaseHandle, Overp
         startTime: dateRange.start.toISOString(),
         endTime: dateRange.end.toISOString(),
         minimumElevation: 5,
-        maxResults: 50,
+        maxResults: 250,
         minimumDuration: 60,
       };
 

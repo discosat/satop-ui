@@ -1,0 +1,35 @@
+---
+title: User Authentication Flow
+---
+stateDiagram-v2
+    [*] --> Unauthenticated: User visits app
+
+    Unauthenticated --> CheckingSession: Request protected route
+    
+    CheckingSession --> LoginPage: No session (middleware redirect)
+    CheckingSession --> CheckAuthorization: Has valid session
+
+    LoginPage --> Auth0Login: Click "Login with Auth0"
+    Auth0Login --> Auth0Callback: Auth0 authentication
+    Auth0Callback --> CheckAuthorization: Session created
+    
+    CheckAuthorization --> PlatformPage: Has platform access
+    CheckAuthorization --> UnauthorizedPage: Insufficient role
+    
+    PlatformPage --> [*]: User views platform
+    UnauthorizedPage --> [*]: Access denied
+
+    note right of CheckingSession
+        Middleware checks session
+        via auth0.getSession()
+    end note
+
+    note right of Auth0Login
+        Redirects to /auth/login
+        handled by Auth0 SDK
+    end note
+
+    note right of CheckAuthorization
+        Checks user role via
+        canAccessPlatform()
+    end note

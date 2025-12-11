@@ -29,6 +29,8 @@ interface CommandBuilderProps {
   onCommandsChange: (commands: Command[]) => void;
   isReadOnly?: boolean;
   satelliteId?: number;
+  validationStates?: Record<string, boolean | null>;
+  onValidationStatesChange?: (states: Record<string, boolean | null>) => void;
 }
 
 export function CommandBuilder({
@@ -36,6 +38,8 @@ export function CommandBuilder({
   onCommandsChange,
   isReadOnly = false,
   satelliteId,
+  validationStates = {},
+  onValidationStatesChange,
 }: CommandBuilderProps) {
   const [selectedCommandType, setSelectedCommandType] = useState<
     CommandType | ""
@@ -44,6 +48,16 @@ export function CommandBuilder({
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [mapDialogOpen, setMapDialogOpen] = useState(false);
   const [editingCommandId, setEditingCommandId] = useState<string | null>(null);
+
+  // Handle validation state changes from child components
+  const handleValidationChange = (commandId: string, isValid: boolean | null) => {
+    if (onValidationStatesChange && validationStates[commandId] !== isValid) {
+      onValidationStatesChange({
+        ...validationStates,
+        [commandId]: isValid,
+      });
+    }
+  };
 
   const addCommand = (type: CommandType) => {
     if (isReadOnly) return;
@@ -264,6 +278,7 @@ export function CommandBuilder({
                     draggable={!isReadOnly}
                     isDragOver={dragOverId === command.id}
                     satelliteId={satelliteId}
+                    onValidationChange={handleValidationChange}
 
                     onDragStartItem={() => {
                       setDraggedId(command.id);
@@ -335,6 +350,7 @@ interface CommandItemProps {
   onDropOnItem?: () => void;
   openMapForCommand?: (commandId: string) => void;
   satelliteId?: number;
+  onValidationChange?: (commandId: string, isValid: boolean | null) => void;
 }
 
 function CommandItem({
@@ -354,6 +370,7 @@ function CommandItem({
   onDropOnItem,
   openMapForCommand,
   satelliteId,
+  onValidationChange,
 }: CommandItemProps) {
   return (
     <div
@@ -398,6 +415,7 @@ function CommandItem({
             onUpdate={onUpdate}
             onOpenMap={openMapForCommand ? () => openMapForCommand(command.id) : undefined}
             satelliteId={satelliteId}
+            onValidationChange={onValidationChange}
           />
         ) : (
           <TriggerPipelineCommand

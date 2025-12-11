@@ -72,6 +72,28 @@ export default function NewFlightPlanPage() {
   const [groundStationsError, setGroundStationsError] = useState<string | null>(
     null
   );
+  const [validationStates, setValidationStates] = useState<Record<string, boolean | null>>({});
+
+  // Check if any commands have invalid validation OR if any TRIGGER_CAPTURE commands are pending validation
+  const hasInvalidCommands = useMemo(() => {
+    return Object.values(validationStates).some(state => state === false);
+  }, [validationStates]);
+
+  // Check if all TRIGGER_CAPTURE commands have been validated successfully
+  const allCommandsValid = useMemo(() => {
+    // Get all TRIGGER_CAPTURE command IDs
+    const triggerCaptureIds = commands
+      .filter(cmd => cmd.type === "TRIGGER_CAPTURE")
+      .map(cmd => cmd.id);
+    
+    // If no TRIGGER_CAPTURE commands, we're valid
+    if (triggerCaptureIds.length === 0) {
+      return true;
+    }
+    
+    // All TRIGGER_CAPTURE commands must have validation state === true
+    return triggerCaptureIds.every(id => validationStates[id] === true);
+  }, [commands, validationStates]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -316,6 +338,8 @@ export default function NewFlightPlanPage() {
                     commands={commands}
                     onCommandsChange={setCommands}
                     satelliteId={form.watch("satId") ? parseInt(form.watch("satId")) : undefined}
+                    validationStates={validationStates}
+                    onValidationStatesChange={setValidationStates}
                   />
                 </Protected>
               </div>
@@ -337,14 +361,18 @@ export default function NewFlightPlanPage() {
                       !!groundStationsError ||
                       satellites.length === 0 ||
                       groundStations.length === 0 ||
-                      commands.length === 0
+                      commands.length === 0 ||
+                      !allCommandsValid ||
+                      hasInvalidCommands
                     }
                     title={
-                      commands.length === 0 
-                        ? "Add at least one command to create a flight plan" 
-                        : "Create flight plan"
+                      !allCommandsValid
+                        ? "All imaging coordinates must be validated before creating flight plan"
+                        : commands.length === 0 
+                          ? "Add at least one command to create a flight plan" 
+                          : "Create flight plan"
                     }
-                    className={commands.length === 0 ? "opacity-50" : ""}
+                    className={commands.length === 0 || !allCommandsValid ? "opacity-50" : ""}
                   >
                     {isSubmitting ? "Creating..." : "Create Flight Plan"}
                   </Button>

@@ -93,7 +93,7 @@ export default async function FlightPlanImagesPage({ params }: PageProps) {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Ground Station</p>
-              <p className="font-medium">{groundStation?.name || `ID: ${flightPlan.gsId}`}</p>
+              <p className="font-medium">{flightPlan.gsId == null ? "Deleted" : (groundStation?.name || `ID: ${flightPlan.gsId}`)}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-2">Status</p>

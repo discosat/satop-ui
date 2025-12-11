@@ -16,6 +16,7 @@ interface TriggerCaptureCommandProps {
   onUpdate: (updater: (cmd: Command) => Command) => void;
   onOpenMap?: () => void;
   satelliteId?: number;
+  onValidationChange?: (commandId: string, isValid: boolean | null) => void;
 }
 
 export function TriggerCaptureCommand({
@@ -23,6 +24,7 @@ export function TriggerCaptureCommand({
   onUpdate,
   onOpenMap,
   satelliteId,
+  onValidationChange,
 }: TriggerCaptureCommandProps) {
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [validationState, setValidationState] = useState<{
@@ -64,10 +66,12 @@ export function TriggerCaptureCommand({
         targetLongitude: longitude,
       });
 
+      console.log("Imaging opportunity result:", result);
+
       // Update last validated coordinates
       lastValidatedRef.current = { lat: latitude, lon: longitude, satId };
 
-      if (result) {
+      if (result?.possible) {
         setValidationState({
           isValidating: false,
           isValid: true,
@@ -75,11 +79,18 @@ export function TriggerCaptureCommand({
           imagingTime: result.imagingTime,
           offNadirDegrees: result.offNadirDegrees,
         });
+      } else if (result) {
+        // Result exists but not possible
+        setValidationState({
+          isValidating: false,
+          isValid: false,
+          error: result.message || "Unable to image these coordinates with the selected satellite.",
+        });
       } else {
         setValidationState({
           isValidating: false,
           isValid: false,
-          error: "Unable to image these coordinates with the selected satellite.",
+          error: "Unable to validate coordinates. Please try again.",
         });
       }
     } catch (error) {
@@ -110,12 +121,12 @@ export function TriggerCaptureCommand({
     }
 
     // Check if coordinates have actually changed
-    if (
-      lastValidatedRef.current &&
-      lastValidatedRef.current.lat === command.captureLocation.latitude &&
-      lastValidatedRef.current.lon === command.captureLocation.longitude &&
-      lastValidatedRef.current.satId === satelliteId
-    ) {
+    const coordsChanged = !lastValidatedRef.current ||
+      lastValidatedRef.current.lat !== command.captureLocation.latitude ||
+      lastValidatedRef.current.lon !== command.captureLocation.longitude ||
+      lastValidatedRef.current.satId !== satelliteId;
+
+    if (!coordsChanged) {
       return; // Skip if coordinates haven't changed
     }
 
@@ -135,6 +146,13 @@ export function TriggerCaptureCommand({
       }
     };
   }, [command.captureLocation.latitude, command.captureLocation.longitude, satelliteId, validateCoordinates]);
+
+  // Notify parent component of validation state changes
+  useEffect(() => {
+    if (onValidationChange) {
+      onValidationChange(command.id, validationState.isValid);
+    }
+  }, [validationState.isValid, command.id, onValidationChange]);
 
   const updateCaptureLocation = (field: "latitude" | "longitude", value: number) => {
     onUpdate((c) =>
@@ -212,10 +230,11 @@ export function TriggerCaptureCommand({
                 id={`lat-${command.id}`}
                 type="number"
                 step="0.000001"
-                value={command.captureLocation.latitude}
-                onChange={(e) =>
-                  updateCaptureLocation("latitude", parseFloat(e.target.value) || 0)
-                }
+                value={command.captureLocation.latitude === 0 ? "" : command.captureLocation.latitude}
+                onChange={(e) => {
+                  const value = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                  updateCaptureLocation("latitude", value);
+                }}
                 placeholder="55.6761"
                 className="h-9"
               />
@@ -228,10 +247,11 @@ export function TriggerCaptureCommand({
                 id={`lon-${command.id}`}
                 type="number"
                 step="0.000001"
-                value={command.captureLocation.longitude}
-                onChange={(e) =>
-                  updateCaptureLocation("longitude", parseFloat(e.target.value) || 0)
-                }
+                value={command.captureLocation.longitude === 0 ? "" : command.captureLocation.longitude}
+                onChange={(e) => {
+                  const value = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                  updateCaptureLocation("longitude", value);
+                }}
                 placeholder="12.5683"
                 className="h-9"
               />

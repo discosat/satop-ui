@@ -211,6 +211,7 @@ export async function getImagingOpportunities(
 ): Promise<ImagingOpportunity | null> {
   if (process.env.MOCKED || process.env.NEXT_PUBLIC_MOCKED) {
     return {
+      possible: true,
       imagingTime: new Date().toISOString(),
       offNadirDegrees: 0,
       satelliteAltitudeKm: 400,
