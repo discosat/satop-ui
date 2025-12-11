@@ -1,67 +1,107 @@
-## Development Setup
+# DiscoSat Platform UI
 
-This Next.js application can be run in two modes: **Live API Mode** for full end-to-end testing, and **Mocked Mode** for rapid, standalone UI development.
+This is the frontend application for the DiscoSat satellite operations platform. The application is built using Next.js and provides a comprehensive interface for managing satellites, ground stations, and flight operations.
 
-### Running in Live API Mode (Connected to Backend)
+## Prerequisites
 
-Use this mode for testing features that require a real database, verifying security rules, and ensuring the frontend and backend are correctly integrated.
+Before you begin, ensure you have the following installed on your system:
 
-#### Step 1: Start the Backend
+- Node.js version 18 or higher
+- npm package manager
+- Docker and Docker Compose for running the backend
 
-This mode requires a running instance of the `satop-platform` Python backend.
+## Getting Started
 
-1.  Navigate to your local `satop-platform` repository.
-2.  Start the backend server using Docker:
-    ```bash
-    docker compose up dev
-    ```
-3.  The backend API will start on `http://localhost:7890`. The database is **automatically seeded** with a default admin user, so no manual setup is needed.
+The project supports two different operational modes depending on your development needs.
 
-#### Step 2: Run the Frontend
+### Installation
 
-You are now ready to run the frontend in live mode.
+First, clone the repository and install the required dependencies:
+
+```bash
+npm install
+```
+
+This will install all necessary packages including Next.js, React, and various UI component libraries.
+
+Create a .env file in the root of the project with the following secrets:
+
+```API_BASE_URL=http://localhost:5111/api/v1
+
+# Auth0 Configuration
+# IMPORTANT: Replace AUTH0_SECRET with a secure value using: openssl rand -hex 32
+AUTH0_SECRET=secret
+APP_BASE_URL=http://localhost:3000
+AUTH0_DOMAIN=secret
+AUTH0_CLIENT_ID=secret
+AUTH0_CLIENT_SECRET=secret
+# Auth0 Scope - what information you want from the user
+AUTH0_SCOPE=openid profile email
+# Only needed if you're using an Auth0 API (leave commented if not using)
+AUTH0_AUDIENCE=http://localhost:5111
+```
+
+Replace the secret values with your own secret from Auth0.
+
+### Development Mode Options
+
+#### Option 1: Full Stack Development
+
+This mode connects the frontend to a live backend API. It is recommended when you need to test end-to-end functionality or work with real data flows.
+
+Start the backend service first. Navigate to the backend projekt and execute:
+
+```bash
+docker compose up dev
+```
+
+The backend will be available at http://localhost:5111 with a pre-configured database.
+
+Then start the frontend development server:
 
 ```bash
 npm run dev
 ```
 
-#### Login Credentials
+The application will be accessible at http://localhost:3000.
 
-Once the backend and frontend are running, you can log in with the default account that was automatically created:
+You can log in using your own google account. You must elevate your role by editing the backend database manually.
 
-- **Admin User**
-  - **Email:** `admin@example.com`
-  - **Password:** `adminpassword`
+#### Option 2: Standalone Frontend Development
 
-### Running in Mocked Mode (Standalone Frontend)
+This mode allows you to work on the UI without running the backend. It uses mocked data and is useful for component development and design work.
 
-Use this mode for rapid UI development, working on components, or when you are offline or do not need the backend. This mode does **not** require the Python backend to be running.
-
-#### Step 1: Run the Frontend
+Start the frontend in mocked mode:
 
 ```bash
 npm run dev:mocked
 ```
 
-The application will start on [http://localhost:3000](http://localhost:3000).
+In this mode, authentication is simulated and you will have full administrative access, but you still have to login first that cannot be avoided. All API responses come from mock files in the codebase.
 
-#### How it Works:
+## Project Structure
 
-- **Login:** Any email and password will be accepted.
-- **Permissions:** You will be automatically logged in as a superuser with full admin permissions (`*` scope), allowing you to see and interact with all UI elements.
-- **Data:** All data is served from local mock files (e.g., `app/api/platform/flight/mock.ts`) and is not persistent.
+The application follows a standard Next.js app directory structure. The main directories include:
 
-## Learn More
+- app/ - Contains all application pages and routes
+- components/ - Reusable UI components
+- lib/ - Utility functions and shared logic
+- public/ - Static assets
 
-To learn more about Next.js, take a look at the following resources:
+## Building for Production
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+To create an optimized production build:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run build
+```
 
-## Deploy on Vercel
+After building, you can start the production server:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm start
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Additional Information
+
+The application uses TypeScript for type safety and includes ESLint for code quality. It leverages various modern React patterns and libraries for state management and UI rendering.
